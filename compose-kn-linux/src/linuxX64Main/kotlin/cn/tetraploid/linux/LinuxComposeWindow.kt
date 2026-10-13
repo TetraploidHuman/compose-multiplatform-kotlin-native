@@ -1,6 +1,12 @@
 package cn.tetraploid.linux
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.matches
+import androidx.compose.ui.window.NativeMenuBarModel
+import androidx.compose.ui.window.shortcutActions
 import org.jetbrains.skia.Canvas
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoRenderDelegate
@@ -92,6 +98,29 @@ class LinuxComposeWindow(
 
     /** CSD 边缘缩放带宽（逻辑 dp）；Wayland beginResize 不按像素带宽，仅记账。 */
     internal var resizerThicknessDp: Float = 8f
+
+    /**
+     * Desktop [androidx.compose.ui.window.FrameWindowScope.MenuBar] 树。
+     * Wayland 用 Compose 顶栏绘制（见 [LinuxComposeMenuBar]）。
+     */
+    var menuBarModel: NativeMenuBarModel? by mutableStateOf(null)
+        private set
+
+    fun setMenuBar(model: NativeMenuBarModel?) {
+        menuBarModel = model
+    }
+
+    /** 尝试消费菜单 shortcut（KeyDown）；命中则调 onClick。 */
+    fun tryMenuShortcut(event: KeyEvent): Boolean {
+        val model = menuBarModel ?: return false
+        for ((shortcut, action) in model.shortcutActions()) {
+            if (shortcut.matches(event)) {
+                action()
+                return true
+            }
+        }
+        return false
+    }
 
     /** 窗级键盘钩子（对齐 Desktop onPreviewKeyEvent / onKeyEvent）。 */
     internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }

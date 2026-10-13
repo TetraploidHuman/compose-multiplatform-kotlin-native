@@ -20,7 +20,7 @@
 | DnD | ✅ | ✅ | |
 | 文件对话框 | ✅ | ✅ | Linux：xdg-desktop-portal |
 | 系统托盘 | ✅ | ✅ | Linux：SNI；无 SNI 时通知兜底 |
-| MenuBar | ⚠️ no-op | ✅ | Win：Item/Checkbox/Radio + mnemonic/shortcut；Linux 显示仍 no-op |
+| MenuBar | ⚠️ Compose 顶栏 | ✅ | Win：HMENU；Linux：Compose 顶栏 + shortcut；icon 忽略 |
 | 窗口最小化 / 最大化 / 关闭 | ✅ | ✅ | |
 | 全屏 | ✅ | ✅ | |
 | `setResizable` | ✅ | ✅ | |

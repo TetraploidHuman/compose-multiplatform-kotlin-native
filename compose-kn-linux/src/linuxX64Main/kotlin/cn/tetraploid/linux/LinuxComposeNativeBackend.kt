@@ -12,6 +12,7 @@ import androidx.compose.ui.window.ComposeNativeWindowBackend
 import androidx.compose.ui.window.ComposeNativeWindowBackendRegistry
 import androidx.compose.ui.window.ComposeNativeWindowCreateParams
 import androidx.compose.ui.window.ComposeNativeWindowHandle
+import androidx.compose.ui.window.NativeMenuBarModel
 import androidx.compose.ui.window.WindowGeometrySnapshot
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
@@ -253,6 +254,10 @@ class LinuxNativeWindowHandle(
 
     override fun setOnCloseRequest(callback: () -> Unit) {
         app.composeWindow.onCloseRequest = callback
+    }
+
+    override fun setMenuBar(model: NativeMenuBarModel?) {
+        app.composeWindow.setMenuBar(model)
     }
 
     override fun setContent(content: @Composable () -> Unit) {

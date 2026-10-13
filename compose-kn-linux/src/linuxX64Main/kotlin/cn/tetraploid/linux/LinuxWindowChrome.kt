@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.NativeMenuBarModel
 import org.jetbrains.skiko.WaylandWindow
 
 // XDG toplevel resize edges (from xdg-shell protocol)
@@ -36,18 +37,25 @@ private const val XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT = 10u
 
 /**
  * Client-side title bar with minimize / maximize / close when the compositor does not
- * provide server-side decorations.
+ * provide server-side decorations. Optional [menuBar] is drawn under the title (CSD)
+ * or above content (SSD path via [LinuxComposeApplication]).
  */
 @Composable
 fun LinuxWindowChrome(
     title: String,
     window: WaylandWindow,
     modifier: Modifier = Modifier,
+    menuBar: NativeMenuBarModel? = null,
     content: @Composable () -> Unit,
 ) {
     if (window.usesServerDecoration) {
-        Box(modifier.fillMaxSize()) {
-            content()
+        Column(modifier.fillMaxSize()) {
+            if (menuBar != null && menuBar.menus.isNotEmpty()) {
+                LinuxComposeMenuBar(menuBar)
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                content()
+            }
         }
         return
     }
@@ -83,7 +91,10 @@ fun LinuxWindowChrome(
                 )
                 WindowControlButton(label = "×", onClick = window::requestClose)
             }
-            Box(Modifier.fillMaxSize()) {
+            if (menuBar != null && menuBar.menus.isNotEmpty()) {
+                LinuxComposeMenuBar(menuBar)
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
                 content()
             }
         }

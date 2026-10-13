@@ -1,12 +1,12 @@
 /*
  * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
  *
- * Win32 原生 HMENU 菜单栏（FrameWindowScope.MenuBar）。
- * 策略：composition 用稳定 slot 收集树 → SideEffect rebuild-on-change → SetMenu。
- * 非 Windows / 无边框窗口：ComposeNativeWindowHandle.setMenuBar 为 no-op。
+ * FrameWindowScope.MenuBar：composition 用稳定 slot 收集树 → SideEffect → setMenuBar。
+ * Win32 → 原生 HMENU；Wayland → Compose 顶栏（LinuxComposeMenuBar）。
+ * 无边框 Win 窗不挂系统 HMENU（宿主忽略）。
  *
  * API 对齐 Desktop MenuScope：Item / CheckboxItem / RadioButtonItem +
- * icon / mnemonic / shortcut（icon 在原生 HMENU 上忽略；mnemonic→`&`；shortcut→`\t` 标签）。
+ * icon / mnemonic / shortcut（icon 忽略；Win mnemonic→`&` / shortcut→`\t` 标签）。
  */
 
 package androidx.compose.ui.window

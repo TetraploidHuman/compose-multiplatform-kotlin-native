@@ -31,7 +31,7 @@
 
 ### P1 — API 形态不对齐，真项目会踩
 
-- [x] **MenuBar 能力**：`mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win HMENU + 快捷键；`icon` 忽略；Linux 显示仍 no-op）
+- [x] **MenuBar 能力**：`mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win HMENU；Linux Compose 顶栏；`icon` 忽略）
 - [x] **`WindowDecoration` + resizerThickness**（`undecorated` 布尔兼容保留）
 - [x] **窗级快捷键路径**：preview → scene → onKey（Linux / Windows）
 
@@ -43,7 +43,7 @@
 - [x] `Window(icon=…)` → Win `WM_SETICON`（16+32 BGRA）；Linux 无便携协议（记账 + 一次日志）
 - [x] `Window(transparent=true)` 真透明客户区（Win：WS_EX_LAYERED+UpdateLayeredWindow/软件路径；Linux：空 opaque region + clear TRANSPARENT）
 - [x] `Window(focusable=…)` 原生焦点策略（Win：WS_EX_NOACTIVATE+MA_NOACTIVATE；Linux：丢 Key/IME + 一次日志）
-- [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
+- [x] Linux MenuBar 可见实现（Compose 顶栏 + shortcut；非 HMENU）
 - [ ] `compose.resources` locale / plurals / XML vector
 - [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）
 - [x] `WindowDecoration.resizerThickness` → Win CSD `edgeMarginDp`；Linux 记账

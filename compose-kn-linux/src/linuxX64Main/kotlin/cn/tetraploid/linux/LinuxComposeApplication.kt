@@ -4,8 +4,15 @@ package cn.tetraploid.linux
 
 import androidx.compose.ui.platform.DefaultArchitectureComponentsOwner
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asComposeCanvas
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.FrameRecomposer
 import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.scene.ComposeScene
@@ -88,9 +95,22 @@ class LinuxComposeApplication(
         scene.size = initialSize
         scene.density = Density(composeWindow.layer.contentScale)
         scene.setContent {
-            // withChrome / 无 SSD → CSD；有 SSD 且非 undecorated → 纯内容
+            val menuBar = composeWindow.menuBarModel
+            // withChrome / 无 SSD → CSD；有 SSD 且非 undecorated → 纯内容（仍可挂 MenuBar）
             if (withChrome || !composeWindow.window.usesServerDecoration) {
-                LinuxWindowChrome(title = title, window = composeWindow.window, content = content)
+                LinuxWindowChrome(
+                    title = title,
+                    window = composeWindow.window,
+                    menuBar = menuBar,
+                    content = content,
+                )
+            } else if (menuBar != null && menuBar.menus.isNotEmpty()) {
+                Column(Modifier.fillMaxSize()) {
+                    LinuxComposeMenuBar(menuBar)
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        content()
+                    }
+                }
             } else {
                 content()
             }
@@ -222,7 +242,14 @@ class LinuxComposeApplication(
                 inputState,
                 backNavigationInput,
                 onPreviewKeyEvent = composeWindow.onPreviewKeyEvent,
-                onKeyEvent = composeWindow.onKeyEvent,
+                onKeyEvent = { keyEvent ->
+                    if (composeWindow.onKeyEvent(keyEvent)) true
+                    else if (keyEvent.type == KeyEventType.KeyDown) {
+                        composeWindow.tryMenuShortcut(keyEvent)
+                    } else {
+                        false
+                    }
+                },
             )
             return
         }
