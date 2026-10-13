@@ -110,6 +110,11 @@ struct ComposeKNWindow {
     bool fullscreen = false;
     /** App requested non-resizable：configure 后不要清掉 min=max。 */
     bool size_locked = false;
+    /**
+     * Desktop `Window(transparent)`：空 opaque region，让 compositor 按 alpha 混合。
+     * （NULL opaque region = 完全不透明；空 region = 无任何不透明矩形。）
+     */
+    bool transparent = false;
     uint32_t configure_serial = 0;
     /** True after request_size：下一次 toplevel configure 后清掉 min/max 约束。 */
     bool clear_size_constraints_after_configure = false;
@@ -3502,6 +3507,47 @@ extern "C" void composekn_window_set_title(ComposeKNWindow* window, const char* 
         return;
     }
     xdg_toplevel_set_title(window->toplevel, title != nullptr ? title : "");
+}
+
+static void apply_opaque_region(ComposeKNWindow* window) {
+    if (window == nullptr || window->surface == nullptr || window->compositor == nullptr) {
+        return;
+    }
+    if (window->transparent) {
+        // 空 region：surface 无任何「可当不透明」的矩形 → compositor 必须混合 alpha。
+        wl_region* region = wl_compositor_create_region(window->compositor);
+        if (region != nullptr) {
+            wl_surface_set_opaque_region(window->surface, region);
+            wl_region_destroy(region);
+        }
+    } else {
+        // NULL：协议规定视为完全不透明（可走 opaque 优化）。
+        wl_surface_set_opaque_region(window->surface, nullptr);
+    }
+    wl_surface_commit(window->surface);
+    if (window->display != nullptr) {
+        wl_display_flush(window->display);
+    }
+}
+
+extern "C" void composekn_window_set_transparent(ComposeKNWindow* window, bool transparent) {
+    window = resolve_window(window);
+    if (window == nullptr) {
+        return;
+    }
+    if (window->transparent == transparent) {
+        return;
+    }
+    window->transparent = transparent;
+    apply_opaque_region(window);
+    std::fprintf(stderr, "composekn: transparent=%d (opaque_region %s)\n",
+                 transparent ? 1 : 0,
+                 transparent ? "empty" : "null=opaque");
+}
+
+extern "C" bool composekn_window_is_transparent(ComposeKNWindow* window) {
+    window = resolve_window(window);
+    return window != nullptr && window->transparent;
 }
 
 extern "C" void composekn_window_request_size(ComposeKNWindow* window, int w, int h) {

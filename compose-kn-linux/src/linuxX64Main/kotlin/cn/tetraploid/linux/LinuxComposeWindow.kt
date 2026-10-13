@@ -66,8 +66,21 @@ class LinuxComposeWindow(
     /** Desktop `focusable`；标准 xdg-shell 无协议，仅记账。 */
     internal var focusable: Boolean = true
 
-    /** Desktop `transparent`；当前 GLES/Vulkan 路径诚实记账。 */
+    /**
+     * Desktop `transparent`：空 wl opaque region + Skia clear(TRANSPARENT)。
+     * EGL/Vulkan 已带 ALPHA_SIZE。
+     */
     internal var transparent: Boolean = false
+        private set
+
+    fun setTransparent(enabled: Boolean) {
+        if (transparent == enabled) {
+            window.setTransparent(enabled)
+            return
+        }
+        transparent = enabled
+        window.setTransparent(enabled)
+    }
 
     /** CSD 边缘缩放带宽（逻辑 dp）；Wayland beginResize 不按像素带宽，仅记账。 */
     internal var resizerThicknessDp: Float = 8f

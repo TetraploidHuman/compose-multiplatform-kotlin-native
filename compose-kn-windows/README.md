@@ -26,6 +26,7 @@ Compose Multiplatform。
 - [x] 发出侧 DnD：派发后再 `DoDragDrop`；进 OLE 前清 Escape；`QueryContinueDrag` 异步交叉验证
 - [x] 自定义装饰图拖出（`drawDragDecoration` → `IDragSourceHelper::InitializeFromBitmap`）
 - [x] 自定义字体：`compose-kn-resources` / `Res.font.*` → LoadedFont（见该模块 README）
+- [x] `Window(transparent=true)`：`WS_EX_LAYERED` + `UpdateLayeredWindow`（attach 前强制软件 present；建议 undecorated）
 
 ## Requirements
 

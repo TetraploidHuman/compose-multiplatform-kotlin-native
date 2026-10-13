@@ -456,6 +456,14 @@ bool composekn_win32_post_test_key(
 bool composekn_win32_is_always_on_top(ComposeKNWin32Window* window);
 void composekn_win32_set_always_on_top(ComposeKNWin32Window* window, bool on_top);
 
+/**
+ * Desktop `Window(transparent)`：开关 WS_EX_LAYERED。
+ * 开启后 present 走 UpdateLayeredWindow（预乘 BGRA）；需软件 raster 路径。
+ * 通常配合 undecorated。
+ */
+void composekn_win32_set_transparent(ComposeKNWin32Window* window, bool transparent);
+bool composekn_win32_is_transparent(ComposeKNWin32Window* window);
+
 /** 启用/禁用窗口输入（软模态对话框：EnableWindow）。 */
 void composekn_win32_set_enabled(ComposeKNWin32Window* window, bool enabled);
 bool composekn_win32_is_enabled(ComposeKNWin32Window* window);

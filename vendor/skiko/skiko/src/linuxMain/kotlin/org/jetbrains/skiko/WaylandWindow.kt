@@ -226,6 +226,14 @@ class WaylandWindow(
 
     fun alwaysOnTopSupported(): Boolean = composekn_window_always_on_top_supported()
 
+    /**
+     * Desktop `Window(transparent)`：空 opaque region + framebuffer alpha。
+     */
+    fun setTransparent(transparent: Boolean) =
+        composekn_window_set_transparent(native, transparent)
+
+    val isTransparent: Boolean get() = composekn_window_is_transparent(native)
+
     fun beginResize(edges: UInt) = composekn_window_begin_resize(native, edges)
 
     fun destroy() {

@@ -1,6 +1,7 @@
 package cn.tetraploid.windows
 
 import org.jetbrains.skia.Canvas
+import org.jetbrains.skiko.GraphicsApi
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoRenderDelegate
 import org.jetbrains.skiko.Win32Event
@@ -164,8 +165,39 @@ class WindowsComposeWindow(
     /** Desktop `focusable`；Win32 暂记账（无廉价 WS 切换路径）。 */
     internal var focusable: Boolean = true
 
-    /** Desktop `transparent`；当前路径诚实记账。 */
+    /**
+     * Desktop `transparent`：Win32 走 `WS_EX_LAYERED` + `UpdateLayeredWindow`。
+     * attach 前会强制 [GraphicsApi.SOFTWARE_FAST]（逐像素 alpha）。
+     */
     internal var transparent: Boolean = false
+        private set
+
+    /**
+     * 开关透明客户区。已 attach 且仍在 GPU 后端时仅记账 + 一次日志
+     * （逐像素 alpha 需要软件 present；请在建窗前设 `transparent=true`）。
+     */
+    fun setTransparent(enabled: Boolean) {
+        if (transparent == enabled) {
+            win32Window?.setTransparent(enabled)
+            return
+        }
+        transparent = enabled
+        win32Window?.setTransparent(enabled)
+        if (enabled) {
+            // attach 后改 renderApi 不会重建 redrawer；须在建窗前设 transparent。
+            val alreadyGpu = win32Window != null &&
+                layer.renderApi != GraphicsApi.SOFTWARE_FAST &&
+                layer.renderApi != GraphicsApi.SOFTWARE_COMPAT
+            layer.renderApi = GraphicsApi.SOFTWARE_FAST
+            if (alreadyGpu) {
+                win32Log(
+                    "Window(transparent=true): GPU redrawer already active; " +
+                        "per-pixel alpha needs SOFTWARE_FAST (set transparent before attach / " +
+                        "COMPOSEKN_RENDER_API=software)",
+                )
+            }
+        }
+    }
 
     /** 窗级键盘钩子。 */
     internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }
@@ -531,7 +563,7 @@ class WindowsComposeWindow(
 
     /** 创建 Win32 窗口并 attach SkiaLayer（[run] / [attachToHost] 共用）。 */
     private fun createAndAttachLayer(): Win32Window {
-        win32Log("create: Win32 window ${width}x$height undecorated=$undecorated")
+        win32Log("create: Win32 window ${width}x$height undecorated=$undecorated transparent=$transparent")
         val win = Win32Window(title, width, height, undecorated)
         win32Window = win
         println("WindowsComposeWindow: created window '$title' (${win.width}x${win.height})")
@@ -541,6 +573,11 @@ class WindowsComposeWindow(
         applyMenuBarLocked(pendingMenuBar)
         check(layer.renderDelegate != null) {
             "SkiaLayer.renderDelegate must be set before attach/run"
+        }
+        // 透明窗必须在 attach 前锁定软件 present（UpdateLayeredWindow）。
+        if (transparent) {
+            layer.renderApi = GraphicsApi.SOFTWARE_FAST
+            win.setTransparent(true)
         }
         layer.attachTo(win)
         return win

@@ -45,7 +45,8 @@ interface ComposeNativeWindowHandle {
 
     /**
      * 透明客户区（对齐 Desktop `transparent`；通常需 undecorated）。
-     * 当前宿主可能诚实 no-op + 一次日志。
+     * Win32：WS_EX_LAYERED + UpdateLayeredWindow（软件路径）；
+     * Wayland：空 opaque region + clear(TRANSPARENT)。
      */
     fun setTransparent(transparent: Boolean) {}
 

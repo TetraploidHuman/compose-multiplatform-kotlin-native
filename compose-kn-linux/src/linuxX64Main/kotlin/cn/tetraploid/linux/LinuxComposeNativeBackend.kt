@@ -124,10 +124,9 @@ class LinuxNativeWindowHandle(
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
     companion object {
-        /** Absolute / always-on-top / transparent / icon 限制只打一次日志，避免 SideEffect 刷屏。 */
+        /** Absolute / always-on-top / icon 限制只打一次日志，避免 SideEffect 刷屏。 */
         private var absolutePositionLogged = false
         private var alwaysOnTopLogged = false
-        private var transparentLogged = false
         private var iconLogged = false
     }
 
@@ -167,14 +166,7 @@ class LinuxNativeWindowHandle(
     }
 
     override fun setTransparent(transparent: Boolean) {
-        app.composeWindow.transparent = transparent
-        if (transparent && !transparentLogged) {
-            transparentLogged = true
-            println(
-                "composekn: Window(transparent=true) is not yet wired on Wayland " +
-                    "(flag stored; compositor transparency TBD)",
-            )
-        }
+        app.composeWindow.setTransparent(transparent)
     }
 
     override fun setResizerThicknessDp(dp: Float) {

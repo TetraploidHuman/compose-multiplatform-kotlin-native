@@ -41,7 +41,7 @@
 - [x] 菜单加速键标签（`Ctrl+S` 而非 `Key keyCode: N`）
 - [x] Tray Checkbox/Radio 勾选态（文本前缀 `✓`；无原生 checkmark API）
 - [x] `Window(icon=…)` → Win `WM_SETICON`（16+32 BGRA）；Linux 无便携协议（记账 + 一次日志）
-- [ ] `Window(transparent=true)` 真透明客户区
+- [x] `Window(transparent=true)` 真透明客户区（Win：WS_EX_LAYERED+UpdateLayeredWindow/软件路径；Linux：空 opaque region + clear TRANSPARENT）
 - [ ] `Window(focusable=…)` 原生焦点策略
 - [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
 - [ ] `compose.resources` locale / plurals / XML vector

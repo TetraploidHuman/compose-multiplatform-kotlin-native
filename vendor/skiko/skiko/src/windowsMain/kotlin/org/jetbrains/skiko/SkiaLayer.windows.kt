@@ -206,7 +206,10 @@ actual open class SkiaLayer {
             pictureWidth.toFloat(),
             pictureHeight.toFloat(),
         ).apply {
-            clear(Color.WHITE)
+            // transparent 窗：清成全透明，交给 UpdateLayeredWindow 合成。
+            clear(
+                if (window.isTransparent) Color.TRANSPARENT else Color.WHITE
+            )
         }
         renderDelegate?.onRender(canvas, pictureWidth, pictureHeight, nanoTime)
         picture = PictureHolder(pictureRecorder.finishRecordingAsPicture(), pictureWidth, pictureHeight)

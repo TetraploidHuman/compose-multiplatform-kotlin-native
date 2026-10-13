@@ -137,10 +137,6 @@ class WindowsNativeWindowHandle(
     private var pendingContent: (@Composable () -> Unit)? = null
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
-    companion object {
-        private var transparentLogged = false
-    }
-
     override fun asPlatformWindow(): Any? = app.window
 
     override fun setTitle(title: String) {
@@ -168,11 +164,7 @@ class WindowsNativeWindowHandle(
     }
 
     override fun setTransparent(transparent: Boolean) {
-        app.window.transparent = transparent
-        if (transparent && !transparentLogged) {
-            transparentLogged = true
-            win32Log("Window(transparent=true) not yet wired on Win32 (flag stored)")
-        }
+        app.window.setTransparent(transparent)
     }
 
     override fun setResizerThicknessDp(dp: Float) {

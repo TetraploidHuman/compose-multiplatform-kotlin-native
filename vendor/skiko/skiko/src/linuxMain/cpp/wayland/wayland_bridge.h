@@ -271,6 +271,13 @@ void composekn_window_set_parent(ComposeKNWindow* child, ComposeKNWindow* parent
 bool composekn_window_set_always_on_top(ComposeKNWindow* window, bool on_top);
 bool composekn_window_always_on_top_supported(void);
 
+/**
+ * Desktop `Window(transparent)`：空 wl opaque region（按 framebuffer alpha 混合）。
+ * EGL/Vulkan 配置已带 ALPHA_SIZE；Kotlin 侧需 clear(TRANSPARENT)。
+ */
+void composekn_window_set_transparent(ComposeKNWindow* window, bool transparent);
+bool composekn_window_is_transparent(ComposeKNWindow* window);
+
 /* ---- IME (zwp_text_input_v3) ---- */
 
 /**

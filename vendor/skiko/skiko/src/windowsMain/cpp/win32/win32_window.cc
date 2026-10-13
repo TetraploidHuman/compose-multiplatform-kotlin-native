@@ -210,6 +210,11 @@ struct ComposeKNWin32Window {
     // false = 系统标题栏（Compose JVM 桌面 Window() 的默认形态：NC 全归 OS 管）；
     // true = 无边框自绘 CSD（对应 JVM 的 undecorated = true）。
     bool undecorated = false;
+    /**
+     * Desktop `Window(transparent=true)`：WS_EX_LAYERED + UpdateLayeredWindow 逐像素 alpha。
+     * 需软件 present 路径（CPU raster）；通常配合 undecorated。
+     */
+    bool transparent = false;
     /** CSD 边缘缩放带宽（逻辑 dp @96dpi）；对齐 WindowDecoration.resizerThickness。 */
     int edgeMarginDp = kEdgeMarginBaseDefault;
     /** WM_SETICON 持有的图标（destroy 时 DestroyIcon）。 */
@@ -481,6 +486,7 @@ static void enableDpiAwareness() {
 }
 
 // 把最近一帧（必要时拉伸）贴到当前客户区。缩放/重绘时用它立刻补画。
+// transparent：UpdateLayeredWindow（预乘 BGRA + AC_SRC_ALPHA）；否则 StretchDIBits。
 static void blitFrame(ComposeKNWin32Window* window) {
     if (window == nullptr || window->hwnd == nullptr) return;
     if (window->frame.empty() || window->frameW <= 0 || window->frameH <= 0) return;
@@ -489,16 +495,73 @@ static void blitFrame(ComposeKNWin32Window* window) {
     int cw = rc.right - rc.left;
     int ch = rc.bottom - rc.top;
     if (cw <= 0 || ch <= 0) return;
-    HDC dc = GetDC(window->hwnd);
-    if (dc == nullptr) return;
+
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = window->frameW;
-    bmi.bmiHeader.biHeight = -window->frameH;  // top-down
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
+
+    if (window->transparent) {
+        // 逐像素 alpha：源 DIB 必须是预乘 BGRA（Skia PREMUL），尺寸对齐窗口客户区。
+        HDC screen = GetDC(nullptr);
+        if (screen == nullptr) return;
+        HDC mem = CreateCompatibleDC(screen);
+        if (mem == nullptr) {
+            ReleaseDC(nullptr, screen);
+            return;
+        }
+        bmi.bmiHeader.biWidth = cw;
+        bmi.bmiHeader.biHeight = -ch;  // top-down
+        void* bits = nullptr;
+        HBITMAP bmp = CreateDIBSection(mem, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+        if (bmp == nullptr || bits == nullptr) {
+            if (bmp != nullptr) DeleteObject(bmp);
+            DeleteDC(mem);
+            ReleaseDC(nullptr, screen);
+            return;
+        }
+        HGDIOBJ old = SelectObject(mem, bmp);
+        if (window->frameW == cw && window->frameH == ch) {
+            std::memcpy(bits, window->frame.data(),
+                        static_cast<size_t>(cw) * static_cast<size_t>(ch) * 4u);
+        } else {
+            BITMAPINFO srcBmi;
+            ZeroMemory(&srcBmi, sizeof(srcBmi));
+            srcBmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            srcBmi.bmiHeader.biWidth = window->frameW;
+            srcBmi.bmiHeader.biHeight = -window->frameH;
+            srcBmi.bmiHeader.biPlanes = 1;
+            srcBmi.bmiHeader.biBitCount = 32;
+            srcBmi.bmiHeader.biCompression = BI_RGB;
+            SetStretchBltMode(mem, COLORONCOLOR);
+            StretchDIBits(mem, 0, 0, cw, ch, 0, 0, window->frameW, window->frameH,
+                          window->frame.data(), &srcBmi, DIB_RGB_COLORS, SRCCOPY);
+        }
+        RECT wr;
+        GetWindowRect(window->hwnd, &wr);
+        POINT ptDst = {wr.left, wr.top};
+        SIZE size = {cw, ch};
+        POINT ptSrc = {0, 0};
+        BLENDFUNCTION blend = {};
+        blend.BlendOp = AC_SRC_OVER;
+        blend.BlendFlags = 0;
+        blend.SourceConstantAlpha = 255;
+        blend.AlphaFormat = AC_SRC_ALPHA;
+        UpdateLayeredWindow(
+            window->hwnd, screen, &ptDst, &size, mem, &ptSrc, 0, &blend, ULW_ALPHA);
+        SelectObject(mem, old);
+        DeleteObject(bmp);
+        DeleteDC(mem);
+        ReleaseDC(nullptr, screen);
+        return;
+    }
+
+    HDC dc = GetDC(window->hwnd);
+    if (dc == nullptr) return;
+    bmi.bmiHeader.biWidth = window->frameW;
+    bmi.bmiHeader.biHeight = -window->frameH;  // top-down
     SetStretchBltMode(dc, COLORONCOLOR);
     StretchDIBits(dc, 0, 0, cw, ch, 0, 0, window->frameW, window->frameH,
                   window->frame.data(), &bmi, DIB_RGB_COLORS, SRCCOPY);
@@ -2904,6 +2967,40 @@ extern "C" void composekn_win32_set_always_on_top(ComposeKNWin32Window* window, 
         0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
     );
     composeknLog("window: alwaysOnTop=%d", on_top ? 1 : 0);
+}
+
+extern "C" void composekn_win32_set_transparent(ComposeKNWin32Window* window, bool transparent) {
+    if (window == nullptr || window->hwnd == nullptr) return;
+    if (window->transparent == transparent) return;
+    window->transparent = transparent;
+    const LONG_PTR ex = GetWindowLongPtrW(window->hwnd, GWL_EXSTYLE);
+    const LONG_PTR next = transparent
+        ? (ex | WS_EX_LAYERED)
+        : (ex & ~static_cast<LONG_PTR>(WS_EX_LAYERED));
+    if (next != ex) {
+        SetWindowLongPtrW(window->hwnd, GWL_EXSTYLE, next);
+        // 退出 layered 后需要一次普通重绘；进入 layered 则等下一帧 UpdateLayeredWindow。
+        if (!transparent) {
+            InvalidateRect(window->hwnd, nullptr, TRUE);
+        }
+        SetWindowPos(
+            window->hwnd, nullptr, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
+        );
+    }
+    if (transparent && !window->undecorated) {
+        composeknLog(
+            "window: transparent=1（建议 undecorated=true；有系统边框时 layered 外观可能异常）");
+    } else {
+        composeknLog("window: transparent=%d", transparent ? 1 : 0);
+    }
+    if (transparent && !window->frame.empty()) {
+        blitFrame(window);
+    }
+}
+
+extern "C" bool composekn_win32_is_transparent(ComposeKNWin32Window* window) {
+    return window != nullptr && window->transparent;
 }
 
 extern "C" void composekn_win32_set_enabled(ComposeKNWin32Window* window, bool enabled) {

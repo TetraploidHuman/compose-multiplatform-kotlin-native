@@ -97,7 +97,9 @@ actual open class SkiaLayer {
             pictureWidth.toFloat(),
             pictureHeight.toFloat(),
         ).apply {
-            clear(Color.WHITE)
+            clear(
+                if (window.isTransparent) Color.TRANSPARENT else Color.WHITE
+            )
         }
         renderDelegate?.onRender(canvas, pictureWidth, pictureHeight, nanoTime)
         picture = PictureHolder(pictureRecorder.finishRecordingAsPicture(), pictureWidth, pictureHeight)

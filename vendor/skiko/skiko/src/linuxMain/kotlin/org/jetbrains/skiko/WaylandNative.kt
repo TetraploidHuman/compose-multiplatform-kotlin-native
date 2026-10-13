@@ -230,6 +230,12 @@ internal external fun composekn_window_set_always_on_top(window: COpaquePointer,
 @SymbolName("composekn_window_always_on_top_supported")
 internal external fun composekn_window_always_on_top_supported(): Boolean
 
+@SymbolName("composekn_window_set_transparent")
+internal external fun composekn_window_set_transparent(window: COpaquePointer, transparent: Boolean)
+
+@SymbolName("composekn_window_is_transparent")
+internal external fun composekn_window_is_transparent(window: COpaquePointer): Boolean
+
 @SymbolName("composekn_window_begin_resize")
 internal external fun composekn_window_begin_resize(window: COpaquePointer, edges: UInt)
 

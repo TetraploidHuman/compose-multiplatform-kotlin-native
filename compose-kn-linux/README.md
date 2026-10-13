@@ -29,6 +29,7 @@ Kotlin/Native **linuxX64** 宿主：Wayland + Graphite/Vulkan（回退 EGL/GLES�
 - [x] 发出 / 接收 DnD：`wl_data_device_start_drag` + enter/drop；自定义拖影 → icon surface
 - [x] 自定义装饰图拖出（`drawDragDecoration` → BGRA icon）
 - [x] 自定义字体：`compose-kn-resources` / `Res.font.*` → LoadedFont（见该模块 README）
+- [x] `Window(transparent=true)`：空 wl opaque region + Skia `clear(TRANSPARENT)`（EGL/Vulkan 已带 ALPHA）
 
 ## Requirements
 
