@@ -129,7 +129,7 @@ class LinuxComposeWindow(
         layer.needRender()
         // 首帧不依赖 compositor FRAME（headless / 首 commit 无 buffer 时回调可能永不来）。
         renderFrameGuarded()
-        println("composekn: attachToHost ready ${window.width}x${window.height}")
+        println("tetraploid: attachToHost ready ${window.width}x${window.height}")
     }
 
     /**
@@ -180,7 +180,7 @@ class LinuxComposeWindow(
             }
             return
         }
-        println("composekn: detachFromHost")
+        println("tetraploid: detachFromHost")
         if (isHostAttached) {
             LinuxApplicationHost.unregister(this)
         }
@@ -299,5 +299,5 @@ fun drawHelloFrame(canvas: Canvas, width: Int, height: Int) {
     canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(40f, 40f, width.toFloat() - 80f, height.toFloat() - 80f), paint)
     val font = org.jetbrains.skia.Font(null, 28f)
     val textPaint = org.jetbrains.skia.Paint().apply { color = org.jetbrains.skia.Color.WHITE }
-    canvas.drawString("ComposeKN / Wayland", 60f, 100f, font, textPaint)
+    canvas.drawString("Tetraploid / Wayland", 60f, 100f, font, textPaint)
 }

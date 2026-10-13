@@ -1,13 +1,13 @@
-# LumiCode × ComposeKN
+# LumiCode × Tetraploid
 
 把隔壁 [LumiCodeNext](https://github.com/TetraploidHuman/LumiCode) 的 `commonMain` UI
-接到 ComposeKN 的 Kotlin/Native 宿主上，验证 Linux（Wayland）与 Windows（mingwX64）可用性。
+接到 Tetraploid 的 Kotlin/Native 宿主上，验证 Linux（Wayland）与 Windows（mingwX64）可用性。
 
 ## 布局要求
 
 ```
-~/ComposeKN/          # 本仓库
-~/LumiCodeNext/       # sibling（main 或 experiment/composekn-native，功能已同步）
+~/Tetraploid/          # 本仓库
+~/LumiCodeNext/       # sibling（main 或 experiment/tetraploid-native，功能已同步）
 ```
 
 `build.gradle.kts` 通过相对路径引用：

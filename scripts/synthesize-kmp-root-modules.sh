@@ -10,9 +10,9 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 M2="${1:-$REPO/build/maven-repo}"
-VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="$(grep '^composekn.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="${UI_VER:-1.12.1-ckn.$VER}"
+VER="$(grep '^tetraploid.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="$(grep '^tetraploid.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="${UI_VER:-1.12.1-tp.$VER}"
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
 
@@ -104,7 +104,7 @@ EOF
   <version>$version</version>
   <packaging>pom</packaging>
   <name>$name</name>
-  <description>ComposeKN KMP root (platform variants via Gradle Module Metadata)</description>
+  <description>Tetraploid KMP root (platform variants via Gradle Module Metadata)</description>
 </project>
 EOF
 
@@ -141,7 +141,7 @@ synthesize com/tetraploid compose-kn-windows "$VER" mingwx64
 synthesize com/tetraploid compose-kn-resources "$VER" linuxx64 mingwx64
 synthesize com/tetraploid skiko "$VER" linuxx64 mingwx64
 
-# —— compose UI（com.tetraploid.compose，版本 = composekn.compose.ui.version）——
+# —— compose UI（com.tetraploid.compose，版本 = tetraploid.compose.ui.version）——
 UI_MODULES=(
   ui-util ui-geometry ui-unit ui-graphics ui-text ui-backhandler
   lifecycle-viewmodel-compose ui

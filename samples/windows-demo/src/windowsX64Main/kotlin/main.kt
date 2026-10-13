@@ -44,18 +44,18 @@ import kotlin.time.TimeSource
 import com.tetraploid.windows.WindowsComposeWindow
 import com.tetraploid.windows.WindowsNativeWindowHandle
 import com.tetraploid.windows.internal.winlog
-import com.tetraploid.windows.registerComposeKnWindowsBackend
+import com.tetraploid.windows.registerTetraploidWindowsBackend
 import org.jetbrains.skiko.win32ProcessorCount
 import kotlin.system.exitProcess
 import platform.posix.getenv
 import kotlinx.cinterop.toKString
 
 /**
- * ComposeKN Windows 原生 demo。
+ * Tetraploid Windows 原生 demo。
  *
  * 两种运行模式：
  *  - 默认：`application { Window(...) }` 组件画廊（人工测试用，支持第二扇窗）
- *  - `COMPOSEKN_SELFTEST=1|logic|window|all`（或命令行参数 `--selftest`）：
+ *  - `TETRAPLOID_SELFTEST=1|logic|window|all`（或命令行参数 `--selftest`）：
  *    自动化自检，跑完以退出码 0/1 汇报结果（见 SelfTest.kt）
  */
 fun main(args: Array<String>) {
@@ -71,13 +71,13 @@ fun main(args: Array<String>) {
         exitProcess(if (passed) 0 else 1)
     }
 
-    println("ComposeKN Windows: Starting component gallery (application { Window })")
+    println("Tetraploid Windows: Starting component gallery (application { Window })")
     log("main: entry (Kotlin main reached)")
 
     val animate = resolveGalleryAnimation(args)
-    println("ComposeKN Windows: gallery animation = $animate（--no-animate / COMPOSEKN_GALLERY_ANIMATE=0 可关）")
+    println("Tetraploid Windows: gallery animation = $animate（--no-animate / TETRAPLOID_GALLERY_ANIMATE=0 可关）")
 
-    registerComposeKnWindowsBackend()
+    registerTetraploidWindowsBackend()
 
     application {
         val probe = remember { GalleryProbe() }
@@ -87,12 +87,12 @@ fun main(args: Array<String>) {
         val mainState = rememberWindowState(size = DpSize(1100.dp, 760.dp))
         val trayState = rememberTrayState()
         val trayNotifyInfo = rememberNotification(
-            title = "ComposeKN",
+            title = "Tetraploid",
             message = "托盘通知（Info）——右键图标也可发",
             type = Notification.Type.Info,
         )
         val trayNotifyWarn = rememberNotification(
-            title = "ComposeKN",
+            title = "Tetraploid",
             message = "托盘通知（Warning）",
             type = Notification.Type.Warning,
         )
@@ -104,7 +104,7 @@ fun main(args: Array<String>) {
             Tray(
                 icon = ColorPainter(Color(0xFF1B6AC9)),
                 state = trayState,
-                tooltip = "ComposeKN Windows Demo",
+                tooltip = "Tetraploid Windows Demo",
                 onAction = {
                     probe.trayAction = "dblclick"
                     winlog("tray: onAction (double-click)")
@@ -129,7 +129,7 @@ fun main(args: Array<String>) {
         Window(
             onCloseRequest = ::exitApplication,
             state = mainState,
-            title = "ComposeKN Windows Demo",
+            title = "Tetraploid Windows Demo",
         ) {
             // 原生 Win32 HMENU（标题栏下方）；点选写到 probe.menuAction。
             MenuBar {
@@ -189,7 +189,7 @@ fun main(args: Array<String>) {
                         " dpi=${fmt1(win.dpiScale.toDouble())}" +
                         " 刷新率=$hzNote 帧间隔=${fmt1(1_000_000_000.0 / effHz / 1_000_000.0)}ms" +
                         " 动画=$animate 逻辑核=$cores" +
-                        " 日志=exe 同目录 composekn-startup.log"
+                        " 日志=exe 同目录 tetraploid-startup.log"
                     println(banner)
                     log(banner)
 
@@ -241,7 +241,7 @@ fun main(args: Array<String>) {
                         lastLoopFrames = win.layer.loopFrameCount
                         lastTickFrames = win.layer.immediateFrameCount
                         lastMark = TimeSource.Monotonic.markNow()
-                        win.setTitle("ComposeKN Windows Demo — ${fmt1(fps)} fps (frames=$total)")
+                        win.setTitle("Tetraploid Windows Demo — ${fmt1(fps)} fps (frames=$total)")
                     }
                 }
 
@@ -262,7 +262,7 @@ fun main(args: Array<String>) {
             Window(
                 onCloseRequest = { openSecond = false },
                 state = rememberWindowState(size = DpSize(480.dp, 360.dp)),
-                title = "ComposeKN · 第二扇窗",
+                title = "Tetraploid · 第二扇窗",
             ) {
                 SecondWindowContent(onClose = { openSecond = false })
             }
@@ -272,7 +272,7 @@ fun main(args: Array<String>) {
             DialogWindow(
                 onCloseRequest = { openDialog = false },
                 state = rememberDialogState(width = 420.dp, height = 280.dp),
-                title = "ComposeKN · DialogWindow",
+                title = "Tetraploid · DialogWindow",
             ) {
                 DialogWindowContent(onClose = { openDialog = false })
             }
@@ -284,7 +284,7 @@ fun main(args: Array<String>) {
             Window(
                 onCloseRequest = { openCsdMove = false },
                 state = rememberWindowState(size = DpSize(420.dp, 280.dp)),
-                title = "ComposeKN · WindowDraggableArea",
+                title = "Tetraploid · WindowDraggableArea",
                 undecorated = true,
             ) {
                 Surface(Modifier.fillMaxSize()) {
@@ -318,11 +318,11 @@ fun main(args: Array<String>) {
             }
         }
     }
-    println("ComposeKN Windows: application finished")
+    println("Tetraploid Windows: application finished")
 }
 
 /**
- * `--selftest[=logic|window|all]` 或环境变量 `COMPOSEKN_SELFTEST=1|logic|window|all`。
+ * `--selftest[=logic|window|all]` 或环境变量 `TETRAPLOID_SELFTEST=1|logic|window|all`。
  * 返回 null 表示正常运行画廊。
  */
 private fun resolveSelfTestMode(args: Array<String>): String? {
@@ -330,7 +330,7 @@ private fun resolveSelfTestMode(args: Array<String>): String? {
         val value = arg.substringAfter('=', "").trim()
         return normalizeSelfTestMode(if (value.isEmpty()) "all" else value)
     }
-    val env = getenv("COMPOSEKN_SELFTEST")?.toKString()?.trim()
+    val env = getenv("TETRAPLOID_SELFTEST")?.toKString()?.trim()
     if (env.isNullOrEmpty() || env == "0") return null
     return normalizeSelfTestMode(env)
 }
@@ -346,11 +346,11 @@ private fun normalizeSelfTestMode(value: String): String = when (value.lowercase
  * 画廊是否跑「每帧 +1」的动画（默认 true）。
  *
  * 关掉它就能观察空闲行为：宿主现在是按需渲染，静止窗口不应该产生任何帧。
- * 用法：`--no-animate` 或 `COMPOSEKN_GALLERY_ANIMATE=0`。
+ * 用法：`--no-animate` 或 `TETRAPLOID_GALLERY_ANIMATE=0`。
  */
 private fun resolveGalleryAnimation(args: Array<String>): Boolean {
     if (args.any { it == "--no-animate" }) return false
-    val env = getenv("COMPOSEKN_GALLERY_ANIMATE")?.toKString()?.trim()?.lowercase()
+    val env = getenv("TETRAPLOID_GALLERY_ANIMATE")?.toKString()?.trim()?.lowercase()
     return !(env == "0" || env == "false" || env == "no" || env == "off")
 }
 

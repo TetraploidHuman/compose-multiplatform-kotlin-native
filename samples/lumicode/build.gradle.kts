@@ -9,7 +9,7 @@ val lumicodeRoot = file("../../../LumiCodeNext/composeApp")
 val lumicodeCommon = file("$lumicodeRoot/src/commonMain/kotlin")
 val lumicodeFonts = file("$lumicodeRoot/src/commonMain/composeResources/font")
 
-composeKnResources {
+tetraploidResources {
     // 官方 compose.resources 同义：packageOfResClass("…")
     packageOfResClass("com.lumicode.editor.resources")
     // Prefer LumiCodeNext fonts when present; also allow local composeResources/font.
@@ -92,7 +92,7 @@ tasks.named("compileKotlinLinuxX64") { dependsOn("verifyLumicodeSources") }
 tasks.matching { it.name.startsWith("compileKotlinMingw") }.configureEach {
     dependsOn("verifyLumicodeSources")
 }
-tasks.named("generateComposeKnResources") { dependsOn("verifyLumicodeSources") }
+tasks.named("generateTetraploidResources") { dependsOn("verifyLumicodeSources") }
 
 configurations.configureEach {
     resolutionStrategy.force("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")

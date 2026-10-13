@@ -25,7 +25,7 @@ class TrayMenuItem(
     val children: List<TrayMenuItem> = emptyList(),
 )
 
-object ComposeKNTray {
+object TetraploidTray {
     private var created = false
     private var onAction: (() -> Unit)? = null
     private val menuClickMap = mutableMapOf<Int, () -> Unit>()
@@ -43,7 +43,7 @@ object ComposeKNTray {
             composekn_win32_tray_create(tip, trayCallback, null)
         }
         if (!ok) {
-            println("ComposeKNTray: Shell_NotifyIcon create failed")
+            println("TetraploidTray: Shell_NotifyIcon create failed")
             return
         }
         created = true
@@ -188,7 +188,7 @@ object ComposeKNTray {
             }
         } catch (t: Throwable) {
             println(
-                "ComposeKNTray: callback kind=$kind arg=$arg " +
+                "TetraploidTray: callback kind=$kind arg=$arg " +
                     "${t::class.simpleName}: ${t.message}",
             )
         }
@@ -230,7 +230,7 @@ internal external fun composekn_win32_tray_set_icon(
 
 private val trayCallback =
     staticCFunction<Int, Int, COpaquePointer?, Unit> { kind, arg, _ ->
-        ComposeKNTray.dispatch(kind, arg)
+        TetraploidTray.dispatch(kind, arg)
     }
 
 private inline fun <R> String.useCString(block: (CPointer<ByteVar>) -> R): R {

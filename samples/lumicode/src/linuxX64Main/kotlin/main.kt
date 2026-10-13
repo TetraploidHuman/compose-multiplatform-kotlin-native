@@ -11,7 +11,7 @@ import kotlinx.cinterop.toKString
 import platform.posix.getenv
 
 /**
- * LumiCode on ComposeKN / Kotlin Native (linuxX64 · Wayland).
+ * LumiCode on Tetraploid / Kotlin Native (linuxX64 · Wayland).
  *
  * initLinuxMainThread + registerBackend：由 com.tetraploid.host entry wrapper 负责。
  */

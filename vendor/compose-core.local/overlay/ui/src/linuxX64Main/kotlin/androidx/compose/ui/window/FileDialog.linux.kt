@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
+ * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
  *
  * 系统文件对话框（打开 / 保存）。
  * Windows：comdlg32 GetOpenFileNameW / GetSaveFileNameW（Wine 友好）。
@@ -11,7 +11,7 @@ package androidx.compose.ui.window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
-import org.jetbrains.skiko.ComposeKNFileDialog
+import org.jetbrains.skiko.TetraploidFileDialog
 
 /** 打开（Load）或保存（Save）。 */
 enum class FileDialogMode { Load, Save }
@@ -131,9 +131,9 @@ private fun runNativeFileDialog(
     initialFileName: String?,
     multiple: Boolean,
     filters: List<FileDialogFilter>,
-): List<String> = ComposeKNFileDialog.show(
+): List<String> = TetraploidFileDialog.show(
     ownerPlatform = ownerPlatform,
-    mode = if (mode == FileDialogMode.Save) ComposeKNFileDialog.MODE_SAVE else ComposeKNFileDialog.MODE_LOAD,
+    mode = if (mode == FileDialogMode.Save) TetraploidFileDialog.MODE_SAVE else TetraploidFileDialog.MODE_LOAD,
     title = title,
     initialDirectory = initialDirectory,
     initialFileName = initialFileName,

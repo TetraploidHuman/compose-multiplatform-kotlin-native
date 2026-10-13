@@ -1,6 +1,6 @@
 /*
  * Copyright 2021 The Android Open Source Project
- * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
+ * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
  *
  * Port of Tray.desktop.kt for Kotlin/Native (Win32 Shell_NotifyIcon /
  * Linux StatusNotifierItem + notify-send).
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import org.jetbrains.skiko.ComposeKNTray
+import org.jetbrains.skiko.TetraploidTray
 import org.jetbrains.skiko.TrayMenuItem
 
 /**
@@ -30,7 +30,7 @@ import org.jetbrains.skiko.TrayMenuItem
  *
  * Windows: Shell_NotifyIcon. Linux: StatusNotifierWatcher 或 notify-send。
  */
-val isTraySupported: Boolean get() = ComposeKNTray.available()
+val isTraySupported: Boolean get() = TetraploidTray.available()
 
 /**
  * Adds a system tray icon when supported.
@@ -70,25 +70,25 @@ fun ApplicationScope.Tray(
     val iconPixels = remember(icon) { icon.toTrayIconBgra() }
 
     SideEffect {
-        ComposeKNTray.setTooltip(tooltip)
-        ComposeKNTray.setOnAction { currentOnAction() }
-        ComposeKNTray.setMenu(latestNodes.toTrayMenuItems())
-        ComposeKNTray.setIcon(iconPixels.first, iconPixels.second, iconPixels.third)
+        TetraploidTray.setTooltip(tooltip)
+        TetraploidTray.setOnAction { currentOnAction() }
+        TetraploidTray.setMenu(latestNodes.toTrayMenuItems())
+        TetraploidTray.setIcon(iconPixels.first, iconPixels.second, iconPixels.third)
     }
 
     DisposableEffect(state) {
-        ComposeKNTray.ensureCreated(tooltip)
-        ComposeKNTray.setOnAction { currentOnAction() }
-        ComposeKNTray.setMenu(latestNodes.toTrayMenuItems())
-        ComposeKNTray.setIcon(iconPixels.first, iconPixels.second, iconPixels.third)
+        TetraploidTray.ensureCreated(tooltip)
+        TetraploidTray.setOnAction { currentOnAction() }
+        TetraploidTray.setMenu(latestNodes.toTrayMenuItems())
+        TetraploidTray.setIcon(iconPixels.first, iconPixels.second, iconPixels.third)
         val job = state.notificationFlow
             .onEach { n ->
-                ComposeKNTray.showNotification(n.title, n.message, n.type.ordinal)
+                TetraploidTray.showNotification(n.title, n.message, n.type.ordinal)
             }
             .launchIn(coroutineScope)
         onDispose {
             job.cancel()
-            ComposeKNTray.destroy()
+            TetraploidTray.destroy()
         }
     }
 }

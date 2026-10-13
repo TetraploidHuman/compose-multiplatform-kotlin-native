@@ -7,7 +7,7 @@ import java.nio.file.StandardCopyOption
 internal object LinuxRuntimeBundle {
     /** Directory containing libcrypt.so.1 (Kotlin/Native stdlib NEEDED on NixOS). */
     fun libcryptLibDir(): File? {
-        System.getenv("COMPOSEKN_LIBCRYPT_LIB")?.let { path ->
+        System.getenv("TETRAPLOID_LIBCRYPT_LIB")?.let { path ->
             val dir = File(path)
             if (File(dir, "libcrypt.so.1").exists()) return dir
         }
@@ -22,7 +22,7 @@ internal object LinuxRuntimeBundle {
     fun bundleLibcryptNextToKexe(kexe: File, logger: (String) -> Unit) {
         val src = libcryptSo1File() ?: run {
             logger(
-                "libcrypt.so.1 not found (set COMPOSEKN_LIBCRYPT_LIB or use nix-shell ./shell.nix); " +
+                "libcrypt.so.1 not found (set TETRAPLOID_LIBCRYPT_LIB or use nix-shell ./shell.nix); " +
                     "run via ./scripts/run-linux-native.sh"
             )
             return

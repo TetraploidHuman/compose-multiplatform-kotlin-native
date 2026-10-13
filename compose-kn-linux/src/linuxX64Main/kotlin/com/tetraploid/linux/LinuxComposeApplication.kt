@@ -187,7 +187,7 @@ class LinuxComposeApplication(
             composeWindow.onCloseRequest = onCloseRequest
         }
         composeWindow.attachToHost(onEvent = ::handleEvent)
-        println("composekn: app attached to shared host")
+        println("tetraploid: app attached to shared host")
     }
 
     /** 从共享宿主摘掉并释放场景（声明式 Window 离开 composition 时）。 */
@@ -209,7 +209,7 @@ class LinuxComposeApplication(
             return
         }
         if (event.type == WaylandEventType.Key) {
-            println("composekn: key keyCode=${event.keyCode} keysym=${event.keysym} pressed=${event.pressed}")
+            println("tetraploid: key keyCode=${event.keyCode} keysym=${event.keysym} pressed=${event.pressed}")
             scene.dispatchWaylandKeyEvent(event, inputState, backNavigationInput)
             return
         }

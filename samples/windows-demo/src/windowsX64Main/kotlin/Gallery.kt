@@ -103,8 +103,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.graphicsLayer
 import com.tetraploid.windows.internal.winlog
 import androidx.compose.runtime.withFrameNanos
-import org.jetbrains.skiko.ComposeKNFileDialog
-import org.jetbrains.skiko.ComposeKNTray
+import org.jetbrains.skiko.TetraploidFileDialog
+import org.jetbrains.skiko.TetraploidTray
 
 /**
  * 组件画廊的「观测点」。
@@ -212,7 +212,7 @@ class GalleryProbe {
 }
 
 /**
- * ComposeKN Windows 组件画廊。
+ * Tetraploid Windows 组件画廊。
  *
  * 目标不是"好看"，而是**尽可能多地走一遍 Compose 的渲染/排版/输入路径**：
  * 文本（含长文本换行与省略号）、按钮四种、绘制、滚动（普通滚动 + Lazy 虚拟化）、
@@ -255,7 +255,7 @@ fun ComponentGallery(
             val outerState = rememberLazyListState()
             val innerState = rememberLazyListState()
 
-            // 诊断：把「外层/内层滚动位置 + 缩放值」写进 composekn-startup.log（~20Hz 节流）。
+            // 诊断：把「外层/内层滚动位置 + 缩放值」写进 tetraploid-startup.log（~20Hz 节流）。
             //
             // 为什么需要：真机反馈「缩放之后还会跳 / 嵌套滚动有时候也跳」，但那种"跳"是
             // 肉眼看到的现象，日志里只有触摸轨迹，无法判断**是哪个滚动容器在动、动了多少**。
@@ -321,7 +321,7 @@ private fun DiagnosticsHud(probe: GalleryProbe, window: WindowsComposeWindow) {
         // 高度打印出来会是 Infinity.dp，徒增困惑。
         val availableWidth = maxWidth
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("ComposeKN · Windows 原生组件画廊", style = MaterialTheme.typography.titleMedium)
+            Text("Tetraploid · Windows 原生组件画廊", style = MaterialTheme.typography.titleMedium)
             Text(
                 text = "窗口 ${window.logicalWidth}x${window.logicalHeight}dp · 可用宽度 $availableWidth" +
                     " · dpi=${window.layer.contentScale}",
@@ -429,7 +429,7 @@ private fun LazyListScope.gallerySections(
 
     section("托盘 / Tray + Notification") {
         Text(
-            "available=${ComposeKNTray.available()} / isTraySupported=$traySupported。" +
+            "available=${TetraploidTray.available()} / isTraySupported=$traySupported。" +
                 "任务栏通知区应有蓝底白圆图标；双击 = onAction，右键 = 菜单。",
             style = MaterialTheme.typography.bodySmall,
         )
@@ -440,12 +440,12 @@ private fun LazyListScope.gallerySections(
         )
         if (trayState != null && traySupported) {
             val info = rememberNotification(
-                "ComposeKN",
+                "Tetraploid",
                 "画廊按钮发出的 Info 通知",
                 Notification.Type.Info,
             )
             val err = rememberNotification(
-                "ComposeKN",
+                "Tetraploid",
                 "画廊按钮发出的 Error 通知",
                 Notification.Type.Error,
             )
@@ -476,7 +476,7 @@ private fun LazyListScope.gallerySections(
     section("文本 / Text") {
         Text("headlineSmall 标题", style = MaterialTheme.typography.headlineSmall)
         Text("titleMedium 小标题", style = MaterialTheme.typography.titleMedium)
-        Text("bodyMedium 正文：ComposeKN 让 Compose 跑在 Kotlin/Native 上。", style = MaterialTheme.typography.bodyMedium)
+        Text("bodyMedium 正文：Tetraploid 让 Compose 跑在 Kotlin/Native 上。", style = MaterialTheme.typography.bodyMedium)
         Text("labelSmall 标签", style = MaterialTheme.typography.labelSmall)
         Text(
             text = "长文本省略号测试：Compose Multiplatform 的文本排版在 Windows 原生后端上" +
@@ -855,7 +855,7 @@ private fun LazyListScope.gallerySections(
 /**
  * 文件对话框手动验证：命令式 open/save + 声明式 [FileDialog]。
  *
- * CI 不弹交互对话框（只断言 `ComposeKNFileDialog.available()`）；这里是给人点的。
+ * CI 不弹交互对话框（只断言 `TetraploidFileDialog.available()`）；这里是给人点的。
  */
 @Composable
 private fun FileDialogBox(window: WindowsComposeWindow) {
@@ -873,7 +873,7 @@ private fun FileDialogBox(window: WindowsComposeWindow) {
         Column(Modifier.padding(12.dp)) {
             Text("文件对话框", style = MaterialTheme.typography.titleSmall)
             Text(
-                "available=${ComposeKNFileDialog.available()}（comdlg32）",
+                "available=${TetraploidFileDialog.available()}（comdlg32）",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -1141,8 +1141,8 @@ private fun ClipboardCopyFilesButton() {
     val clipboard = LocalClipboardManager.current
     val paths = remember {
         listOf(
-            """C:\composekn\gallery-copy-1.txt""",
-            """C:\composekn\gallery-copy-2.txt""",
+            """C:\tetraploid\gallery-copy-1.txt""",
+            """C:\tetraploid\gallery-copy-2.txt""",
         )
     }
     var status by remember { mutableStateOf("点按钮 → ClipEntry.withFiles → 资源管理器里 Ctrl+V") }
@@ -1169,8 +1169,8 @@ private fun ClipboardCopyFilesButton() {
 private fun DragAndDropDemoBox() {
     val paths = remember {
         listOf(
-            """C:\composekn\gallery-drag-1.txt""",
-            """C:\composekn\gallery-drag-2.txt""",
+            """C:\tetraploid\gallery-drag-1.txt""",
+            """C:\tetraploid\gallery-drag-2.txt""",
         )
     }
     var dropStatus by remember { mutableStateOf("把文件/文本拖到右边虚线框") }
@@ -1239,7 +1239,7 @@ private fun DragAndDropDemoBox() {
                         },
                     ) { _ ->
                         DragAndDropTransferData(
-                            text = "ComposeKN Gallery 拖出的文本",
+                            text = "Tetraploid Gallery 拖出的文本",
                             onTransferCompleted = { ok ->
                                 winlog("drag: Source 文本拖放结束 success=$ok")
                             },

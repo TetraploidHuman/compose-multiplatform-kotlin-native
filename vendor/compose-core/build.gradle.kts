@@ -12,25 +12,25 @@ plugins {
 }
 
 /**
- * 发布到 ComposeKN 坐标（默认关；`-Pcomposekn.publish.composeUi=true` 打开）：
+ * 发布到 Tetraploid 坐标（默认关；`-Ptetraploid.publish.composeUi=true` 打开）：
  *   group = com.tetraploid.compose
- *   version = 1.12.1-ckn.<composekn.version>
+ *   version = 1.12.1-tp.<tetraploid.version>
  *   artifactId = 子工程名（ui / foundation / material3 / …）
  *
  * 消费者用 settings 插件 `com.tetraploid.settings` 把
  * `org.jetbrains.compose.*` 顶成这些坐标，无需 includeBuild。
  */
 val publishComposeUi =
-    providers.gradleProperty("composekn.publish.composeUi").orNull == "true"
+    providers.gradleProperty("tetraploid.publish.composeUi").orNull == "true"
 val skipMetadata =
-    providers.gradleProperty("composekn.publish.skipMetadata").orNull == "true"
+    providers.gradleProperty("tetraploid.publish.skipMetadata").orNull == "true"
 val usePublishedSkiko =
-    providers.gradleProperty("composekn.usePublishedSkiko").orNull == "true"
-val composeknVer =
-    providers.gradleProperty("composekn.version").orElse("0.5.66")
+    providers.gradleProperty("tetraploid.usePublishedSkiko").orNull == "true"
+val tetraploidVer =
+    providers.gradleProperty("tetraploid.version").orElse("0.5.66")
 val composeUiVer =
-    providers.gradleProperty("composekn.compose.ui.version")
-        .orElse(composeknVer.map { "1.12.1-ckn.$it" })
+    providers.gradleProperty("tetraploid.compose.ui.version")
+        .orElse(tetraploidVer.map { "1.12.1-tp.$it" })
 
 // 覆盖 includeBuild 进来的 skiko：禁用其 metadata（init-script 是双保险）
 if (skipMetadata) {
@@ -45,7 +45,7 @@ if (skipMetadata) {
 
 if (usePublishedSkiko) {
     // 按 configuration 名直接顶到平台坐标，避开合成根 .module 的 available-at 解析问题。
-    val skikoVer = composeknVer.get()
+    val skikoVer = tetraploidVer.get()
     allprojects {
         configurations.configureEach {
             val confName = name
@@ -106,8 +106,8 @@ subprojects {
             extensions.configure<PublishingExtension> {
                 repositories {
                     maven {
-                        name = "ComposeKnLocal"
-                        // 发到 ComposeKN 仓库根的 build/maven-repo（本工程在 vendor/compose-core）
+                        name = "TetraploidLocal"
+                        // 发到 Tetraploid 仓库根的 build/maven-repo（本工程在 vendor/compose-core）
                         url = uri(rootProject.projectDir.resolve("../../build/maven-repo"))
                     }
                     val ghToken = System.getenv("GITHUB_TOKEN")
@@ -127,7 +127,7 @@ subprojects {
                 }
             }
             logger.lifecycle(
-                "ComposeKN: will publish ${project.path} as com.tetraploid.compose:${project.name}:$version",
+                "Tetraploid: will publish ${project.path} as com.tetraploid.compose:${project.name}:$version",
             )
         }
     }

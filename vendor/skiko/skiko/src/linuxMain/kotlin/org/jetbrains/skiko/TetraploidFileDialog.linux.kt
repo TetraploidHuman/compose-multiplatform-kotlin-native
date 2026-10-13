@@ -11,7 +11,7 @@ import kotlinx.cinterop.usePinned
  * Linux：xdg-desktop-portal FileChooser（libdbus）。
  * [ownerPlatform] 暂忽略（无 parent_window 绑定）。
  */
-object ComposeKNFileDialog {
+object TetraploidFileDialog {
     const val MODE_LOAD = 0
     const val MODE_SAVE = 1
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # 从 GitHub Release 拉 compose-kn Maven 仓库（稳定 CDN，绕过 Packages Billing）。
 #
-#   ./scripts/fetch-composekn-maven.sh                 # → ~/.composekn/m2/<ver>
-#   ./scripts/fetch-composekn-maven.sh /path/to/m2     # 自定义目录
-#   COMPOSEKN_VERSION=0.5.66 ./scripts/fetch-composekn-maven.sh
+#   ./scripts/fetch-tetraploid-maven.sh                 # → ~/.tetraploid/m2/<ver>
+#   ./scripts/fetch-tetraploid-maven.sh /path/to/m2     # 自定义目录
+#   TETRAPLOID_VERSION=0.5.66 ./scripts/fetch-tetraploid-maven.sh
 #
 # 与 com.tetraploid settings 插件默认缓存一致。
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VER="${COMPOSEKN_VERSION:-$(grep '^composekn.version=' "$REPO/gradle.properties" 2>/dev/null | cut -d= -f2 || echo 0.5.66)}"
-DEST="${1:-$HOME/.composekn/m2/$VER}"
-OWNER="${COMPOSEKN_GH_OWNER:-TetraploidHuman}"
-REPO_NAME="${COMPOSEKN_GH_REPO:-compose-multiplatform-kotlin-native}"
-ASSET="composekn-maven-${VER}.zip"
+VER="${TETRAPLOID_VERSION:-$(grep '^tetraploid.version=' "$REPO/gradle.properties" 2>/dev/null | cut -d= -f2 || echo 0.5.66)}"
+DEST="${1:-$HOME/.tetraploid/m2/$VER}"
+OWNER="${TETRAPLOID_GH_OWNER:-TetraploidHuman}"
+REPO_NAME="${TETRAPLOID_GH_REPO:-compose-multiplatform-kotlin-native}"
+ASSET="tetraploid-maven-${VER}.zip"
 TAG="v${VER}"
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
@@ -31,7 +31,7 @@ API="https://api.github.com/repos/$OWNER/$REPO_NAME/releases/tags/$TAG"
 ASSET_ID="$(curl -fsSL "${AUTH[@]}" -H "Accept: application/vnd.github+json" "$API" \
   | python3 -c "import json,sys; r=json.load(sys.stdin); print(next(a['id'] for a in r.get('assets',[]) if a['name']==sys.argv[1]))" "$ASSET" \
   2>/dev/null || true)"
-[ -n "$ASSET_ID" ] || die "Release $TAG 没有资产 $ASSET（先跑: ./scripts/publish-composekn-packages.sh --release）"
+[ -n "$ASSET_ID" ] || die "Release $TAG 没有资产 $ASSET（先跑: ./scripts/publish-tetraploid-packages.sh --release）"
 
 curl -fsSL "${AUTH[@]}" -H "Accept: application/octet-stream" \
   -o "$TMP/$ASSET" \
@@ -48,6 +48,6 @@ with zipfile.ZipFile("$TMP/$ASSET") as z:
     z.extractall("$DEST")
 PY
 fi
-echo "$VER" > "$DEST/.composekn-complete"
+echo "$VER" > "$DEST/.tetraploid-complete"
 info "Maven repo ready: $DEST"
 find "$DEST" -name '*.klib' 2>/dev/null | sort || true

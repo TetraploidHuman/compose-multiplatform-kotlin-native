@@ -14,4 +14,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "composekn-build-logic"
+rootProject.name = "tetraploid-build-logic"

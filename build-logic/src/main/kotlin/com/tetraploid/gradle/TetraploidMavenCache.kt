@@ -9,23 +9,23 @@ import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 
 /**
- * 把 GitHub Release 里的 `composekn-maven-<ver>.zip` 落到本地缓存，
+ * 把 GitHub Release 里的 `tetraploid-maven-<ver>.zip` 落到本地缓存，
  * 作为免 Packages Billing 的稳定 Maven 源（「CDN」路径）。
  *
- * 默认目录：`~/.composekn/m2/<version>/`
+ * 默认目录：`~/.tetraploid/m2/<version>/`
  */
-object ComposeKnMavenCache {
+object TetraploidMavenCache {
     const val DEFAULT_OWNER = "TetraploidHuman"
     const val DEFAULT_REPO = "compose-multiplatform-kotlin-native"
 
     fun defaultCacheDir(version: String): File =
-        File(System.getProperty("user.home"), ".composekn/m2/$version")
+        File(System.getProperty("user.home"), ".tetraploid/m2/$version")
 
     fun isPopulated(dir: File): Boolean =
         File(dir, "com/tetraploid").isDirectory &&
             (
-                File(dir, ".composekn-complete").isFile ||
-                    File(dir, "com/tetraploid/composekn-build-logic").isDirectory
+                File(dir, ".tetraploid-complete").isFile ||
+                    File(dir, "com/tetraploid/tetraploid-build-logic").isDirectory
                 )
 
     /**
@@ -41,24 +41,24 @@ object ComposeKnMavenCache {
         log: (String) -> Unit = {},
     ): File? {
         if (isPopulated(dest)) {
-            log("ComposeKN maven cache hit: $dest")
+            log("Tetraploid maven cache hit: $dest")
             return dest
         }
         dest.parentFile?.mkdirs()
-        val asset = "composekn-maven-$version.zip"
+        val asset = "tetraploid-maven-$version.zip"
         val tag = "v$version"
         val staging = File(dest.parentFile, "${dest.name}.staging-${ProcessHandle.current().pid()}")
         return try {
-            log("ComposeKN: fetching $owner/$repo@$tag /$asset → $dest")
+            log("Tetraploid: fetching $owner/$repo@$tag /$asset → $dest")
             if (staging.exists()) staging.deleteRecursively()
             staging.mkdirs()
             val zipFile = File(staging, asset)
             downloadReleaseAsset(owner, repo, tag, asset, token, zipFile)
             unzip(zipFile, staging)
             zipFile.delete()
-            File(staging, ".composekn-complete").writeText(version)
+            File(staging, ".tetraploid-complete").writeText(version)
             if (!isPopulated(staging)) {
-                log("ComposeKN: unzipped but com/tetraploid missing under $staging")
+                log("Tetraploid: unzipped but com/tetraploid missing under $staging")
                 staging.deleteRecursively()
                 null
             } else {
@@ -68,11 +68,11 @@ object ComposeKnMavenCache {
                 } catch (_: Exception) {
                     Files.move(staging.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 }
-                log("ComposeKN maven cache ready: $dest")
+                log("Tetraploid maven cache ready: $dest")
                 dest
             }
         } catch (e: Exception) {
-            log("ComposeKN: auto-fetch failed (${e.message})")
+            log("Tetraploid: auto-fetch failed (${e.message})")
             runCatching { staging.deleteRecursively() }
             null
         }
@@ -172,7 +172,7 @@ object ComposeKnMavenCache {
         conn.instanceFollowRedirects = true
         conn.connectTimeout = 30_000
         conn.readTimeout = 600_000
-        conn.setRequestProperty("User-Agent", "ComposeKN-MavenCache")
+        conn.setRequestProperty("User-Agent", "Tetraploid-MavenCache")
         if (accept != null) conn.setRequestProperty("Accept", accept)
         if (!token.isNullOrBlank()) {
             conn.setRequestProperty("Authorization", "Bearer $token")

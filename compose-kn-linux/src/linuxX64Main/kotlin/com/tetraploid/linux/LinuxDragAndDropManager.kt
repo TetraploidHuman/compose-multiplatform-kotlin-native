@@ -64,13 +64,13 @@ internal class LinuxDragAndDropManager(
         val files = transferData.files.takeIf { it.isNotEmpty() }
         val text = transferData.text?.takeIf { it.isNotEmpty() }
         if (files == null && text == null) {
-            println("composekn: drag Source 没有 files/text，跳过 start_drag")
+            println("tetraploid: drag Source 没有 files/text，跳过 start_drag")
             transferData.onTransferCompleted?.invoke(false)
             return false
         }
         val window = windowProvider()
         if (window == null) {
-            println("composekn: drag 窗口尚未就绪，无法 start_drag")
+            println("tetraploid: drag 窗口尚未就绪，无法 start_drag")
             transferData.onTransferCompleted?.invoke(false)
             return false
         }
@@ -90,7 +90,7 @@ internal class LinuxDragAndDropManager(
             ),
         )
         println(
-            "composekn: drag Source 已排队" +
+            "tetraploid: drag Source 已排队" +
                 if (icon.bgra != null) " (icon ${icon.width}x${icon.height})" else "",
         )
         LinuxApplicationHost.wake()
@@ -176,9 +176,9 @@ internal class LinuxDragAndDropManager(
                     activeOutgoing.add(
                         ActiveOutgoingDrag(pending.window, pending.onCompleted),
                     )
-                    println("composekn: drag start_drag 已发起")
+                    println("tetraploid: drag start_drag 已发起")
                 } else {
-                    println("composekn: drag start_drag 失败")
+                    println("tetraploid: drag start_drag 失败")
                     pending.onCompleted?.invoke(false)
                 }
             }
@@ -192,11 +192,11 @@ internal class LinuxDragAndDropManager(
                 when (val result = active.window.dragPollResult()) {
                     -1 -> still.add(active)
                     0 -> {
-                        println("composekn: drag Source 取消")
+                        println("tetraploid: drag Source 取消")
                         active.onCompleted?.invoke(false)
                     }
                     else -> {
-                        println("composekn: drag Source 成功 result=$result")
+                        println("tetraploid: drag Source 成功 result=$result")
                         active.onCompleted?.invoke(result > 0)
                     }
                 }

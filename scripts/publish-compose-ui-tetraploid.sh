@@ -2,16 +2,16 @@
 # 发布 com.tetraploid.compose:*（linuxX64 + mingwX64），依赖已发布的 com.tetraploid:skiko。
 # 平台 publication 之后合成根坐标并（有真 token 时）上传到 GitHub Packages。
 #
-#   GITHUB_TOKEN=… ./scripts/publish-compose-ui-composekn.sh
-#   COMPOSEKN_UI_LOCAL_ONLY=1 GITHUB_TOKEN=local-only ./scripts/publish-compose-ui-composekn.sh
+#   GITHUB_TOKEN=… ./scripts/publish-compose-ui-tetraploid.sh
+#   TETRAPLOID_UI_LOCAL_ONLY=1 GITHUB_TOKEN=local-only ./scripts/publish-compose-ui-tetraploid.sh
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CKN_VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="$(grep '^composekn.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="${UI_VER:-1.12.1-ckn.$CKN_VER}"
+CKN_VER="$(grep '^tetraploid.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="$(grep '^tetraploid.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="${UI_VER:-1.12.1-tp.$CKN_VER}"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 : "${GITHUB_ACTOR:=github}"
-LOCAL_ONLY="${COMPOSEKN_UI_LOCAL_ONLY:-0}"
+LOCAL_ONLY="${TETRAPLOID_UI_LOCAL_ONLY:-0}"
 if [ "$GITHUB_TOKEN" = "local-only" ]; then
   LOCAL_ONLY=1
 fi
@@ -33,8 +33,8 @@ MODULES=(
 TASKS=()
 for m in "${MODULES[@]}"; do
   TASKS+=(
-    ":$m:publishLinuxX64PublicationToComposeKnLocalRepository"
-    ":$m:publishMingwX64PublicationToComposeKnLocalRepository"
+    ":$m:publishLinuxX64PublicationToTetraploidLocalRepository"
+    ":$m:publishMingwX64PublicationToTetraploidLocalRepository"
   )
   if [ "$LOCAL_ONLY" != 1 ]; then
     TASKS+=(
@@ -49,12 +49,12 @@ cd "$REPO"
 ./gradlew -p vendor/compose-core \
   --init-script "$INIT" \
   --no-daemon \
-  -Pcomposekn.compose.standalone=true \
-  -Pcomposekn.usePublishedSkiko=true \
-  -Pcomposekn.publish.composeUi=true \
-  -Pcomposekn.version="$CKN_VER" \
-  -Pcomposekn.compose.ui.version="$UI_VER" \
-  -Pcomposekn.publish.skipMetadata=true \
+  -Ptetraploid.compose.standalone=true \
+  -Ptetraploid.usePublishedSkiko=true \
+  -Ptetraploid.publish.composeUi=true \
+  -Ptetraploid.version="$CKN_VER" \
+  -Ptetraploid.compose.ui.version="$UI_VER" \
+  -Ptetraploid.publish.skipMetadata=true \
   "${TASKS[@]}"
 
 info "Synthesize com.tetraploid.compose:* roots"

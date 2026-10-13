@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 构建并运行 ComposeKN Windows GPU 后端「阶段 0」冒烟测试。
+# 构建并运行 Tetraploid Windows GPU 后端「阶段 0」冒烟测试。
 #
 # 前置：先跑 build-skia-mingw-gl.sh 产出 out/mingw-gl/*.a（Ganesh + GL 版 Skia）。
 #
@@ -16,7 +16,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKIA="$WORK/skia"
 OUT_DIR="${SKIA_GL_OUT_DIR:-$SKIA/out/mingw-gl}"
 BUILD="$HERE/build"
-RUN="${COMPOSEKN_GL_SMOKE_DIR:-/tmp/composekn-gl-smoke}"
+RUN="${TETRAPLOID_GL_SMOKE_DIR:-/tmp/tetraploid-gl-smoke}"
 CXX="${MINGW_CXX:-x86_64-w64-mingw32-g++}"
 
 [ -d "$OUT_DIR" ] || { echo "!! 找不到 $OUT_DIR（先跑 build-skia-mingw-gl.sh）" >&2; exit 1; }
@@ -41,7 +41,7 @@ if [ "${1:-}" = "--no-run" ]; then
 fi
 
 cp -f "$BUILD/gl_smoke.exe" "$RUN/gl_smoke.exe"
-ICUDTL="$(ls /tmp/composekn-prebuilt/*/icudtl.dat 2>/dev/null | head -1)"
+ICUDTL="$(ls /tmp/tetraploid-prebuilt/*/icudtl.dat 2>/dev/null | head -1)"
 [ -n "$ICUDTL" ] && cp -f "$ICUDTL" "$RUN/icudtl.dat"
 
 if [ -n "${DISPLAY:-}" ]; then

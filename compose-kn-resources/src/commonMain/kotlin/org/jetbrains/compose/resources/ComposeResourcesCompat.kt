@@ -12,59 +12,59 @@ package org.jetbrains.compose.resources
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.tetraploid.resources.DrawableResource as ComposeKnDrawableResource
-import com.tetraploid.resources.Font as ComposeKnFont
-import com.tetraploid.resources.FontFromFile as ComposeKnFontFromFile
-import com.tetraploid.resources.FontResource as ComposeKnFontResource
-import com.tetraploid.resources.StringResource as ComposeKnStringResource
-import com.tetraploid.resources.drawableResource as composeKnDrawableResource
-import com.tetraploid.resources.fontFamilyOf as composeKnFontFamilyOf
-import com.tetraploid.resources.fontResource as composeKnFontResource
-import com.tetraploid.resources.loadDrawableBytes as composeKnLoadDrawableBytes
-import com.tetraploid.resources.stringResource as composeKnStringResourceFactory
+import com.tetraploid.resources.DrawableResource as TetraploidDrawableResource
+import com.tetraploid.resources.Font as TetraploidFont
+import com.tetraploid.resources.FontFromFile as TetraploidFontFromFile
+import com.tetraploid.resources.FontResource as TetraploidFontResource
+import com.tetraploid.resources.StringResource as TetraploidStringResource
+import com.tetraploid.resources.drawableResource as tetraploidDrawableResource
+import com.tetraploid.resources.fontFamilyOf as tetraploidFontFamilyOf
+import com.tetraploid.resources.fontResource as tetraploidFontResource
+import com.tetraploid.resources.loadDrawableBytes as tetraploidLoadDrawableBytes
+import com.tetraploid.resources.stringResource as tetraploidStringResourceFactory
 
-typealias FontResource = ComposeKnFontResource
-typealias StringResource = ComposeKnStringResource
-typealias DrawableResource = ComposeKnDrawableResource
+typealias FontResource = TetraploidFontResource
+typealias StringResource = TetraploidStringResource
+typealias DrawableResource = TetraploidDrawableResource
 
 fun fontResource(
     identity: String,
     relativePath: String,
     developmentPath: String? = null,
-): FontResource = composeKnFontResource(identity, relativePath, developmentPath)
+): FontResource = tetraploidFontResource(identity, relativePath, developmentPath)
 
 fun stringResource(
     identity: String,
     relativePath: String,
     defaultValue: String,
     developmentPath: String? = null,
-): StringResource = composeKnStringResourceFactory(identity, relativePath, defaultValue, developmentPath)
+): StringResource = tetraploidStringResourceFactory(identity, relativePath, defaultValue, developmentPath)
 
 /** 读取字符串（当前 = 生成期 defaultValue）。 */
 fun stringResource(resource: StringResource): String =
-    composeKnStringResourceFactory(resource)
+    tetraploidStringResourceFactory(resource)
 
 fun drawableResource(
     identity: String,
     relativePath: String,
     developmentPath: String? = null,
-): DrawableResource = composeKnDrawableResource(identity, relativePath, developmentPath)
+): DrawableResource = tetraploidDrawableResource(identity, relativePath, developmentPath)
 
 fun loadDrawableBytes(resource: DrawableResource): ByteArray? =
-    composeKnLoadDrawableBytes(resource)
+    tetraploidLoadDrawableBytes(resource)
 
 fun Font(
     resource: FontResource,
     weight: FontWeight = FontWeight.Normal,
     style: FontStyle = FontStyle.Normal,
-): Font = ComposeKnFont(resource, weight, style)
+): Font = TetraploidFont(resource, weight, style)
 
 fun Font(
     identity: String,
     bytes: ByteArray,
     weight: FontWeight = FontWeight.Normal,
     style: FontStyle = FontStyle.Normal,
-): Font = ComposeKnFont(identity, bytes, weight, style)
+): Font = TetraploidFont(identity, bytes, weight, style)
 
 fun FontFromFile(
     path: String,
@@ -72,6 +72,6 @@ fun FontFromFile(
         .substringBeforeLast('.'),
     weight: FontWeight = FontWeight.Normal,
     style: FontStyle = FontStyle.Normal,
-): Font = ComposeKnFontFromFile(path, identity, weight, style)
+): Font = TetraploidFontFromFile(path, identity, weight, style)
 
-fun fontFamilyOf(vararg fonts: Font) = composeKnFontFamilyOf(*fonts)
+fun fontFamilyOf(vararg fonts: Font) = tetraploidFontFamilyOf(*fonts)

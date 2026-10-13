@@ -1,6 +1,6 @@
 /*
  * Copyright 2021 The Android Open Source Project
- * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
+ * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
  *
  * 声明式 DialogWindow：独立原生窗 + 软模态（对齐 Desktop DocumentModal 语义的子集）。
  */

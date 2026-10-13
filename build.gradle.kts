@@ -6,7 +6,7 @@ plugins {
 }
 
 tasks.register("linkLinuxX64Stable") {
-    group = "composekn"
+    group = "tetraploid"
     description = "Link all linuxX64 release executables (konanc shutdown-crash workaround)."
     dependsOn(
         ":samples:link-smoke:linkReleaseExecutableLinuxX64Stable",
@@ -16,7 +16,7 @@ tasks.register("linkLinuxX64Stable") {
 }
 
 tasks.register("linkWindowsX64Stable") {
-    group = "composekn"
+    group = "tetraploid"
     description = "Link all windowsX64 release executables."
     dependsOn(
         ":samples:windows-demo:linkReleaseExecutableWindowsX64",

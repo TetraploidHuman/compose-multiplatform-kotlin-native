@@ -20,32 +20,32 @@ import org.jetbrains.skiko.initLinuxMainThread
  * `androidx.compose.ui.window.application { Window(...) }` 调用。
  *
  * 幂等；[LinuxComposeApplication] 构造时也会自动调用。
- * 依赖本模块时，[installComposeKnLinuxAutoRegister] 会把自动登记挂到 Registry。
+ * 依赖本模块时，[installTetraploidLinuxAutoRegister] 会把自动登记挂到 Registry。
  */
-fun registerComposeKnLinuxBackend() {
+fun registerTetraploidLinuxBackend() {
     // Skiko UI 主线程标记（幂等）；消费者不必再手写 initLinuxMainThread()
     initLinuxMainThread()
     if (ComposeNativeWindowBackendRegistry.backend != null) return
     ComposeNativeWindowBackendRegistry.register(LinuxComposeNativeBackend)
-    println("composekn: backend ComposeNativeWindowBackend registered (Linux/Wayland)")
+    println("tetraploid: backend ComposeNativeWindowBackend registered (Linux/Wayland)")
 }
 
 /** 供 Application.init / 测试调用的别名。 */
-internal fun ensureLinuxComposeBackendRegistered() = registerComposeKnLinuxBackend()
+internal fun ensureLinuxComposeBackendRegistered() = registerTetraploidLinuxBackend()
 
 /**
  * 挂到 [ComposeNativeWindowBackendRegistry.autoRegister]，使 `application { }` 无需手写 register。
  * 由宿主插件生成的 bootstrap / 本文件顶层初始化调用。
  */
-fun installComposeKnLinuxAutoRegister() {
-    ComposeNativeWindowBackendRegistry.autoRegister = { registerComposeKnLinuxBackend() }
+fun installTetraploidLinuxAutoRegister() {
+    ComposeNativeWindowBackendRegistry.autoRegister = { registerTetraploidLinuxBackend() }
 }
 
 // 只要本 klib 被链接且本文件进最终二进制，application 即可自动登记。
 // （宿主插件还会生成显式 bootstrap，防止 DCE 掉未引用符号。）
 @Suppress("unused")
-private val composeKnLinuxAutoRegisterInstall: Boolean = run {
-    installComposeKnLinuxAutoRegister()
+private val tetraploidLinuxAutoRegisterInstall: Boolean = run {
+    installTetraploidLinuxAutoRegister()
     true
 }
 
@@ -141,7 +141,7 @@ class LinuxNativeWindowHandle(
         if (alwaysOnTop && !accepted && !alwaysOnTopLogged) {
             alwaysOnTopLogged = true
             println(
-                "composekn: alwaysOnTop is unsupported on standard xdg-shell " +
+                "tetraploid: alwaysOnTop is unsupported on standard xdg-shell " +
                     "(requested=$alwaysOnTop; flag stored only)",
             )
         }
@@ -180,7 +180,7 @@ class LinuxNativeWindowHandle(
                 if (!absolutePositionLogged) {
                     absolutePositionLogged = true
                     println(
-                        "composekn: WindowPosition.Absolute is a no-op on Wayland " +
+                        "tetraploid: WindowPosition.Absolute is a no-op on Wayland " +
                             "(compositor owns placement; requested " +
                             "${position.x.value.toInt()},${position.y.value.toInt()})",
                     )
@@ -189,7 +189,7 @@ class LinuxNativeWindowHandle(
             is WindowPosition.Aligned -> {
                 if (!LinuxApplicationHost.placeAligned(app.composeWindow)) {
                     println(
-                        "composekn: WindowPosition.Aligned has no anchor yet " +
+                        "tetraploid: WindowPosition.Aligned has no anchor yet " +
                             "(will rely on compositor default)",
                     )
                 }

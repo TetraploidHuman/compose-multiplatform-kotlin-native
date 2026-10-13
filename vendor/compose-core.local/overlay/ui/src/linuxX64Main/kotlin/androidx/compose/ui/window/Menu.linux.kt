@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
+ * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
  *
  * Win32 原生 HMENU 菜单栏（FrameWindowScope.MenuBar）。
  * 策略：composition 用稳定 slot 收集树 → SideEffect rebuild-on-change → SetMenu。

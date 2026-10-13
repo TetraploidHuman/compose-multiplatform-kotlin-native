@@ -7,7 +7,7 @@ import org.jetbrains.skiko.Win32Event
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import org.jetbrains.skiko.ClipboardImage
-import org.jetbrains.skiko.ComposeKNFileDialog
+import org.jetbrains.skiko.TetraploidFileDialog
 import org.jetbrains.skiko.Win32HitTest
 import org.jetbrains.skiko.Win32Menu
 import org.jetbrains.skiko.Win32Window
@@ -921,9 +921,9 @@ class WindowsComposeWindow(
         initialFileName: String? = null,
         multiple: Boolean = false,
         filters: List<FileDialogFilter> = emptyList(),
-    ): List<String> = ComposeKNFileDialog.show(
+    ): List<String> = TetraploidFileDialog.show(
         ownerPlatform = this,
-        mode = ComposeKNFileDialog.MODE_LOAD,
+        mode = TetraploidFileDialog.MODE_LOAD,
         title = title,
         initialDirectory = initialDirectory,
         initialFileName = initialFileName,
@@ -941,9 +941,9 @@ class WindowsComposeWindow(
         initialDirectory: String? = null,
         initialFileName: String? = null,
         filters: List<FileDialogFilter> = emptyList(),
-    ): String? = ComposeKNFileDialog.show(
+    ): String? = TetraploidFileDialog.show(
         ownerPlatform = this,
-        mode = ComposeKNFileDialog.MODE_SAVE,
+        mode = TetraploidFileDialog.MODE_SAVE,
         title = title,
         initialDirectory = initialDirectory,
         initialFileName = initialFileName,
@@ -1104,5 +1104,5 @@ fun drawHelloFrame(canvas: Canvas, width: Int, height: Int) {
     canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(40f, 40f, width.toFloat() - 80f, height.toFloat() - 80f), paint)
     val font = org.jetbrains.skia.Font(null, 28f)
     val textPaint = org.jetbrains.skia.Paint().apply { color = org.jetbrains.skia.Color.WHITE }
-    canvas.drawString("ComposeKN / Windows", 60f, 100f, font, textPaint)
+    canvas.drawString("Tetraploid / Windows", 60f, 100f, font, textPaint)
 }

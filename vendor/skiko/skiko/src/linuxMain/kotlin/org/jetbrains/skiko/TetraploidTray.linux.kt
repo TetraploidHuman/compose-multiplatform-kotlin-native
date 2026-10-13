@@ -27,7 +27,7 @@ class TrayMenuItem(
     val children: List<TrayMenuItem> = emptyList(),
 )
 
-object ComposeKNTray {
+object TetraploidTray {
     private var created = false
     private var onAction: (() -> Unit)? = null
     private val menuClickMap = mutableMapOf<Int, () -> Unit>()
@@ -46,7 +46,7 @@ object ComposeKNTray {
             // 无 dbus 时仍允许 notify-send 通道。
             created = notifySendPath() != null
             if (!created) {
-                println("ComposeKNTray: linux tray create failed")
+                println("TetraploidTray: linux tray create failed")
             }
             return
         }
@@ -147,7 +147,7 @@ object ComposeKNTray {
             }
         } catch (t: Throwable) {
             println(
-                "ComposeKNTray: callback kind=$kind arg=$arg " +
+                "TetraploidTray: callback kind=$kind arg=$arg " +
                     "${t::class.simpleName}: ${t.message}",
             )
         }
@@ -210,7 +210,7 @@ internal external fun composekn_linux_tray_destroy()
 
 private val trayCallback =
     staticCFunction<Int, Int, COpaquePointer?, Unit> { kind, arg, _ ->
-        ComposeKNTray.dispatchCallback(kind, arg)
+        TetraploidTray.dispatchCallback(kind, arg)
     }
 
 private inline fun <R> String.useCString(block: (CPointer<ByteVar>) -> R): R {

@@ -17,18 +17,18 @@ import org.gradle.api.Project
  * settings 侧配合 `id("com.tetraploid")`（或 `com.tetraploid.settings`）。
  * 本仓库内开发时自动 `project()` 依赖宿主；外部 Maven 消费则走坐标。
  */
-class ComposeKnAppPlugin : Plugin<Project> {
+class TetraploidAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("com.tetraploid.host")
         project.pluginManager.apply("com.tetraploid.resources")
 
-        val inComposeKnRepo =
+        val inTetraploidRepo =
             project.rootProject.findProject(":compose-kn-linux") != null
-        project.extensions.configure(ComposeKnHostExtension::class.java) {
-            useProjectDependencies.convention(inComposeKnRepo)
-            val ver = project.findProperty("composekn.version")?.toString()
+        project.extensions.configure(TetraploidHostExtension::class.java) {
+            useProjectDependencies.convention(inTetraploidRepo)
+            val ver = project.findProperty("tetraploid.version")?.toString()
             if (!ver.isNullOrBlank()) {
-                composeknVersion.convention(ver)
+                tetraploidVersion.convention(ver)
             }
         }
     }

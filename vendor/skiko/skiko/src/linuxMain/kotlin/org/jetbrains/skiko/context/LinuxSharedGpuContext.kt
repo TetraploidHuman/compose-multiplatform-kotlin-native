@@ -19,7 +19,7 @@ internal object LinuxSharedGpuContext {
             val ptr = composekn_create_egl_direct_context()
             if (ptr == NullPointer) return null
             context = DirectContext(ptr)
-            println("composekn: shared Skia GrDirectContext acquired")
+            println("tetraploid: shared Skia GrDirectContext acquired")
         }
         refCount++
         return context
@@ -30,7 +30,7 @@ internal object LinuxSharedGpuContext {
         if (refCount == 0) {
             context?.close()
             context = null
-            println("composekn: shared Skia GrDirectContext released")
+            println("tetraploid: shared Skia GrDirectContext released")
         }
     }
 }

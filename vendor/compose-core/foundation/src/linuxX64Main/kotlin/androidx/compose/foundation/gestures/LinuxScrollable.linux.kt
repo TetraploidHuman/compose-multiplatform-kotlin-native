@@ -25,7 +25,7 @@ import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.hostOs
 
 // ============================================================================
-// ComposeKN 本地改动（对应上游的 LinuxScrollable.linux.kt）
+// Tetraploid 本地改动（对应上游的 LinuxScrollable.linux.kt）
 //
 // 上游/先前版本：`calculateMouseWheelScroll` 直接返回 `Offset.Zero`。
 // 而 `MouseWheelScrollingLogic.onMouseWheel` 拿到 0 会走
@@ -34,14 +34,14 @@ import org.jetbrains.skiko.hostOs
 // scrollbar …）在 K/N 原生后端上完全不响应鼠标滚轮。
 //
 // mingwX64（Windows 原生）复用 linuxX64Main 这份源集，所以两个平台一起中招。
-// 由 ComposeKN 自检发现：离屏 `interaction/wheel-scroll-state/pixels` 与
+// 由 Tetraploid 自检发现：离屏 `interaction/wheel-scroll-state/pixels` 与
 // 真实窗口 `window/wheel-scroll`（见 HANDOVER §14）。
 //
 // 事件侧约定（两个平台的 mapper 都遵守）：`PointerEvent.scrollDelta` 的
 // **正数 = 向下滚**（`canConsumeDelta(delta > 0) == canScrollForward`，
 // 即 ScrollState.value 增大）：
 //   - Windows：WM_MOUSEWHEEL 的 delta/120 是「格数」，正数 = 滚轮向上；
-//     ComposeKN 的 mapper 取负后得到「正 = 向下」。
+//     Tetraploid 的 mapper 取负后得到「正 = 向下」。
 //     每格滚动量沿用上游 Windows 桌面版公式：视口高度 / 20。
 //   - Linux/Wayland：wl_pointer.axis 的 value 已经是 surface-local 像素
 //     （mapper 乘过 contentScale），直接透传。

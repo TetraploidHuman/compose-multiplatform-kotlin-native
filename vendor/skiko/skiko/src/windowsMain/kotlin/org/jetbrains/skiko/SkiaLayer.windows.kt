@@ -27,7 +27,7 @@ actual open class SkiaLayer {
      * - [GraphicsApi.SOFTWARE_FAST] / [GraphicsApi.SOFTWARE_COMPAT]：CPU raster + GDI
      *   （对齐上游 SOFTWARE_FAST 形状，见 WindowsSoftwareContextHandler）。
      *
-     * 环境变量 `COMPOSEKN_RENDER_API=vulkan|gl|software` 可强制指定（CI / 排查用）。
+     * 环境变量 `TETRAPLOID_RENDER_API=vulkan|gl|software` 可强制指定（CI / 排查用）。
      */
     actual var renderApi: GraphicsApi = defaultWindowsRenderApi()
         set(value) {
@@ -147,7 +147,7 @@ actual open class SkiaLayer {
         get() = redrawer?.renderInfo?.trim()?.replace('\n', ';') ?: "n/a"
 
     /**
-     * 建后端：默认 Graphite/Vulkan → GL → 软件；可用 `COMPOSEKN_RENDER_API` 强制。
+     * 建后端：默认 Graphite/Vulkan → GL → 软件；可用 `TETRAPLOID_RENDER_API` 强制。
      */
     private fun createRedrawer(window: Win32Window): Redrawer {
         val requested = windowsRenderApiOverride() ?: renderApi
@@ -253,17 +253,17 @@ private val cachedWindowsPixelGeometry: PixelGeometry by lazy {
 internal fun windowsPixelGeometry(): PixelGeometry = cachedWindowsPixelGeometry
 
 /**
- * `COMPOSEKN_RENDER_API=vulkan|vk|graphite|gl|opengl|software|sw|gdi`：强制指定后端。
+ * `TETRAPLOID_RENDER_API=vulkan|vk|graphite|gl|opengl|software|sw|gdi`：强制指定后端。
  * 未设置时返回 null，表示按 [SkiaLayer.renderApi] 走默认逻辑。
  */
 private fun windowsRenderApiOverride(): GraphicsApi? {
-    val raw = platform.posix.getenv("COMPOSEKN_RENDER_API")?.toKString()?.trim()?.lowercase() ?: return null
+    val raw = platform.posix.getenv("TETRAPLOID_RENDER_API")?.toKString()?.trim()?.lowercase() ?: return null
     return when (raw) {
         "vulkan", "vk", "graphite", "graphite-vk" -> GraphicsApi.VULKAN
         "gl", "opengl", "gpu" -> GraphicsApi.OPENGL
         "software", "sw", "gdi", "cpu" -> GraphicsApi.SOFTWARE_FAST
         else -> {
-            win32Log("skialayer: 无法识别的 COMPOSEKN_RENDER_API=$raw（按默认处理）")
+            win32Log("skialayer: 无法识别的 TETRAPLOID_RENDER_API=$raw（按默认处理）")
             null
         }
     }
@@ -271,6 +271,6 @@ private fun windowsRenderApiOverride(): GraphicsApi? {
 
 /**
  * 默认后端 = Graphite/Vulkan，失败回退 GL，再失败回退软件。
- * 强制指定：`COMPOSEKN_RENDER_API=vulkan|gl|software`。
+ * 强制指定：`TETRAPLOID_RENDER_API=vulkan|gl|software`。
  */
 private fun defaultWindowsRenderApi(): GraphicsApi = GraphicsApi.VULKAN

@@ -1,10 +1,10 @@
 package com.tetraploid.resources
 
 /**
- * 解析并读取 ComposeKN 资源字节。
+ * 解析并读取 Tetraploid 资源字节。
  *
  * 查找顺序：
- * 1. `COMPOSEKN_RESOURCES` 环境变量（目录）+ relativePath
+ * 1. `TETRAPLOID_RESOURCES` 环境变量（目录）+ relativePath
  * 2. `<exeDir>/composeResources/` + relativePath
  * 3. `<exeDir>/` + relativePath
  * 4. `<exeDir>/fonts/` + fileName（仅 font/ 前缀时）
@@ -42,7 +42,7 @@ object ResourceLoads {
     fun readFile(path: String): ByteArray? = readFileBytes(path)
 
     private fun environResourceRoot(): String? =
-        getenv("COMPOSEKN_RESOURCES")?.trim()?.takeIf { it.isNotEmpty() }
+        getenv("TETRAPLOID_RESOURCES")?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun join(first: String, vararg parts: String): String {
         var out = first.trimEnd('/', '\\')

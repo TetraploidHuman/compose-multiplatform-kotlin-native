@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.tetraploid"
-version = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
+version = providers.gradleProperty("tetraploid.version").orElse("0.5.68").get()
 
 dependencies {
     implementation(gradleApi())
     // Must be implementation (not compileOnly): Maven consumers load host/resources plugins
-    // in an isolated classloader; decorating ComposeKnHostPlugin needs KMP types on that path.
+    // in an isolated classloader; decorating TetraploidHostPlugin needs KMP types on that path.
     // includeBuild hid this because the composite classpath already had KGP.
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
     testImplementation(kotlin("test"))
@@ -33,30 +33,30 @@ gradlePlugin {
             id = "com.tetraploid.windows-native-linker"
             implementationClass = "com.tetraploid.gradle.WindowsNativeLinkerPlugin"
         }
-        create("composeKnResources") {
+        create("tetraploidResources") {
             id = "com.tetraploid.resources"
-            implementationClass = "com.tetraploid.gradle.ComposeKnResourcesPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidResourcesPlugin"
         }
-        create("composeKnHost") {
+        create("tetraploidHost") {
             id = "com.tetraploid.host"
-            implementationClass = "com.tetraploid.gradle.ComposeKnHostPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidHostPlugin"
         }
-        create("composeKnApp") {
+        create("tetraploidApp") {
             id = "com.tetraploid.app"
-            implementationClass = "com.tetraploid.gradle.ComposeKnAppPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidAppPlugin"
         }
-        create("composeKnPublish") {
+        create("tetraploidPublish") {
             id = "com.tetraploid.publish"
-            implementationClass = "com.tetraploid.gradle.ComposeKnPublishPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidPublishPlugin"
         }
-        create("composeKnSettings") {
+        create("tetraploidSettings") {
             id = "com.tetraploid.settings"
-            implementationClass = "com.tetraploid.gradle.ComposeKnSettingsPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidSettingsPlugin"
         }
         // 统一入口：与 settings 同一实现（坐标替换 + Release 缓存）
-        create("composeKn") {
+        create("tetraploid") {
             id = "com.tetraploid"
-            implementationClass = "com.tetraploid.gradle.ComposeKnSettingsPlugin"
+            implementationClass = "com.tetraploid.gradle.TetraploidSettingsPlugin"
         }
     }
 }
@@ -64,11 +64,11 @@ gradlePlugin {
 publishing {
     repositories {
         maven {
-            name = "ComposeKnLocal"
+            name = "TetraploidLocal"
             url = uri(rootProject.layout.projectDirectory.dir("../build/maven-repo"))
         }
         val ghToken = System.getenv("GITHUB_TOKEN")
-        val wantGh = providers.gradleProperty("composekn.publish.github").orNull == "true"
+        val wantGh = providers.gradleProperty("tetraploid.publish.github").orNull == "true"
         if (wantGh && !ghToken.isNullOrBlank()) {
             val owner = System.getenv("GITHUB_REPOSITORY_OWNER") ?: "TetraploidHuman"
             val repo = System.getenv("GITHUB_REPOSITORY")?.substringAfter('/')

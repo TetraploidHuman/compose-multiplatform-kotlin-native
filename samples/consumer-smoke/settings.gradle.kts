@@ -1,14 +1,14 @@
 pluginManagement {
-    val localMaven = providers.gradleProperty("composekn.maven.local")
-        .orElse(providers.environmentVariable("COMPOSEKN_MAVEN_LOCAL"))
+    val localMaven = providers.gradleProperty("tetraploid.maven.local")
+        .orElse(providers.environmentVariable("TETRAPLOID_MAVEN_LOCAL"))
         .orNull
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
+    val tpVer = providers.gradleProperty("tetraploid.version").orElse("0.5.68").get()
     // 与 settings 插件默认缓存一致；首次需已 fetch 或指向 local，才能解析插件 JAR
     val cacheMaven = java.io.File(
         System.getProperty("user.home"),
-        ".composekn/m2/$cknVer",
+        ".tetraploid/m2/$tpVer",
     )
     repositories {
         if (localMaven != null) {
@@ -23,7 +23,7 @@ pluginManagement {
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id.startsWith("com.tetraploid")) {
-                useVersion(cknVer)
+                useVersion(tpVer)
             }
         }
     }

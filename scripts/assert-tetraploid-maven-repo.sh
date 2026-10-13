@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # 校验 maven-repo 是否具备消费所需的最小集合（合成根 + 关键平台 klib）。
 #
-#   ./scripts/assert-composekn-maven-repo.sh [maven-repo-root]
+#   ./scripts/assert-tetraploid-maven-repo.sh [maven-repo-root]
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 M2="${1:-$REPO/build/maven-repo}"
-VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="$(grep '^composekn.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="${UI_VER:-1.12.1-ckn.$VER}"
+VER="$(grep '^tetraploid.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="$(grep '^tetraploid.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="${UI_VER:-1.12.1-tp.$VER}"
 
 die() { printf '\033[31m!!\033[0m %s\n' "$1" >&2; exit 1; }
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
@@ -41,13 +41,13 @@ need_file "$M2/com/tetraploid/compose/foundation-linuxx64/$UI_VER/foundation-lin
 need_file "$M2/com/tetraploid/compose/material3-linuxx64/$UI_VER/material3-linuxx64-$UI_VER.klib"
 
 # plugins + catalog
-need_dir "$M2/com/tetraploid/composekn-catalog/$VER"
-need_file "$M2/com/tetraploid/composekn-catalog/$VER/composekn-catalog-$VER.toml"
+need_dir "$M2/com/tetraploid/tetraploid-catalog/$VER"
+need_file "$M2/com/tetraploid/tetraploid-catalog/$VER/tetraploid-catalog-$VER.toml"
 need_dir "$M2/com/tetraploid/settings/com.tetraploid.settings.gradle.plugin/$VER"
 need_dir "$M2/com/tetraploid/host/com.tetraploid.host.gradle.plugin/$VER"
 need_dir "$M2/com/tetraploid/com.tetraploid.gradle.plugin/$VER"
 need_dir "$M2/com/tetraploid/app/com.tetraploid.app.gradle.plugin/$VER"
-need_file "$M2/com/tetraploid/composekn-build-logic/$VER/composekn-build-logic-$VER.jar"
+need_file "$M2/com/tetraploid/tetraploid-build-logic/$VER/tetraploid-build-logic-$VER.jar"
 
 KLIB_N="$(find "$M2" -name '*.klib' | wc -l | tr -d ' ')"
 # hosts(4) + skiko(2+cinterop?) + UI(~28) ≈ 34+；下限保守取 30

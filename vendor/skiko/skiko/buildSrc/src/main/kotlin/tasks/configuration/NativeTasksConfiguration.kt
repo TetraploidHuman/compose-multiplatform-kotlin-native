@@ -212,14 +212,14 @@ fun SkikoProjectContext.compileNativeBridgesTask(
 
 /**
  * 把 `src/linuxMain/cinterop/composekn_wayland.def` 里的相对路径（相对 module 根）
- * 解析成绝对路径，写到 `build/composekn-wayland/` 下。
+ * 解析成绝对路径，写到 `build/tetraploid-wayland/` 下。
  *
  * 背景见调用处：绝对路径不能进仓库，但 cinterop 解析 `headers =` 时又是按
  * **进程工作目录**（不是 .def 所在目录）来的，所以在构建期做这一次解析最稳。
  */
 private fun resolveWaylandDefFile(project: Project): File {
     val template = project.projectDir.resolve("src/linuxMain/cinterop/composekn_wayland.def")
-    val out = project.layout.buildDirectory.file("composekn-wayland/composekn_wayland.def").get().asFile
+    val out = project.layout.buildDirectory.file("tetraploid-wayland/composekn_wayland.def").get().asFile
     out.parentFile.mkdirs()
     // konanc 的 ld.lld 不认 nix 的 LIBRARY_PATH；把 pkg-config 的 -L/-l 写进 .def。
     val dbusLibs = try {
@@ -313,7 +313,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
 
     val skiaBinDir = "$skiaDir/out/${buildType.id}-$targetString"
     val resolvedBinaryInputs = resolveBinaryInputs(os, arch, TargetEnv.NATIVE, skiaBinDir)
-    // ComposeKN: allow swapping the shipped MSVC-ABI Skia .lib files for a
+    // Tetraploid: allow swapping the shipped MSVC-ABI Skia .lib files for a
     // GNU-ABI (MinGW) Skia build produced by
     // vendor/skiko/skia-mingw/build-skia-mingw.sh. Kotlin/Native's mingwX64
     // backend links with the GNU ABI, so the MSVC archives cannot be used.
@@ -325,7 +325,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
             mingwSkiaDir?.let { dir ->
                 val files = File(dir).listFiles { f: File -> f.isFile && f.name.endsWith(".a") } ?: emptyArray()
                 files.map { it.absolutePath }.sorted().also {
-                    println("ComposeKN: embedding ${it.size} MinGW Skia archives from $dir")
+                    println("Tetraploid: embedding ${it.size} MinGW Skia archives from $dir")
                 }
             }
         } else {
@@ -390,7 +390,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
         OS.Linux -> {
             // Configure cinterop with the original .def file that includes headers and compilerOpts
             //
-            // ComposeKN: 仓库里的 .def 用的是**相对 module 根**的路径，不能把开发机的
+            // Tetraploid: 仓库里的 .def 用的是**相对 module 根**的路径，不能把开发机的
             // 绝对路径提交进去（CI 在别的目录 checkout 后，cinterop 会报
             //   wayland_bridge.h file not found
             // 而且这个错只在 CI 上出现，本地永远是绿的）。这里把相对路径解析成
@@ -422,7 +422,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
         }
         OS.Windows -> {
             val options = mutableListOf<String>()
-            // ComposeKN: when `skiko.skia.mingw.dir` is set, link the GNU-ABI
+            // Tetraploid: when `skiko.skia.mingw.dir` is set, link the GNU-ABI
             // (MinGW/Itanium-mangling) Skia archives built from source by
             // vendor/skiko/skia-mingw/build-skia-mingw.sh instead of the
             // MSVC-ABI .lib files shipped with skiko. Kotlin/Native's mingwX64
@@ -433,7 +433,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
                 val archives = (dir.listFiles { f: File -> f.isFile && f.name.endsWith(".a") } ?: emptyArray())
                     .map { it.absolutePath }
                     .sorted()
-                println("ComposeKN: linking ${archives.size} MinGW Skia archives from $mingwSkiaDir")
+                println("Tetraploid: linking ${archives.size} MinGW Skia archives from $mingwSkiaDir")
                 options.add("-Wl,--start-group")
                 options.addAll(archives)
                 options.add("-Wl,--end-group")
@@ -545,7 +545,7 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
     target.compilations.all {
         compileTaskProvider.configure {
             dependsOn(hideSkiaSymbols)
-            // ComposeKN: `-include-binary <file>` 是当成**字符串**塞进 freeCompilerArgs 的，
+            // Tetraploid: `-include-binary <file>` 是当成**字符串**塞进 freeCompilerArgs 的，
             // KGP 因此不会跟踪那些文件的内容 —— 于是 nativeBridges 归档（我们的 C++ 桥接，
             // 见 CompileSkikoCppTask）重建之后，compileKotlin 仍被判成 UP-TO-DATE：
             // klib 里嵌的还是**旧归档**，连带 linkReleaseExecutable 也 UP-TO-DATE，

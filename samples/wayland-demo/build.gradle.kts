@@ -7,7 +7,7 @@ plugins {
 
 val lumicodeFonts = file("../../../LumiCodeNext/composeApp/src/commonMain/composeResources/font")
 
-composeKnResources {
+tetraploidResources {
     packageOfResClass("main.resources")
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }

@@ -32,7 +32,7 @@ class KonanLinkWorkaroundPlugin : Plugin<Project> {
             if (project.tasks.findByName(stableName) != null) continue
 
             project.tasks.register(stableName) {
-                group = "composekn"
+                group = "tetraploid"
                 description =
                     "Links ${linkTask.name} in an isolated Gradle process and ignores konanc host-JVM shutdown crash when the .kexe exists."
                 dependsOn(linkTask.binary.compilation.compileTaskProvider)
@@ -55,7 +55,7 @@ class KonanLinkWorkaroundPlugin : Plugin<Project> {
 
     private fun runLinkInSubprocess(project: Project, linkTask: KotlinNativeLink, output: File) {
         val gradlew = project.rootProject.file("gradlew")
-        val logDir = project.rootProject.layout.buildDirectory.dir("composekn-link-logs").get().asFile
+        val logDir = project.rootProject.layout.buildDirectory.dir("tetraploid-link-logs").get().asFile
         logDir.mkdirs()
         val logFile = File(logDir, "${linkTask.path.replace(':', '-')}.log")
         val javaHome = resolveJavaHome()
@@ -63,7 +63,7 @@ class KonanLinkWorkaroundPlugin : Plugin<Project> {
         var lastExit = 1
         repeat(MAX_LINK_ATTEMPTS) { attempt ->
             project.logger.lifecycle(
-                "ComposeKN: linking ${linkTask.path} (attempt ${attempt + 1}/$MAX_LINK_ATTEMPTS, log: $logFile)"
+                "Tetraploid: linking ${linkTask.path} (attempt ${attempt + 1}/$MAX_LINK_ATTEMPTS, log: $logFile)"
             )
             logFile.appendText("\n=== attempt ${attempt + 1} ===\n")
             val pb = ProcessBuilder(
@@ -78,7 +78,7 @@ class KonanLinkWorkaroundPlugin : Plugin<Project> {
             val env = pb.environment()
             if (javaHome != null) {
                 env["JAVA_HOME"] = javaHome
-                env["COMPOSEKN_JAVA_HOME"] = javaHome
+                env["TETRAPLOID_JAVA_HOME"] = javaHome
                 env["PATH"] = "${File(javaHome, "bin")}:${env["PATH"] ?: ""}"
                 env["ORG_GRADLE_JAVA_HOME"] = javaHome
             }
@@ -110,7 +110,7 @@ class KonanLinkWorkaroundPlugin : Plugin<Project> {
     }
 
     private fun resolveJavaHome(): String? {
-        System.getenv("COMPOSEKN_JAVA_HOME")?.takeIf { File(it, "bin/java").exists() }?.let { return it }
+        System.getenv("TETRAPLOID_JAVA_HOME")?.takeIf { File(it, "bin/java").exists() }?.let { return it }
         "/tmp/temurin21".takeIf { File(it, "bin/java").exists() }?.let { return it }
         return System.getenv("JAVA_HOME")?.takeIf { File(it, "bin/java").exists() }
     }

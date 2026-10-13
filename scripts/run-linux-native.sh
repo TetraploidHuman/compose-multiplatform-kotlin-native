@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run a ComposeKN linuxX64 .kexe with Wayland/EGL/GL shared libraries (NixOS-safe).
+# Run a Tetraploid linuxX64 .kexe with Wayland/EGL/GL shared libraries (NixOS-safe).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 KEXE="${1:-$ROOT/samples/wayland-demo/build/bin/linuxX64/releaseExecutable/wayland-demo.kexe}"

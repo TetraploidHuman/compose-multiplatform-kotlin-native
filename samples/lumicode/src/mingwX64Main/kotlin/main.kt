@@ -11,7 +11,7 @@ import kotlinx.cinterop.toKString
 import platform.posix.getenv
 
 /**
- * LumiCode on ComposeKN / Kotlin Native (mingwX64 · Win32).
+ * LumiCode on Tetraploid / Kotlin Native (mingwX64 · Win32).
  *
  * registerBackend：由 com.tetraploid.host entry wrapper 负责。
  */

@@ -239,7 +239,7 @@ internal fun ComposeScene.dispatchWaylandDragEvent(
             val consumed = root.onDrop(dragEvent)
             root.onEnded(dragEvent)
             if (!consumed) {
-                println("composekn: drag onDrop 未被任何 dragAndDropTarget 消费")
+                println("tetraploid: drag onDrop 未被任何 dragAndDropTarget 消费")
             }
             false
         }

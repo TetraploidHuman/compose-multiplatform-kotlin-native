@@ -7,15 +7,15 @@ cd "$ROOT"
 
 BUILD_ONLY=0
 SKIP_BUILD=0
-RENDER_API="${COMPOSEKN_RENDER_API:-}"
-TIMEOUT_SEC="${COMPOSEKN_SELFTEST_TIMEOUT:-90}"
+RENDER_API="${TETRAPLOID_RENDER_API:-}"
+TIMEOUT_SEC="${TETRAPLOID_SELFTEST_TIMEOUT:-90}"
 
 usage() {
   cat <<'EOF'
 Usage: scripts/test-linux-native.sh [--build-only] [--skip-build] [--api=vulkan|gl]
 
   Starts weston (headless), links wayland-demo if needed, runs --selftest.
-  Sets COMPOSEKN_SELFTEST_RELAX=1 so missing portal/SNI does not fail CI.
+  Sets TETRAPLOID_SELFTEST_RELAX=1 so missing portal/SNI does not fail CI.
 EOF
 }
 
@@ -39,11 +39,11 @@ need_cmd() {
 need_cmd java
 need_cmd pkg-config
 
-export XDG_RUNTIME_DIR="${COMPOSEKN_XDG_RUNTIME_DIR:-/tmp/composekn-xdg-$UID}"
+export XDG_RUNTIME_DIR="${TETRAPLOID_XDG_RUNTIME_DIR:-/tmp/tetraploid-xdg-$UID}"
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 # 强制独立 socket，避免继承 nix-shell/桌面会话的 WAYLAND_DISPLAY=wayland-0。
-export WAYLAND_DISPLAY="${COMPOSEKN_WAYLAND_DISPLAY:-wayland-composekn}"
+export WAYLAND_DISPLAY="${TETRAPLOID_WAYLAND_DISPLAY:-wayland-tetraploid}"
 
 # lavapipe when present (Ubuntu mesa-vulkan-drivers / Nix mesa)
 if [[ -z "${VK_ICD_FILENAMES:-}" ]]; then
@@ -60,11 +60,11 @@ if [[ -z "${VK_ICD_FILENAMES:-}" ]]; then
 fi
 export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"
 export GALLIUM_DRIVER="${GALLIUM_DRIVER:-llvmpipe}"
-export COMPOSEKN_SELFTEST_RELAX="${COMPOSEKN_SELFTEST_RELAX:-1}"
+export TETRAPLOID_SELFTEST_RELAX="${TETRAPLOID_SELFTEST_RELAX:-1}"
 export CI="${CI:-}"
 
 if [[ -n "$RENDER_API" ]]; then
-  export COMPOSEKN_RENDER_API="$RENDER_API"
+  export TETRAPLOID_RENDER_API="$RENDER_API"
 fi
 
 KEXE_DEBUG="$ROOT/samples/wayland-demo/build/bin/linuxX64/debugExecutable/wayland-demo.kexe"
@@ -127,7 +127,7 @@ if [[ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]]; then
   exit 1
 fi
 
-echo "==> selftest ($KEXE) RENDER_API=${COMPOSEKN_RENDER_API:-default} ICD=${VK_ICD_FILENAMES:-unset}"
+echo "==> selftest ($KEXE) RENDER_API=${TETRAPLOID_RENDER_API:-default} ICD=${VK_ICD_FILENAMES:-unset}"
 set +e
 timeout "$TIMEOUT_SEC" "$KEXE" --selftest
 RC=$?

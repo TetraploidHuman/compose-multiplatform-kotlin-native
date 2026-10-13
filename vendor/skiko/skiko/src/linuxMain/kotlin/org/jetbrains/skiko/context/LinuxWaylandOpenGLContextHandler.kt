@@ -18,7 +18,7 @@ internal class LinuxWaylandOpenGLContextHandler(layer: SkiaLayer) : ContextHandl
         if (context != null) return true
         context = LinuxSharedGpuContext.acquire() ?: run {
             println(
-                "Failed to create Skia EGL context on Wayland (see composekn: lines above). " +
+                "Failed to create Skia EGL context on Wayland (see tetraploid: lines above). " +
                     "On NixOS use: ./scripts/run-linux-native.sh",
             )
             return false

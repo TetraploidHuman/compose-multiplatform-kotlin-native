@@ -129,7 +129,7 @@ import org.jetbrains.skiko.Win32HitTest
 import org.jetbrains.skiko.Win32Message
 
 // =====================================================================
-// 自动化自检（`COMPOSEKN_SELFTEST=1` / `--selftest`）
+// 自动化自检（`TETRAPLOID_SELFTEST=1` / `--selftest`）
 //
 // 三层：
 //   1) logic    —— 纯函数断言（键位映射表、消息参数解码、输入状态机）
@@ -139,7 +139,7 @@ import org.jetbrains.skiko.Win32Message
 // 结果以 `SELFTEST ...` 行打印，最终退出码 0（全绿）/ 1（有失败）。
 // =====================================================================
 
-private const val SELFTEST_CLIPBOARD = "ComposeKN 剪贴板 ✔ clipboard"
+private const val SELFTEST_CLIPBOARD = "Tetraploid 剪贴板 ✔ clipboard"
 
 /** 自检用的确定性界面：所有元素的像素位置都可以手算出来。 */
 private const val TEST_BG_ARGB = 0xFF102030.toInt()
@@ -245,26 +245,26 @@ private const val DRAG_W_DP = 90
 private const val DRAG_H_DP = 60
 
 /**
- * C 侧自检 IDataObject（`ComposeKNTestDataObject`）里固定的两条路径与文本。
+ * C 侧自检 IDataObject（`TetraploidTestDataObject`）里固定的两条路径与文本。
  *
  * 两边必须一致：C 侧构造的是真的 CF_HDROP / CF_UNICODETEXT，这里断言解出来的就是这份；
  * 对不上说明 FORMATETC/DROPFILES 解码错了（而不是"断言写错了"）。
  */
 private val DROP_TEST_FILES = listOf(
-    "C:\\composekn\\drop-test-1.txt",
-    "C:\\composekn\\drop-test-2.txt",
+    "C:\\tetraploid\\drop-test-1.txt",
+    "C:\\tetraploid\\drop-test-2.txt",
 )
-private const val DROP_TEST_TEXT = "ComposeKN 拖放测试文本"
+private const val DROP_TEST_TEXT = "Tetraploid 拖放测试文本"
 
 /** 富文本剪贴板测试用的 HTML 片段（故意含非 ASCII，验证 UTF-8 字节偏移没算错）。 */
 private const val CLIP_HTML_FRAGMENT =
-    "<b>ComposeKN</b> 富文本 <i>clipboard</i> ✔"
+    "<b>Tetraploid</b> 富文本 <i>clipboard</i> ✔"
 
 /** RTF 片段（RTF 是 ASCII，非 ASCII 走 \uN 转义 —— 这里只测"原样往返"）。 */
-private const val CLIP_RTF = "{\\rtf1\\ansi\\b ComposeKN}\\par "
+private const val CLIP_RTF = "{\\rtf1\\ansi\\b Tetraploid}\\par "
 
 /** 富文本条目里的纯文本回退（不认 HTML 的程序该拿到它）。 */
-private const val CLIP_PLAIN = "ComposeKN 富文本回退文本"
+private const val CLIP_PLAIN = "Tetraploid 富文本回退文本"
 
 /**
  * 2×2 测试位图：左上红 / 右上绿 / 左下蓝 / 右下白。
@@ -1086,7 +1086,7 @@ private fun renderChecks(report: SelfTestReport) {
         WindowsComposeWindow(title = "probe", width = 100, height = 100).isDecorated,
         "默认应为系统标题栏（isDecorated=true）",
     )
-    val app = WindowsComposeApplication(title = "ComposeKN Selftest", width = 800, height = 600, undecorated = true)
+    val app = WindowsComposeApplication(title = "Tetraploid Selftest", width = 800, height = 600, undecorated = true)
     app.setContent(withChrome = true) { DeterministicTestScreen(probe, scrollState) }
     // 同一个 driver：帧时钟跨调用单调递增（动画/惯性滚动依赖这一点）
     val driver = OffscreenDriver(app)
@@ -2168,7 +2168,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
     val scrollState = ScrollState(0)
     // 同样显式 CSD：下面的点击/剪贴板坐标全都含 32dp 标题栏偏移。
     val app = WindowsComposeApplication(
-        title = "ComposeKN Selftest", width = 900, height = 600, undecorated = true,
+        title = "Tetraploid Selftest", width = 900, height = 600, undecorated = true,
     )
     var clipboardValue: String? = null
     var clickedAt = Pair(0, 0)
@@ -2559,7 +2559,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             )
             // 真机（MS 拼音）实测：它发的 IMR_DOCUMENTFEED 是 **lParam = NULL** 的。
             // 默认策略是"没有缓冲区就不声称支持"（不处理 = 老行为，什么都不改），
-            // 只有 COMPOSEKN_IME_DOCUMENTFEED=2（探针模式）才会对 NULL 回 TRUE。
+            // 只有 TETRAPLOID_IME_DOCUMENTFEED=2（探针模式）才会对 NULL 回 TRUE。
             val nullProbe = app.window.imeTestReconvert(kind = 0, bufferChars = -1)
             report.check(
                 "window/ime-document-feed-null-not-claimed",
@@ -2638,7 +2638,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             report.checkEquals("window/ime-charpos-test-restores-text", "CK", probe.text)
             // 真实键盘消息（PostMessage）：只投 WM_KEYDOWN / WM_KEYUP，**不**手工投
             // WM_CHAR —— 真实键盘上那个字符是消息循环里的 `TranslateMessage` 从
-            // KEYDOWN 翻译出来的（见 `composekn_win32_pump`），所以
+            // KEYDOWN 翻译出来的（见 `tetraploid_win32_pump`），所以
             //   KEYDOWN -> TranslateMessage -> WM_CHAR -> wndproc 的字符分支
             // 这条链才是真实路径。手工再投一条 WM_CHAR 会插入两个字符
             // （第一版就是这么红的：expected=CKz actual=CKzz），顺便也就把
@@ -2688,12 +2688,12 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             )
             report.check(
                 "window/file-dialog-available",
-                org.jetbrains.skiko.ComposeKNFileDialog.available(),
+                org.jetbrains.skiko.TetraploidFileDialog.available(),
                 "comdlg32 已链接；CI 不弹交互对话框，只断言 available",
             )
             report.check(
                 "window/tray-available",
-                org.jetbrains.skiko.ComposeKNTray.available(),
+                org.jetbrains.skiko.TetraploidTray.available(),
                 "Shell_NotifyIcon 已链接；CI 不弹气泡，只断言 available",
             )
             // 只收文件的框：位置要落在它**自己**的矩形里（onMoved/onEntered 是按
@@ -3180,7 +3180,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
  */
 private fun runConcurrentWindowTests(report: SelfTestReport) {
     report.section("window-multi 并发 A+B")
-    com.tetraploid.windows.registerComposeKnWindowsBackend()
+    com.tetraploid.windows.registerTetraploidWindowsBackend()
     initWindowsMainThread()
 
     val appA = WindowsComposeApplication(
@@ -3265,7 +3265,7 @@ private fun runConcurrentWindowTests(report: SelfTestReport) {
  */
 private fun runApplicationApiSelfTest(report: SelfTestReport) {
     report.section("application{} 声明式入口保活 + 双窗 GL + WindowState 同步 + DialogWindow")
-    com.tetraploid.windows.registerComposeKnWindowsBackend()
+    com.tetraploid.windows.registerTetraploidWindowsBackend()
 
     var frames = 0
     var framesSecond = 0
@@ -3491,7 +3491,7 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
 private fun runDecoratedWindowResizeTests(report: SelfTestReport) {
     report.section("window 系统标题栏：不可缩放的命中测试")
     val app = WindowsComposeApplication(
-        title = "ComposeKN Resize Test", width = 700, height = 500, undecorated = false,
+        title = "Tetraploid Resize Test", width = 700, height = 500, undecorated = false,
     )
     var frame = 0
     var clientBefore = IntSize.Zero
@@ -3684,7 +3684,7 @@ private fun assertWindowPerfReport(
     // 后台线程的一次状态写入必须被画出来（消息泵被唤醒），且只画这一帧。
     // 动画必须持续跑（没被节流卡死），又必须被节流（不是无节制重绘）。
     //
-    // ⚠ `COMPOSEKN_SELFTEST=all`（离屏 logic 阶段先在这个进程里跑过）时**这三条不判定**：
+    // ⚠ `TETRAPLOID_SELFTEST=all`（离屏 logic 阶段先在这个进程里跑过）时**这三条不判定**：
     //   实测窗口阶段的「后台写状态 -> 唤醒消息泵」链路在这个进程里已经不再驱动帧
     //   （三个子阶段全是 0 帧，见 HANDOVER §17.17），perf 契约只在独占进程的 window
     //   阶段才有意义。渲染本身仍被断言（frame-count / wheel-scroll / 逐帧绘制等），

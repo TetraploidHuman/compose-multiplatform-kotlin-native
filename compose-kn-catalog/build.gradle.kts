@@ -5,11 +5,11 @@ plugins {
 }
 
 group = "com.tetraploid"
-version = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
+version = providers.gradleProperty("tetraploid.version").orElse("0.5.68").get()
 
 catalog {
     versionCatalog {
-        from(files("../gradle/composekn.versions.toml"))
+        from(files("../gradle/tetraploid.versions.toml"))
     }
 }
 
@@ -17,7 +17,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["versionCatalog"])
-            artifactId = "composekn-catalog"
+            artifactId = "tetraploid-catalog"
         }
     }
 }

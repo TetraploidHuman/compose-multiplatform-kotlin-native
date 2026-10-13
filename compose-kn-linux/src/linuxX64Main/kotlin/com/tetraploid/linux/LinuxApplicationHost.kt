@@ -8,7 +8,7 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
-import org.jetbrains.skiko.ComposeKNTray
+import org.jetbrains.skiko.TetraploidTray
 import org.jetbrains.skiko.composekn_display_begin_poll_cycle
 import org.jetbrains.skiko.flushMainUIDispatcher
 import org.jetbrains.skiko.initLinuxMainThread
@@ -35,7 +35,7 @@ import platform.posix.write
  * - **定位**：标准 xdg-shell 无绝对坐标；[placeCascaded] / [placeAligned] 通过
  *   `xdg_toplevel_set_parent` 把新窗标成相对锚点的 transient（compositor 通常居中/叠放）
  *
- * 多窗共享同一 `wl_display`（native `ComposeKNSharedDisplay`）；每轮迭代先
+ * 多窗共享同一 `wl_display`（native `TetraploidSharedDisplay`）；每轮迭代先
  * [composekn_display_begin_poll_cycle]，再逐窗 poll（仅首窗 prepare_read）。
  * wake 用 eventfd + 短超时 poll（≤2ms），不阻塞跨线程 Main 任务。
  */
@@ -63,7 +63,7 @@ object LinuxApplicationHost {
         // 不抢 lastActive：否则新窗会把自己当 cascade 锚点（对齐 Windows v0.5.43）。
         refreshWakeHandler()
         refreshDialogModality()
-        println("composekn: host register window count=${sessions.size}")
+        println("tetraploid: host register window count=${sessions.size}")
     }
 
     fun unregister(window: LinuxComposeWindow) {
@@ -74,7 +74,7 @@ object LinuxApplicationHost {
         }
         refreshWakeHandler()
         refreshDialogModality()
-        println("composekn: host unregister window count=${sessions.size}")
+        println("tetraploid: host unregister window count=${sessions.size}")
     }
 
     fun noteFocus(window: LinuxComposeWindow, hasFocus: Boolean) {
@@ -99,7 +99,7 @@ object LinuxApplicationHost {
         val anchor = placementAnchor(window) ?: return false
         window.window.setParent(anchor.window)
         println(
-            "composekn: PlatformDefault → set_parent " +
+            "tetraploid: PlatformDefault → set_parent " +
                 "(transient hint; compositor owns screen coords)",
         )
         return true
@@ -114,7 +114,7 @@ object LinuxApplicationHost {
         val anchor = placementAnchor(window) ?: return false
         window.window.setParent(anchor.window)
         println(
-            "composekn: Aligned → set_parent " +
+            "tetraploid: Aligned → set_parent " +
                 "(transient hint; compositor typically centers over parent)",
         )
         return true
@@ -193,7 +193,7 @@ object LinuxApplicationHost {
     fun runSharedPump(shouldContinue: () -> Boolean) {
         initLinuxMainThread()
         setMainUIDispatcherWakeUpHandler { wake() }
-        println("composekn: host shared pump enter (wakeFd=$wakeFd)")
+        println("tetraploid: host shared pump enter (wakeFd=$wakeFd)")
         try {
             while (shouldContinue()) {
                 // 尚无窗口：仍要 flush（application 级 LaunchedEffect / 首帧 Window 创建）
@@ -213,7 +213,7 @@ object LinuxApplicationHost {
                     if (!sessions.contains(session)) continue
                     if (!session.pollAndDispatchForHost()) {
                         // display 失败：摘掉会话，避免空转刷日志；真正 destroy 仍由上层 dispose
-                        println("composekn: host poll failed — unregistering session")
+                        println("tetraploid: host poll failed — unregistering session")
                         unregister(session)
                         session.markHostDetachedAfterPollFailure()
                     }
@@ -224,14 +224,14 @@ object LinuxApplicationHost {
                 flushMainUIDispatcher()
 
                 // StatusNotifierItem / DBusMenu 回调
-                ComposeKNTray.dispatch()
+                TetraploidTray.dispatch()
 
                 // 有窗时也短等：避免忙等吃满 CPU；eventfd 可提前醒
                 idleWait(1)
             }
         } finally {
             setMainUIDispatcherWakeUpHandler(null)
-            println("composekn: host shared pump exit (windows=${sessions.size})")
+            println("tetraploid: host shared pump exit (windows=${sessions.size})")
         }
     }
 }

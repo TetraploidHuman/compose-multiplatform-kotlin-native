@@ -4,10 +4,10 @@ package org.jetbrains.skiko
  * 系统文件对话框（compose-core 的 [androidx.compose.ui.window.FileDialog] 走这里）。
  *
  * Windows：comdlg32 GetOpenFileNameW / GetSaveFileNameW。
- * [ownerPlatform] 可以是 [Win32Window]，或经 [composeKnFileDialogOwnerResolver]
+ * [ownerPlatform] 可以是 [Win32Window]，或经 [tetraploidFileDialogOwnerResolver]
  * 解析的宿主窗（例如 WindowsComposeWindow）。
  */
-object ComposeKNFileDialog {
+object TetraploidFileDialog {
     const val MODE_LOAD = 0
     const val MODE_SAVE = 1
 
@@ -43,7 +43,7 @@ object ComposeKNFileDialog {
 
     private fun resolveOwner(platform: Any?): Win32Window? {
         if (platform is Win32Window) return platform
-        composeKnFileDialogOwnerResolver?.invoke(platform)?.let { return it }
+        tetraploidFileDialogOwnerResolver?.invoke(platform)?.let { return it }
         return lastActiveCompositionWindow
             ?: (compositionWindowRegistry.lastOrNull() as? Win32Window)
     }
@@ -53,4 +53,4 @@ object ComposeKNFileDialog {
  * 宿主登记：`asPlatformWindow()` 得到的对象 → [Win32Window]。
  * compose-kn-windows 在登记 backend 时设为 `{ (it as? WindowsComposeWindow)?.nativeWindow }`。
  */
-var composeKnFileDialogOwnerResolver: ((Any?) -> Win32Window?)? = null
+var tetraploidFileDialogOwnerResolver: ((Any?) -> Win32Window?)? = null

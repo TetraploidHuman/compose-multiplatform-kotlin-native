@@ -15,7 +15,7 @@ import androidx.compose.ui.window.WindowGeometrySnapshot
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import org.jetbrains.skiko.initWindowsMainThread
-import org.jetbrains.skiko.composeKnFileDialogOwnerResolver
+import org.jetbrains.skiko.tetraploidFileDialogOwnerResolver
 import org.jetbrains.skiko.win32Log
 
 /**
@@ -23,13 +23,13 @@ import org.jetbrains.skiko.win32Log
  * `androidx.compose.ui.window.application { Window(...) }` 调用。
  *
  * 幂等；[WindowsComposeApplication] 构造时也会自动调用。
- * 依赖本模块时，[installComposeKnWindowsAutoRegister] 会把自动登记挂到 Registry。
+ * 依赖本模块时，[installTetraploidWindowsAutoRegister] 会把自动登记挂到 Registry。
  */
-fun registerComposeKnWindowsBackend() {
+fun registerTetraploidWindowsBackend() {
     // Skiko UI 主线程标记（幂等）；消费者不必再手写 initWindowsMainThread()
     initWindowsMainThread()
     // FileDialog：asPlatformWindow() → WindowsComposeWindow → nativeWindow
-    composeKnFileDialogOwnerResolver = { platform ->
+    tetraploidFileDialogOwnerResolver = { platform ->
         (platform as? WindowsComposeWindow)?.nativeWindow
     }
     if (ComposeNativeWindowBackendRegistry.backend != null) return
@@ -38,16 +38,16 @@ fun registerComposeKnWindowsBackend() {
 }
 
 /** 供 Application.init / 测试调用的别名。 */
-internal fun ensureWindowsComposeBackendRegistered() = registerComposeKnWindowsBackend()
+internal fun ensureWindowsComposeBackendRegistered() = registerTetraploidWindowsBackend()
 
 /** 挂到 [ComposeNativeWindowBackendRegistry.autoRegister]。 */
-fun installComposeKnWindowsAutoRegister() {
-    ComposeNativeWindowBackendRegistry.autoRegister = { registerComposeKnWindowsBackend() }
+fun installTetraploidWindowsAutoRegister() {
+    ComposeNativeWindowBackendRegistry.autoRegister = { registerTetraploidWindowsBackend() }
 }
 
 @Suppress("unused")
-private val composeKnWindowsAutoRegisterInstall: Boolean = run {
-    installComposeKnWindowsAutoRegister()
+private val tetraploidWindowsAutoRegisterInstall: Boolean = run {
+    installTetraploidWindowsAutoRegister()
     true
 }
 

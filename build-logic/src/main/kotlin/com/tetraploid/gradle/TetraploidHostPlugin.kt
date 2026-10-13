@@ -21,12 +21,12 @@ import java.io.File
  *
  * 用法：`id("com.tetraploid.host")`
  */
-class ComposeKnHostPlugin : Plugin<Project> {
+class TetraploidHostPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val ext = project.extensions.create("composeKnHost", ComposeKnHostExtension::class.java)
+        val ext = project.extensions.create("tetraploidHost", TetraploidHostExtension::class.java)
         ext.useProjectDependencies.convention(true)
-        ext.composeknVersion.convention(
-            project.findProperty("composekn.version")?.toString() ?: DEFAULT_VERSION,
+        ext.tetraploidVersion.convention(
+            project.findProperty("tetraploid.version")?.toString() ?: DEFAULT_VERSION,
         )
         ext.wrapEntryPoint.convention(true)
 
@@ -35,9 +35,9 @@ class ComposeKnHostPlugin : Plugin<Project> {
         }
     }
 
-    private fun configure(project: Project, ext: ComposeKnHostExtension) {
+    private fun configure(project: Project, ext: TetraploidHostExtension) {
         // afterEvaluate 偶发重复；同一工程只配置一次
-        val flag = "composekn.host.configured"
+        val flag = "tetraploid.host.configured"
         if (project.extensions.extraProperties.has(flag)) return
         project.extensions.extraProperties.set(flag, true)
 
@@ -45,20 +45,20 @@ class ComposeKnHostPlugin : Plugin<Project> {
         val hasLinux = kotlin.targets.findByName("linuxX64") != null
         val hasMingw = kotlin.targets.findByName("mingwX64") != null
         if (!hasLinux && !hasMingw) {
-            project.logger.lifecycle("ComposeKN host: no linuxX64/mingwX64 target — skip")
+            project.logger.lifecycle("Tetraploid host: no linuxX64/mingwX64 target — skip")
             return
         }
 
         if (hasLinux) project.pluginManager.apply("com.tetraploid.linux-native-linker")
         if (hasMingw) project.pluginManager.apply("com.tetraploid.windows-native-linker")
 
-        val linuxGen = project.layout.buildDirectory.dir("generated/composekn/host/linux")
-        val windowsGen = project.layout.buildDirectory.dir("generated/composekn/host/windows")
+        val linuxGen = project.layout.buildDirectory.dir("generated/tetraploid/host/linux")
+        val windowsGen = project.layout.buildDirectory.dir("generated/tetraploid/host/windows")
 
         // target → 用户 entryPoint（每个平台只记一次，避免 debug/release 双 binary 叠 doLast）
         val wrapByPlatform = linkedMapOf<String, String>()
 
-        val generate = project.tasks.register("generateComposeKnHostBootstrap") {
+        val generate = project.tasks.register("generateTetraploidHostBootstrap") {
             outputs.dir(linuxGen)
             outputs.dir(windowsGen)
             inputs.property("wrap", ext.wrapEntryPoint)
@@ -67,24 +67,24 @@ class ComposeKnHostPlugin : Plugin<Project> {
                     val dir = linuxGen.get().asFile
                     dir.mkdirs()
                     writeBootstrap(
-                        File(dir, "ComposeKnLinuxBootstrap.kt"),
+                        File(dir, "TetraploidLinuxBootstrap.kt"),
                         platform = "linux",
-                        importRegister = "com.tetraploid.linux.registerComposeKnLinuxBackend",
-                        importInstall = "com.tetraploid.linux.installComposeKnLinuxAutoRegister",
-                        registerCall = "registerComposeKnLinuxBackend()",
-                        installCall = "installComposeKnLinuxAutoRegister()",
+                        importRegister = "com.tetraploid.linux.registerTetraploidLinuxBackend",
+                        importInstall = "com.tetraploid.linux.installTetraploidLinuxAutoRegister",
+                        registerCall = "registerTetraploidLinuxBackend()",
+                        installCall = "installTetraploidLinuxAutoRegister()",
                     )
                 }
                 if (hasMingw) {
                     val dir = windowsGen.get().asFile
                     dir.mkdirs()
                     writeBootstrap(
-                        File(dir, "ComposeKnWindowsBootstrap.kt"),
+                        File(dir, "TetraploidWindowsBootstrap.kt"),
                         platform = "windows",
-                        importRegister = "com.tetraploid.windows.registerComposeKnWindowsBackend",
-                        importInstall = "com.tetraploid.windows.installComposeKnWindowsAutoRegister",
-                        registerCall = "registerComposeKnWindowsBackend()",
-                        installCall = "installComposeKnWindowsAutoRegister()",
+                        importRegister = "com.tetraploid.windows.registerTetraploidWindowsBackend",
+                        importInstall = "com.tetraploid.windows.installTetraploidWindowsAutoRegister",
+                        registerCall = "registerTetraploidWindowsBackend()",
+                        installCall = "installTetraploidWindowsAutoRegister()",
                     )
                 }
                 for ((platform, userFq) in wrapByPlatform) {
@@ -92,22 +92,22 @@ class ComposeKnHostPlugin : Plugin<Project> {
                     val dir = (if (isLinux) linuxGen else windowsGen).get().asFile
                     dir.mkdirs()
                     val fileName =
-                        if (isLinux) "ComposeKnLinuxEntry.kt" else "ComposeKnWindowsEntry.kt"
+                        if (isLinux) "TetraploidLinuxEntry.kt" else "TetraploidWindowsEntry.kt"
                     val funName =
-                        if (isLinux) "composeknLinuxHostMain" else "composeknWindowsHostMain"
+                        if (isLinux) "tetraploidLinuxHostMain" else "tetraploidWindowsHostMain"
                     val registerImport = if (isLinux) {
-                        "com.tetraploid.linux.registerComposeKnLinuxBackend"
+                        "com.tetraploid.linux.registerTetraploidLinuxBackend"
                     } else {
-                        "com.tetraploid.windows.registerComposeKnWindowsBackend"
+                        "com.tetraploid.windows.registerTetraploidWindowsBackend"
                     }
                     val registerCall = if (isLinux) {
-                        "registerComposeKnLinuxBackend()"
+                        "registerTetraploidLinuxBackend()"
                     } else {
-                        "registerComposeKnWindowsBackend()"
+                        "registerTetraploidWindowsBackend()"
                     }
                     File(dir, fileName).writeText(
                         """
-                        |package composekn.host.generated
+                        |package tetraploid.host.generated
                         |
                         |import $registerImport
                         |
@@ -141,7 +141,7 @@ class ComposeKnHostPlugin : Plugin<Project> {
                     ) {
                         implementation(project.project(projectPath))
                     } else {
-                        implementation("com.tetraploid:$mavenArtifact:${ext.composeknVersion.get()}")
+                        implementation("com.tetraploid:$mavenArtifact:${ext.tetraploidVersion.get()}")
                     }
                 }
             }
@@ -165,15 +165,15 @@ class ComposeKnHostPlugin : Plugin<Project> {
             val platform = if (isLinux) "linux" else "windows"
             binaries.withType(Executable::class.java).configureEach {
                 val userEntry = entryPoint ?: return@configureEach
-                if (userEntry.startsWith("composekn.host.generated.")) return@configureEach
+                if (userEntry.startsWith("tetraploid.host.generated.")) return@configureEach
                 val wrapperName = if (isLinux) {
-                    "composekn.host.generated.composeknLinuxHostMain"
+                    "tetraploid.host.generated.tetraploidLinuxHostMain"
                 } else {
-                    "composekn.host.generated.composeknWindowsHostMain"
+                    "tetraploid.host.generated.tetraploidWindowsHostMain"
                 }
                 if (wrapByPlatform.putIfAbsent(platform, userEntry) == null) {
                     project.logger.lifecycle(
-                        "ComposeKN host: ${target.name} entryPoint $userEntry → $wrapperName",
+                        "Tetraploid host: ${target.name} entryPoint $userEntry → $wrapperName",
                     )
                 }
                 entryPoint = wrapperName
@@ -199,7 +199,7 @@ class ComposeKnHostPlugin : Plugin<Project> {
             } as? Executable ?: return
             val linkTaskName = release.linkTaskName
             project.tasks.register(taskName, Exec::class.java) {
-                group = "composekn"
+                group = "tetraploid"
                 description = "Link and run the $targetName release executable"
                 val stableName = linkTaskName + "Stable"
                 dependsOn(
@@ -249,13 +249,13 @@ class ComposeKnHostPlugin : Plugin<Project> {
     ) {
         file.writeText(
             """
-            |package composekn.host.generated
+            |package tetraploid.host.generated
             |
             |import $importInstall
             |import $importRegister
             |
             |@Suppress("unused")
-            |internal val composekn${platform.replaceFirstChar { it.uppercase() }}HostBootstrap: Boolean =
+            |internal val tetraploid${platform.replaceFirstChar { it.uppercase() }}HostBootstrap: Boolean =
             |    run {
             |        $installCall
             |        $registerCall
@@ -279,10 +279,10 @@ class ComposeKnHostPlugin : Plugin<Project> {
     }
 }
 
-abstract class ComposeKnHostExtension {
+abstract class TetraploidHostExtension {
     /** true：本仓库内用 project()；false：走 Maven `com.tetraploid:compose-kn-*` */
     abstract val useProjectDependencies: Property<Boolean>
-    abstract val composeknVersion: Property<String>
+    abstract val tetraploidVersion: Property<String>
     /** true：把 executable entryPoint 包一层自动 register（推荐） */
     abstract val wrapEntryPoint: Property<Boolean>
 }

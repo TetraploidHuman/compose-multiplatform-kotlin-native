@@ -20,19 +20,19 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import java.io.File
 
 /**
- * ComposeKN 资源管线（对齐官方 composeResources 布局的 native 子集）。
+ * Tetraploid 资源管线（对齐官方 composeResources 布局的 native 子集）。
  *
  * 源：`src/commonMain/composeResources/{font,drawable,values}/`
  * 生成：`Res.font|string|drawable`（类型来自 `org.jetbrains.compose.resources`）；
  * 链接后 copy 到 exe 旁 `composeResources/`。
  *
- * DSL：`composeKnResources { }`；亦可用官方风格别名 [ComposeKnResourcesExtension.packageOfResClass]。
+ * DSL：`tetraploidResources { }`；亦可用官方风格别名 [TetraploidResourcesExtension.packageOfResClass]。
  */
-class ComposeKnResourcesPlugin : Plugin<Project> {
+class TetraploidResourcesPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val ext = project.extensions.create(
-            "composeKnResources",
-            ComposeKnResourcesExtension::class.java,
+            "tetraploidResources",
+            TetraploidResourcesExtension::class.java,
         )
         // 对齐官方默认：{group}.{module}.generated.resources；无 group 时退回稳定占位
         val inferredPkg = buildString {
@@ -52,10 +52,10 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
         ext.extraFontDirs.convention(emptyList())
 
         // 尽早注册 generate，便于 build.gradle 里 tasks.named(...) 挂依赖
-        val genDir = project.layout.buildDirectory.dir("generated/composekn/resources")
+        val genDir = project.layout.buildDirectory.dir("generated/tetraploid/resources")
         val generate = project.tasks.register(
-            "generateComposeKnResources",
-            GenerateComposeKnResourcesTask::class.java,
+            "generateTetraploidResources",
+            GenerateTetraploidResourcesTask::class.java,
         ) {
             packageName.set(ext.packageName)
             resourcesDirectory.set(ext.resourcesDir)
@@ -70,8 +70,8 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
 
     private fun configure(
         project: Project,
-        ext: ComposeKnResourcesExtension,
-        generate: org.gradle.api.tasks.TaskProvider<GenerateComposeKnResourcesTask>,
+        ext: TetraploidResourcesExtension,
+        generate: org.gradle.api.tasks.TaskProvider<GenerateTetraploidResourcesTask>,
         genDir: org.gradle.api.provider.Provider<org.gradle.api.file.Directory>,
     ) {
         val kotlin = project.extensions.findByType(KotlinMultiplatformExtension::class.java) ?: return
@@ -79,8 +79,8 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
             ss.kotlin.srcDir(genDir)
             val inRepo = project.rootProject.findProject(":compose-kn-resources") != null
             val ver =
-                project.findProperty("composekn.version")?.toString()
-                    ?: ComposeKnHostPlugin.DEFAULT_VERSION
+                project.findProperty("tetraploid.version")?.toString()
+                    ?: TetraploidHostPlugin.DEFAULT_VERSION
             ss.dependencies {
                 if (inRepo) {
                     implementation(project.project(":compose-kn-resources"))
@@ -99,7 +99,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
             binaries.withType(Executable::class.java).configureEach {
                 val binary = this
                 val copyName =
-                    "copyComposeKnResources_${target.name}_${binary.buildType.getName()}"
+                    "copyTetraploidResources_${target.name}_${binary.buildType.getName()}"
                 val copy = project.tasks.register(copyName) {
                     dependsOn(generate)
                     dependsOn(binary.linkTaskProvider)
@@ -144,7 +144,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
                             values.copyRecursively(valuesOut, overwrite = true)
                         }
                         logger.lifecycle(
-                            "ComposeKN resources: copied fonts=${fontFiles.size} " +
+                            "Tetraploid resources: copied fonts=${fontFiles.size} " +
                                 "drawables=${drawableFiles.size} → $rootOut",
                         )
                     }
@@ -155,8 +155,8 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
     }
 }
 
-abstract class ComposeKnResourcesExtension {
-    /** Res 类所在包（ComposeKN 原名）。 */
+abstract class TetraploidResourcesExtension {
+    /** Res 类所在包（Tetraploid 原名）。 */
     abstract val packageName: Property<String>
     abstract val resourcesDir: DirectoryProperty
     abstract val extraFontDirs: ListProperty<String>
@@ -169,7 +169,7 @@ abstract class ComposeKnResourcesExtension {
     }
 }
 
-abstract class GenerateComposeKnResourcesTask : DefaultTask() {
+abstract class GenerateTetraploidResourcesTask : DefaultTask() {
     @get:Input
     abstract val packageName: Property<String>
 
@@ -241,8 +241,8 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             |import org.jetbrains.compose.resources.fontResource
             |import org.jetbrains.compose.resources.stringResource
             |
-            |// ComposeKN 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
-            |// 由 generateComposeKnResources 生成 —— 勿手改。
+            |// Tetraploid 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
+            |// 由 generateTetraploidResources 生成 —— 勿手改。
             |object Res {
             |    object font {
             |$fontProps
@@ -259,7 +259,7 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
         )
 
         logger.lifecycle(
-            "ComposeKN resources: Res.font=${fonts.size} string=${strings.size} " +
+            "Tetraploid resources: Res.font=${fonts.size} string=${strings.size} " +
                 "drawable=${drawables.size} → ${dir.resolve("Res.kt")}",
         )
     }

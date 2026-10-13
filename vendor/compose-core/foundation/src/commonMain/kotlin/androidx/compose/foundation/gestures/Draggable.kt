@@ -1042,7 +1042,7 @@ internal abstract class DragGestureNode(
             // has pointers down with unconsumed events, a chance to pick up this gesture,
             // move to the touch slop detection phase
             //
-            // ComposeKN 本地补丁（HANDOVER §17.27）：这里原来传的是
+            // Tetraploid 本地补丁（HANDOVER §17.27）：这里原来传的是
             //   `pointerEvent.changes.first().position - state.initialDown!!.position`
             // —— 即「相对按下点的**总**位移」。它被 TouchSlopDetector.reset() 当成 slop 检测的
             // 初始累计值之后，**下一次事件立刻**判定"slop 已跨过"，并把 `总位移 - slop` 作为

@@ -25,7 +25,7 @@ plugins {
     id("com.tetraploid.app") // 已含 resources；也可单独 id("com.tetraploid.resources")
 }
 
-composeKnResources {
+tetraploidResources {
     // 官方同义：packageOfResClass；也可用 packageName.set("…")
     packageOfResClass("com.example.app.generated.resources")
     extraFontDirs.add("/path/to/other/font/dir")

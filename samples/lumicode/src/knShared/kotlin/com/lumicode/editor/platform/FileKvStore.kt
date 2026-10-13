@@ -17,7 +17,7 @@ import platform.posix.rewind
 import platform.posix.SEEK_END
 
 /**
- * Tiny key=value file store for ComposeKN (no JVM Preferences).
+ * Tiny key=value file store for Tetraploid (no JVM Preferences).
  * Shared by linuxX64 + mingwX64 via [knShared] srcDir.
  */
 internal class FileKvStore(private val pathProvider: () -> String?) {

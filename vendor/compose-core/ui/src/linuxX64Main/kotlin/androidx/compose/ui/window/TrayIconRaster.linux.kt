@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 The ComposeKN Authors
+ * Copyright 2026 The Tetraploid Authors
  *
  * Painter → BGRA（托盘图标）；对齐 Desktop toAwtImage 的光栅化思路，无 AWT。
  */

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Link LumiCode mingwX64 via ComposeKN + prebuilt MinGW Skia.
+# Link LumiCode mingwX64 via Tetraploid + prebuilt MinGW Skia.
 # Mirrors vendor/skiko/skia-mingw/build-windows-native-demo.sh but targets :samples:lumicode.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-PREBUILT="${SKIA_MINGW_PREBUILT:-/tmp/composekn-skia-mingw/skia-mingw-$(cat "$REPO/vendor/skiko/skia-mingw/SKIA_TAG")}"
+PREBUILT="${SKIA_MINGW_PREBUILT:-/tmp/tetraploid-skia-mingw/skia-mingw-$(cat "$REPO/vendor/skiko/skia-mingw/SKIA_TAG")}"
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
 die()  { printf '\033[31m!!\033[0m %s\n' "$1" >&2; exit 1; }

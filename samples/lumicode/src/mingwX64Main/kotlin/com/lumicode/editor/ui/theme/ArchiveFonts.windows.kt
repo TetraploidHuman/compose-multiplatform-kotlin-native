@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.Font
 import com.lumicode.editor.resources.Res
 
 /**
- * ComposeKN Windows：与 Linux actual 相同，走 `Res.font.*` + compose-kn-resources。
+ * Tetraploid Windows：与 Linux actual 相同，走 `Res.font.*` + compose-kn-resources。
  */
 @Composable
 actual fun InstallArchiveFonts() {

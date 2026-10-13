@@ -72,7 +72,7 @@ internal class LinuxTextInputService(
     }
 
     private fun imeLog(message: String) {
-        println("composekn: ime $message")
+        println("tetraploid: ime $message")
     }
 
     private fun handleCommit(text: String): Boolean {

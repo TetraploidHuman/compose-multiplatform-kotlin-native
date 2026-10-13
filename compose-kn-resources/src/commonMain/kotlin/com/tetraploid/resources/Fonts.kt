@@ -18,8 +18,8 @@ fun Font(
 ): Font {
     val bytes = ResourceLoads.loadBytes(resource)
         ?: error(
-            "ComposeKN font not found: ${resource.relativePath} " +
-                "(tried exeDir/composeResources, fonts/, COMPOSEKN_RESOURCES, developmentPath)",
+            "Tetraploid font not found: ${resource.relativePath} " +
+                "(tried exeDir/composeResources, fonts/, TETRAPLOID_RESOURCES, developmentPath)",
         )
     return PlatformFont(resource.identity, bytes, weight, style)
 }

@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class ComposeKnMavenCacheTest {
+class TetraploidMavenCacheTest {
     @Test
     fun findsAssetIdRegardlessOfFieldOrder() {
         val json = """
@@ -20,7 +20,7 @@ class ComposeKnMavenCacheTest {
                 {
                   "id": 42,
                   "node_id": "x",
-                  "name": "composekn-maven-0.5.67.zip",
+                  "name": "tetraploid-maven-0.5.67.zip",
                   "content_type": "application/zip"
                 }
               ]
@@ -28,7 +28,7 @@ class ComposeKnMavenCacheTest {
         """.trimIndent()
         assertEquals(
             "42",
-            ComposeKnMavenCache.findReleaseAssetId(json, "composekn-maven-0.5.67.zip"),
+            TetraploidMavenCache.findReleaseAssetId(json, "tetraploid-maven-0.5.67.zip"),
         )
     }
 
@@ -37,12 +37,12 @@ class ComposeKnMavenCacheTest {
         val json = """
             {
               "id": 99,
-              "name": "composekn-maven-0.5.67.zip",
+              "name": "tetraploid-maven-0.5.67.zip",
               "assets": []
             }
         """.trimIndent()
         assertNull(
-            ComposeKnMavenCache.findReleaseAssetId(json, "composekn-maven-0.5.67.zip"),
+            TetraploidMavenCache.findReleaseAssetId(json, "tetraploid-maven-0.5.67.zip"),
         )
     }
 }

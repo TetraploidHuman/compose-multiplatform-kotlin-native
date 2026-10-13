@@ -15,4 +15,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ComposeKN-Windows-JvmDemo"
+rootProject.name = "Tetraploid-Windows-JvmDemo"

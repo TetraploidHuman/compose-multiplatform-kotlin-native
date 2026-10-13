@@ -8,70 +8,70 @@ import java.net.URI
 
 /**
  * 消费者 settings 插件（也注册为 `com.tetraploid`）：
- * - 解析/缓存 Release Maven zip（稳定 CDN，默认 `~/.composekn/m2/<ver>`）
+ * - 解析/缓存 Release Maven zip（稳定 CDN，默认 `~/.tetraploid/m2/<ver>`）
  * - 可选 GitHub Packages（需显式打开）
  * - 官方 Compose/Skiko/resources → `com.tetraploid` / `com.tetraploid.compose`；linuxX64/mingwX64 顶到平台 artifact
  *
  * 用户通常只需：
  * ```
  * // gradle.properties
- * composekn.version=0.5.68
+ * tetraploid.version=0.5.68
  *
  * // settings.gradle.kts
  * plugins { id("com.tetraploid") version "0.5.68" }
  * ```
  * （`pluginManagement` 需能解析到插件 JAR：缓存目录、本机 publish 或 Packages。）
  */
-class ComposeKnSettingsPlugin : Plugin<Settings> {
+class TetraploidSettingsPlugin : Plugin<Settings> {
     override fun apply(settings: Settings) {
-        val composeknVer = settings.providers.gradleProperty("composekn.version")
+        val tetraploidVer = settings.providers.gradleProperty("tetraploid.version")
             .orElse(DEFAULT_VERSION).get()
-        // 单版本：UI = <compose.ui>-ckn.<composekn.version>，一般不用手写 ui.version
-        val uiBase = settings.providers.gradleProperty("composekn.compose.ui")
+        // 单版本：UI = <compose.ui>-tp.<tetraploid.version>，一般不用手写 ui.version
+        val uiBase = settings.providers.gradleProperty("tetraploid.compose.ui")
             .orElse("1.12.1").get()
-        val uiVer = settings.providers.gradleProperty("composekn.compose.ui.version")
-            .orElse("$uiBase-ckn.$composeknVer").get()
-        val skipSub = settings.providers.gradleProperty("composekn.settings.skipSubstitution")
+        val uiVer = settings.providers.gradleProperty("tetraploid.compose.ui.version")
+            .orElse("$uiBase-tp.$tetraploidVer").get()
+        val skipSub = settings.providers.gradleProperty("tetraploid.settings.skipSubstitution")
             .orNull == "true"
-        val owner = settings.providers.gradleProperty("composekn.publish.github.owner")
+        val owner = settings.providers.gradleProperty("tetraploid.publish.github.owner")
             .orElse(settings.providers.environmentVariable("GITHUB_REPOSITORY_OWNER"))
-            .orElse(ComposeKnMavenCache.DEFAULT_OWNER).get()
-        val repo = settings.providers.gradleProperty("composekn.publish.github.repo")
-            .orElse(ComposeKnMavenCache.DEFAULT_REPO).get()
+            .orElse(TetraploidMavenCache.DEFAULT_OWNER).get()
+        val repo = settings.providers.gradleProperty("tetraploid.publish.github.repo")
+            .orElse(TetraploidMavenCache.DEFAULT_REPO).get()
         val token = settings.providers.environmentVariable("GITHUB_TOKEN")
             .orElse(settings.providers.environmentVariable("GH_TOKEN"))
             .orElse(settings.providers.gradleProperty("gpr.token"))
             .orNull
             ?.takeIf { it.isNotBlank() }
 
-        val explicitLocal = settings.providers.gradleProperty("composekn.maven.local")
-            .orElse(settings.providers.environmentVariable("COMPOSEKN_MAVEN_LOCAL"))
+        val explicitLocal = settings.providers.gradleProperty("tetraploid.maven.local")
+            .orElse(settings.providers.environmentVariable("TETRAPLOID_MAVEN_LOCAL"))
             .orNull
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
 
-        val autoFetch = settings.providers.gradleProperty("composekn.maven.auto")
+        val autoFetch = settings.providers.gradleProperty("tetraploid.maven.auto")
             .orElse("true").get() != "false"
 
         var resolvedMaven: File? = null
         if (explicitLocal != null) {
             val dir = File(explicitLocal)
             require(dir.isDirectory) {
-                "composekn.maven.local is not a directory: $explicitLocal"
+                "tetraploid.maven.local is not a directory: $explicitLocal"
             }
             resolvedMaven = dir
         } else if (autoFetch) {
-            val cacheProp = settings.providers.gradleProperty("composekn.maven.cache")
+            val cacheProp = settings.providers.gradleProperty("tetraploid.maven.cache")
                 .orNull
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }
             val dest = if (cacheProp != null) {
                 File(cacheProp)
             } else {
-                ComposeKnMavenCache.defaultCacheDir(composeknVer)
+                TetraploidMavenCache.defaultCacheDir(tetraploidVer)
             }
-            resolvedMaven = ComposeKnMavenCache.ensure(
-                version = composeknVer,
+            resolvedMaven = TetraploidMavenCache.ensure(
+                version = tetraploidVer,
                 dest = dest,
                 owner = owner,
                 repo = repo,
@@ -80,8 +80,8 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
             )
             if (resolvedMaven == null) {
                 System.err.println(
-                    "ComposeKN: could not auto-fetch maven $composeknVer; " +
-                        "set composekn.maven.local or run scripts/fetch-composekn-maven.sh",
+                    "Tetraploid: could not auto-fetch maven $tetraploidVer; " +
+                        "set tetraploid.maven.local or run scripts/fetch-tetraploid-maven.sh",
                 )
             }
         }
@@ -89,30 +89,30 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
         if (resolvedMaven != null) {
             val uri = resolvedMaven.toURI()
             settings.dependencyResolutionManagement.repositories.maven {
-                name = "ComposeKNLocal"
+                name = "TetraploidLocal"
                 url = uri
             }
             settings.pluginManagement.repositories.maven {
-                name = "ComposeKNLocal"
+                name = "TetraploidLocal"
                 url = uri
             }
         }
 
         // Packages：显式 opt-in；或 Release 拉取失败且有 token 时自动回退
-        val useGh = settings.providers.gradleProperty("composekn.settings.useGithubPackages")
+        val useGh = settings.providers.gradleProperty("tetraploid.settings.useGithubPackages")
             .orNull == "true" ||
-            settings.providers.environmentVariable("COMPOSEKN_USE_GITHUB_PACKAGES")
+            settings.providers.environmentVariable("TETRAPLOID_USE_GITHUB_PACKAGES")
                 .orNull == "true"
-        val explicitSkipGh = settings.providers.gradleProperty("composekn.settings.skipGithubPackages")
+        val explicitSkipGh = settings.providers.gradleProperty("tetraploid.settings.skipGithubPackages")
             .orNull == "true" ||
-            settings.providers.environmentVariable("COMPOSEKN_SKIP_GITHUB_PACKAGES")
+            settings.providers.environmentVariable("TETRAPLOID_SKIP_GITHUB_PACKAGES")
                 .orNull == "true"
         val fallbackGh = resolvedMaven == null && !token.isNullOrBlank()
         val addGh = !explicitSkipGh && (useGh || fallbackGh)
         if (fallbackGh && !useGh && addGh) {
             println(
-                "ComposeKN: Release cache missing; falling back to GitHub Packages " +
-                    "(set composekn.settings.skipGithubPackages=true to disable)",
+                "Tetraploid: Release cache missing; falling back to GitHub Packages " +
+                    "(set tetraploid.settings.skipGithubPackages=true to disable)",
             )
         }
 
@@ -123,7 +123,7 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
                 .orElse("github")
             val ghToken = token ?: ""
             settings.dependencyResolutionManagement.repositories.maven {
-                name = "ComposeKNGitHubPackages"
+                name = "TetraploidGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
@@ -131,7 +131,7 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
                 }
             }
             settings.pluginManagement.repositories.maven {
-                name = "ComposeKNGitHubPackages"
+                name = "TetraploidGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
@@ -149,9 +149,9 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
                 resolutionStrategy.dependencySubstitution {
                     applyUiSubstitutions(this, uiVer, platform)
                     substitute(module("org.jetbrains.skiko:skiko"))
-                        .using(module(skikoCoordinate(platform, composeknVer)))
+                        .using(module(skikoCoordinate(platform, tetraploidVer)))
                     substitute(module("org.jetbrains.compose.components:components-resources"))
-                        .using(module(resourcesCoordinate(platform, composeknVer)))
+                        .using(module(resourcesCoordinate(platform, tetraploidVer)))
                 }
             }
         }

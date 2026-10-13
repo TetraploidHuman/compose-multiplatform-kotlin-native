@@ -9,26 +9,26 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.withType
 
 /**
- * 给 compose-kn-* 挂 maven-publish（`com.tetraploid:<module>:<composekn.version>`）。
+ * 给 compose-kn-* 挂 maven-publish（`com.tetraploid:<module>:<tetraploid.version>`）。
  *
  * 仓库：
  * - 本地 `build/maven-repo`
- * - 可选私服（`composekn.publish.url`）
- * - GitHub Packages（`-Pcomposekn.publish.github=true`）
- * - Maven Central / Central Portal（`-Pcomposekn.publish.central=true`，需凭证与签名）
+ * - 可选私服（`tetraploid.publish.url`）
+ * - GitHub Packages（`-Ptetraploid.publish.github=true`）
+ * - Maven Central / Central Portal（`-Ptetraploid.publish.central=true`，需凭证与签名）
  *
- * `-Pcomposekn.publish.skipMetadata=true`（发布脚本默认打开）：禁用全项目
+ * `-Ptetraploid.publish.skipMetadata=true`（发布脚本默认打开）：禁用全项目
  * `*KotlinMetadata` 任务，避开 skiko/compose-core 在 KN 2.4 下的
  * `@OptionalExpectation` 编译失败，仍可发 native klib。
  */
-class ComposeKnPublishPlugin : Plugin<Project> {
+class TetraploidPublishPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("maven-publish")
-        val version = project.findProperty("composekn.version")?.toString() ?: "0.5.68"
-        project.group = project.findProperty("composekn.group")?.toString() ?: "com.tetraploid"
+        val version = project.findProperty("tetraploid.version")?.toString() ?: "0.5.68"
+        project.group = project.findProperty("tetraploid.group")?.toString() ?: "com.tetraploid"
         project.version = version
 
-        if (project.findProperty("composekn.publish.skipMetadata")?.toString() == "true") {
+        if (project.findProperty("tetraploid.publish.skipMetadata")?.toString() == "true") {
             project.rootProject.allprojects {
                 tasks.configureEach {
                     if (name.contains("KotlinMetadata")) {
@@ -42,34 +42,34 @@ class ComposeKnPublishPlugin : Plugin<Project> {
             project.extensions.configure<PublishingExtension> {
                 repositories {
                     maven {
-                        name = "ComposeKnLocal"
+                        name = "TetraploidLocal"
                         url = project.uri(project.rootProject.layout.buildDirectory.dir("maven-repo"))
                     }
-                    val remote = project.findProperty("composekn.publish.url")?.toString()
+                    val remote = project.findProperty("tetraploid.publish.url")?.toString()
                     if (!remote.isNullOrBlank()) {
                         maven {
-                            name = "ComposeKnRemote"
+                            name = "TetraploidRemote"
                             url = project.uri(remote)
                             credentialsFrom(project, this)
                         }
                     }
                     val ghToken = System.getenv("GITHUB_TOKEN")
-                        ?: project.findProperty("composekn.publish.password")?.toString()
-                    // 仅显式 -Pcomposekn.publish.github=true 才挂 GitHub Packages，
+                        ?: project.findProperty("tetraploid.publish.password")?.toString()
+                    // 仅显式 -Ptetraploid.publish.github=true 才挂 GitHub Packages，
                     // 避免 CI 环境里有 GITHUB_TOKEN 时 :publish 误传 / 409 Conflict。
-                    val wantGh = project.findProperty("composekn.publish.github")?.toString() == "true"
+                    val wantGh = project.findProperty("tetraploid.publish.github")?.toString() == "true"
                     if (wantGh && !ghToken.isNullOrBlank()) {
-                        val owner = project.findProperty("composekn.publish.github.owner")?.toString()
+                        val owner = project.findProperty("tetraploid.publish.github.owner")?.toString()
                             ?: System.getenv("GITHUB_REPOSITORY_OWNER")
                             ?: "TetraploidHuman"
-                        val repo = project.findProperty("composekn.publish.github.repo")?.toString()
+                        val repo = project.findProperty("tetraploid.publish.github.repo")?.toString()
                             ?: System.getenv("GITHUB_REPOSITORY")?.substringAfter('/')
                             ?: "compose-multiplatform-kotlin-native"
                         maven {
                             name = "GitHubPackages"
                             url = project.uri("https://maven.pkg.github.com/$owner/$repo")
                             credentials {
-                                username = project.findProperty("composekn.publish.user")?.toString()
+                                username = project.findProperty("tetraploid.publish.user")?.toString()
                                     ?: System.getenv("GITHUB_ACTOR")
                                     ?: "github"
                                 password = ghToken
@@ -77,18 +77,18 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                         }
                     }
                     // Maven Central（OSSRH staging / Central Portal maven 端点）。
-                    // 需 composekn.publish.central.user|password + signing；默认不挂。
+                    // 需 tetraploid.publish.central.user|password + signing；默认不挂。
                     val wantCentral =
-                        project.findProperty("composekn.publish.central")?.toString() == "true"
+                        project.findProperty("tetraploid.publish.central")?.toString() == "true"
                     if (wantCentral) {
-                        val centralUrl = project.findProperty("composekn.publish.central.url")
+                        val centralUrl = project.findProperty("tetraploid.publish.central.url")
                             ?.toString()
                             ?: "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
                         maven {
                             name = "MavenCentral"
                             url = project.uri(centralUrl)
-                            val u = project.findProperty("composekn.publish.central.user")?.toString()
-                            val p = project.findProperty("composekn.publish.central.password")
+                            val u = project.findProperty("tetraploid.publish.central.user")?.toString()
+                            val p = project.findProperty("tetraploid.publish.central.password")
                                 ?.toString()
                             if (!u.isNullOrBlank() && !p.isNullOrBlank()) {
                                 credentials {
@@ -103,7 +103,7 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                     pom {
                         name.set(project.name)
                         description.set(
-                            project.findProperty("composekn.pom.description")?.toString()
+                            project.findProperty("tetraploid.pom.description")?.toString()
                                 ?: "compose-multiplatform-kotlin-native: Compose Multiplatform on Kotlin/Native (linuxX64/mingwX64)",
                         )
                         url.set("https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native")
@@ -150,8 +150,8 @@ class ComposeKnPublishPlugin : Plugin<Project> {
     private fun credentialsFrom(
         project: Project,
         repo: org.gradle.api.artifacts.repositories.MavenArtifactRepository,
-        userKey: String = "composekn.publish.user",
-        passKey: String = "composekn.publish.password",
+        userKey: String = "tetraploid.publish.user",
+        passKey: String = "tetraploid.publish.password",
     ) {
         val u = project.findProperty(userKey)?.toString()
             ?: System.getenv("GITHUB_ACTOR")
