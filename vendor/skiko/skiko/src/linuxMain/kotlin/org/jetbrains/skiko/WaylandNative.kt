@@ -293,7 +293,7 @@ internal external fun composekn_window_vk_destroy(window: COpaquePointer?)
 @SymbolName("composekn_window_set_vulkan_preferred")
 internal external fun composekn_window_set_vulkan_preferred(window: COpaquePointer?, preferred: Boolean)
 
-/** Wayland wl_data_device clipboard bridge (Tetraploid window). */
+/** Wayland wl_data_device clipboard bridge (ComposeKN window). */
 object WaylandClipboard {
     private const val BUFFER_SIZE = 65536
     private const val PROBE_SIZE = 64 * 1024

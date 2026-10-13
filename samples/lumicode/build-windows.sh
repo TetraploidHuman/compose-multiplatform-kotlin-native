@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Link LumiCode mingwX64 via Tetraploid + prebuilt MinGW Skia.
+# Link LumiCode mingwX64 via ComposeKN + prebuilt MinGW Skia.
 # Mirrors vendor/skiko/skia-mingw/build-windows-native-demo.sh but targets :samples:lumicode.
 set -euo pipefail
 

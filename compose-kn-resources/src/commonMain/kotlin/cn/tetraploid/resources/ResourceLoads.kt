@@ -1,7 +1,7 @@
 package cn.tetraploid.resources
 
 /**
- * 解析并读取 Tetraploid 资源字节。
+ * 解析并读取 ComposeKN 资源字节。
  *
  * 查找顺序：
  * 1. `COMPOSEKN_RESOURCES` 环境变量（目录）+ relativePath

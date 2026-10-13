@@ -12,7 +12,7 @@ plugins {
 }
 
 /**
- * 发布到 Tetraploid 坐标（默认关；`-Pcomposekn.publish.composeUi=true` 打开）：
+ * 发布到 ComposeKN 坐标（默认关；`-Pcomposekn.publish.composeUi=true` 打开）：
  *   group = cn.tetraploid.compose
  *   version = 1.12.1-ckn.<composekn.version>
  *   artifactId = 子工程名（ui / foundation / material3 / …）
@@ -107,7 +107,7 @@ subprojects {
                 repositories {
                     maven {
                         name = "ComposeKnLocal"
-                        // 发到 Tetraploid 仓库根的 build/maven-repo（本工程在 vendor/compose-core）
+                        // 发到 ComposeKN 仓库根的 build/maven-repo（本工程在 vendor/compose-core）
                         url = uri(rootProject.projectDir.resolve("../../build/maven-repo"))
                     }
                     val ghToken = System.getenv("GITHUB_TOKEN")

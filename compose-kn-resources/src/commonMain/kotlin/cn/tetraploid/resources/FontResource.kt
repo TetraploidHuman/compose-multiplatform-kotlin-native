@@ -1,7 +1,7 @@
 package cn.tetraploid.resources
 
 /**
- * Tetraploid 字体资源句柄 —— API 形态对齐官方 `compose.resources` 的 `FontResource`，
+ * ComposeKN 字体资源句柄 —— API 形态对齐官方 `compose.resources` 的 `FontResource`，
  * 供生成的 `Res.font.*` 与 [Font] 使用。
  *
  * 加载顺序见 [ResourceLoads.loadBytes]。

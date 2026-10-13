@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 把 Tetraploid 用的 Skiko 发成 cn.tetraploid:skiko:<composekn.version>。
+# 把 ComposeKN 用的 Skiko 发成 cn.tetraploid:skiko:<composekn.version>。
 #
 # 必须在 nix-shell（shell.nix）内运行，保证 x86_64-w64-mingw32-g++ 在 PATH：
 #   nix-shell ./shell.nix -I nixpkgs=$NIXPKGS_URL --run ./scripts/publish-skiko-composekn.sh

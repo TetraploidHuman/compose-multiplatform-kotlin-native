@@ -237,7 +237,7 @@ PY
   ls -lh "$ZIP"
   if ! gh release view "$TAG" >/dev/null 2>&1; then
     gh release create "$TAG" --title "$TAG" \
-      --notes "Tetraploid $CKN_VER — hosts/BOM/resources/skiko/UI/plugins Maven repo"
+      --notes "ComposeKN $CKN_VER — hosts/BOM/resources/skiko/UI/plugins Maven repo"
   fi
   gh release delete-asset "$TAG" "composekn-maven-${CKN_VER}.zip" -y 2>/dev/null || true
   gh release upload "$TAG" "$ZIP" --clobber

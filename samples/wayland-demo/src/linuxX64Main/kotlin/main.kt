@@ -100,7 +100,7 @@ fun main(args: Array<String>) {
     application {
         val trayState = rememberTrayState()
         val notifyInfo = rememberNotification(
-            "Tetraploid",
+            "ComposeKN",
             "Linux tray notification (Info)",
             Notification.Type.Info,
         )
@@ -114,7 +114,7 @@ fun main(args: Array<String>) {
             Tray(
                 icon = ColorPainter(Color(0xFF1B6AC9)),
                 state = trayState,
-                tooltip = "Tetraploid Wayland Demo",
+                tooltip = "ComposeKN Wayland Demo",
                 onAction = { println("composekn: tray onAction") },
             ) {
                 Item("Notify Info") { trayState.sendNotification(notifyInfo) }
@@ -126,7 +126,7 @@ fun main(args: Array<String>) {
         Window(
             onCloseRequest = ::exitApplication,
             state = mainState,
-            title = "Tetraploid Wayland Demo",
+            title = "ComposeKN Wayland Demo",
         ) {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -137,7 +137,7 @@ fun main(args: Array<String>) {
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(
-                            "Tetraploid — Compose on Kotlin/Native + Wayland",
+                            "ComposeKN — Compose on Kotlin/Native + Wayland",
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
@@ -218,7 +218,7 @@ fun main(args: Array<String>) {
             Window(
                 onCloseRequest = { openSecond = false },
                 state = rememberWindowState(size = DpSize(420.dp, 280.dp)),
-                title = "Tetraploid · 第二扇窗",
+                title = "ComposeKN · 第二扇窗",
             ) {
                 MaterialTheme {
                     Surface(Modifier.fillMaxSize()) {
@@ -243,7 +243,7 @@ fun main(args: Array<String>) {
             DialogWindow(
                 onCloseRequest = { openDialog = false },
                 state = rememberDialogState(size = DpSize(360.dp, 220.dp)),
-                title = "Tetraploid · DialogWindow",
+                title = "ComposeKN · DialogWindow",
             ) {
                 MaterialTheme {
                     Surface(Modifier.fillMaxSize()) {
@@ -288,7 +288,7 @@ private fun runLinuxSelfTest() {
         Window(
             onCloseRequest = ::exitApplication,
             state = state,
-            title = "Tetraploid Linux SelfTest",
+            title = "ComposeKN Linux SelfTest",
         ) {
             LaunchedEffect(Unit) {
                 try {
@@ -494,7 +494,7 @@ private fun ShowcaseSections() {
         val mono = remember {
             FontFamily(Font(Res.font.jbmono_regular, FontWeight.Normal))
         }
-        Text("Noto Sans — Tetraploid Res.font", fontFamily = sans, color = Color.White)
+        Text("Noto Sans — ComposeKN Res.font", fontFamily = sans, color = Color.White)
         Text("JetBrains Mono 0123", fontFamily = mono, color = Color(0xFFB0BEC5))
     }
 }
@@ -509,8 +509,8 @@ private fun ClipboardDemoBox() {
         Button(onClick = {
             clipboard.setClip(
                 ClipEntry.withHtml(
-                    html = "<b>Tetraploid</b> Linux clipboard",
-                    plainText = "Tetraploid Linux clipboard",
+                    html = "<b>ComposeKN</b> Linux clipboard",
+                    plainText = "ComposeKN Linux clipboard",
                 ),
             )
             status = "已写入 HTML+plain"
@@ -584,7 +584,7 @@ private fun DragAndDropDemoBox() {
                         drawDragDecoration = { drawRect(Color(0xFF2E7D32), size = size) },
                     ) { _ ->
                         DragAndDropTransferData(
-                            text = "Tetraploid Wayland 拖出的文本",
+                            text = "ComposeKN Wayland 拖出的文本",
                             onTransferCompleted = { ok ->
                                 println("composekn: drag text done success=$ok")
                             },

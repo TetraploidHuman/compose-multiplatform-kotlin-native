@@ -172,7 +172,7 @@ object ComposeKnMavenCache {
         conn.instanceFollowRedirects = true
         conn.connectTimeout = 30_000
         conn.readTimeout = 600_000
-        conn.setRequestProperty("User-Agent", "Tetraploid-MavenCache")
+        conn.setRequestProperty("User-Agent", "ComposeKN-MavenCache")
         if (accept != null) conn.setRequestProperty("Accept", accept)
         if (!token.isNullOrBlank()) {
             conn.setRequestProperty("Authorization", "Bearer $token")

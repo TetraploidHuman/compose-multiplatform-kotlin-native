@@ -139,7 +139,7 @@ import org.jetbrains.skiko.Win32Message
 // 结果以 `SELFTEST ...` 行打印，最终退出码 0（全绿）/ 1（有失败）。
 // =====================================================================
 
-private const val SELFTEST_CLIPBOARD = "Tetraploid 剪贴板 ✔ clipboard"
+private const val SELFTEST_CLIPBOARD = "ComposeKN 剪贴板 ✔ clipboard"
 
 /** 自检用的确定性界面：所有元素的像素位置都可以手算出来。 */
 private const val TEST_BG_ARGB = 0xFF102030.toInt()
@@ -254,17 +254,17 @@ private val DROP_TEST_FILES = listOf(
     "C:\\tetraploid\\drop-test-1.txt",
     "C:\\tetraploid\\drop-test-2.txt",
 )
-private const val DROP_TEST_TEXT = "Tetraploid 拖放测试文本"
+private const val DROP_TEST_TEXT = "ComposeKN 拖放测试文本"
 
 /** 富文本剪贴板测试用的 HTML 片段（故意含非 ASCII，验证 UTF-8 字节偏移没算错）。 */
 private const val CLIP_HTML_FRAGMENT =
-    "<b>Tetraploid</b> 富文本 <i>clipboard</i> ✔"
+    "<b>ComposeKN</b> 富文本 <i>clipboard</i> ✔"
 
 /** RTF 片段（RTF 是 ASCII，非 ASCII 走 \uN 转义 —— 这里只测"原样往返"）。 */
-private const val CLIP_RTF = "{\\rtf1\\ansi\\b Tetraploid}\\par "
+private const val CLIP_RTF = "{\\rtf1\\ansi\\b ComposeKN}\\par "
 
 /** 富文本条目里的纯文本回退（不认 HTML 的程序该拿到它）。 */
-private const val CLIP_PLAIN = "Tetraploid 富文本回退文本"
+private const val CLIP_PLAIN = "ComposeKN 富文本回退文本"
 
 /**
  * 2×2 测试位图：左上红 / 右上绿 / 左下蓝 / 右下白。
@@ -1086,7 +1086,7 @@ private fun renderChecks(report: SelfTestReport) {
         WindowsComposeWindow(title = "probe", width = 100, height = 100).isDecorated,
         "默认应为系统标题栏（isDecorated=true）",
     )
-    val app = WindowsComposeApplication(title = "Tetraploid Selftest", width = 800, height = 600, undecorated = true)
+    val app = WindowsComposeApplication(title = "ComposeKN Selftest", width = 800, height = 600, undecorated = true)
     app.setContent(withChrome = true) { DeterministicTestScreen(probe, scrollState) }
     // 同一个 driver：帧时钟跨调用单调递增（动画/惯性滚动依赖这一点）
     val driver = OffscreenDriver(app)
@@ -2168,7 +2168,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
     val scrollState = ScrollState(0)
     // 同样显式 CSD：下面的点击/剪贴板坐标全都含 32dp 标题栏偏移。
     val app = WindowsComposeApplication(
-        title = "Tetraploid Selftest", width = 900, height = 600, undecorated = true,
+        title = "ComposeKN Selftest", width = 900, height = 600, undecorated = true,
     )
     var clipboardValue: String? = null
     var clickedAt = Pair(0, 0)
@@ -3491,7 +3491,7 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
 private fun runDecoratedWindowResizeTests(report: SelfTestReport) {
     report.section("window 系统标题栏：不可缩放的命中测试")
     val app = WindowsComposeApplication(
-        title = "Tetraploid Resize Test", width = 700, height = 500, undecorated = false,
+        title = "ComposeKN Resize Test", width = 700, height = 500, undecorated = false,
     )
     var frame = 0
     var clientBefore = IntSize.Zero

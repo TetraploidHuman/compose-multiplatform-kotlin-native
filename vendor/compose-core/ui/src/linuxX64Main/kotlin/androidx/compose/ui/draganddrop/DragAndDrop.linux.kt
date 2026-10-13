@@ -46,7 +46,7 @@ actual class DragAndDropTransferData @ExperimentalComposeUiApi constructor(
  * 上游的对应物：desktop 的 `DragAndDropEvent(dropTargetEvent)` 里裹着 AWT 的
  * `DropTargetEvent`/`Transferable`，iOS 的裹着 `DropSessionContext`。负载怎么读是
  * **平台决定**的（上游也是平台扩展：`event.awtEventOrNull`、iOS 的 `session`），
- * 所以这里给的是 Tetraploid 原生的访问器 [files] / [text]，以及 [positionInWindow]。
+ * 所以这里给的是 ComposeKN 原生的访问器 [files] / [text]，以及 [positionInWindow]。
  *
  * 构造者是宿主（`compose-kn-windows` 的拖放派发）：`DragAndDropEvent.forPlatformDrop(...)`。
  */
@@ -75,7 +75,7 @@ actual class DragAndDropEvent internal constructor(
 
     companion object {
         /**
-         * Tetraploid 扩展：宿主构造一个**入站**拖放事件。
+         * ComposeKN 扩展：宿主构造一个**入站**拖放事件。
          *
          * 为什么需要它：`DragAndDropEvent` 的构造函数是 internal（和上游一致 ——
          * 事件只能由平台层创建），而宿主在另一个 Gradle 模块里，读不到 internal。

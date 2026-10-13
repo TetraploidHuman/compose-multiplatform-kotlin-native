@@ -104,7 +104,7 @@ EOF
   <version>$version</version>
   <packaging>pom</packaging>
   <name>$name</name>
-  <description>Tetraploid KMP root (platform variants via Gradle Module Metadata)</description>
+  <description>ComposeKN KMP root (platform variants via Gradle Module Metadata)</description>
 </project>
 EOF
 

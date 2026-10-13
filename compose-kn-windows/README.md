@@ -74,4 +74,4 @@ COMPOSEKN_SELFTEST=window   # 或 all / logic
 
 ## License
 
-与 Tetraploid 主项目相同。
+与 ComposeKN 主项目相同。

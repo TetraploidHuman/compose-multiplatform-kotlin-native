@@ -15,7 +15,7 @@ die() { printf '\033[31m!!\033[0m %s\n' "$1" >&2; exit 1; }
 
 if [ -z "$M2" ]; then
   M2="$REPO/build/consumer-m2"
-  info "Clean fetch Tetraploid $VER → $M2"
+  info "Clean fetch ComposeKN $VER → $M2"
   rm -rf "$M2"
   mkdir -p "$M2"
   COMPOSEKN_VERSION="$VER" "$REPO/scripts/fetch-composekn-maven.sh" "$M2"

@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
     if (args.contains("--compile-only")) return
     application {
         Window(onCloseRequest = ::exitApplication, title = "consumer-smoke") {
-            Text("Tetraploid consumer-smoke")
+            Text("ComposeKN consumer-smoke")
         }
     }
 }

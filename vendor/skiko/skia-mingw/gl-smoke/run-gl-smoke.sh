@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 构建并运行 Tetraploid Windows GPU 后端「阶段 0」冒烟测试。
+# 构建并运行 ComposeKN Windows GPU 后端「阶段 0」冒烟测试。
 #
 # 前置：先跑 build-skia-mingw-gl.sh 产出 out/mingw-gl/*.a（Ganesh + GL 版 Skia）。
 #

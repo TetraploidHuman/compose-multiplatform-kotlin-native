@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import java.io.File
 
 /**
- * Tetraploid 资源管线（对齐官方 composeResources 布局的 native 子集）。
+ * ComposeKN 资源管线（对齐官方 composeResources 布局的 native 子集）。
  *
  * 源：`src/commonMain/composeResources/{font,drawable,values}/`
  * 生成：`Res.font|string|drawable`（类型来自 `org.jetbrains.compose.resources`）；
@@ -99,7 +99,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
             binaries.withType(Executable::class.java).configureEach {
                 val binary = this
                 val copyName =
-                    "copyTetraploidResources_${target.name}_${binary.buildType.getName()}"
+                    "copyComposeKnResources_${target.name}_${binary.buildType.getName()}"
                 val copy = project.tasks.register(copyName) {
                     dependsOn(generate)
                     dependsOn(binary.linkTaskProvider)
@@ -144,7 +144,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
                             values.copyRecursively(valuesOut, overwrite = true)
                         }
                         logger.lifecycle(
-                            "Tetraploid resources: copied fonts=${fontFiles.size} " +
+                            "ComposeKN resources: copied fonts=${fontFiles.size} " +
                                 "drawables=${drawableFiles.size} → $rootOut",
                         )
                     }
@@ -156,7 +156,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
 }
 
 abstract class ComposeKnResourcesExtension {
-    /** Res 类所在包（Tetraploid 原名）。 */
+    /** Res 类所在包（ComposeKN 原名）。 */
     abstract val packageName: Property<String>
     abstract val resourcesDir: DirectoryProperty
     abstract val extraFontDirs: ListProperty<String>
@@ -241,7 +241,7 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             |import org.jetbrains.compose.resources.fontResource
             |import org.jetbrains.compose.resources.stringResource
             |
-            |// Tetraploid 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
+            |// ComposeKN 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
             |// 由 generateComposeKnResources 生成 —— 勿手改。
             |object Res {
             |    object font {
@@ -259,7 +259,7 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
         )
 
         logger.lifecycle(
-            "Tetraploid resources: Res.font=${fonts.size} string=${strings.size} " +
+            "ComposeKN resources: Res.font=${fonts.size} string=${strings.size} " +
                 "drawable=${drawables.size} → ${dir.resolve("Res.kt")}",
         )
     }

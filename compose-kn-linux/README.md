@@ -103,4 +103,4 @@ COMPOSEKN_VK_HARDWARE=1 nix-shell ./shell.nix --run './scripts/run-linux-native.
 
 ## License
 
-与 Tetraploid 主项目相同。
+与 ComposeKN 主项目相同。

@@ -1,6 +1,6 @@
 /*
  * Copyright 2021 The Android Open Source Project
- * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
+ * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
  *
  * 声明式 Window：DisposableEffect 创建/销毁原生窗；系统关窗只调 onCloseRequest。
  */

@@ -212,7 +212,7 @@ class GalleryProbe {
 }
 
 /**
- * Tetraploid Windows 组件画廊。
+ * ComposeKN Windows 组件画廊。
  *
  * 目标不是"好看"，而是**尽可能多地走一遍 Compose 的渲染/排版/输入路径**：
  * 文本（含长文本换行与省略号）、按钮四种、绘制、滚动（普通滚动 + Lazy 虚拟化）、
@@ -321,7 +321,7 @@ private fun DiagnosticsHud(probe: GalleryProbe, window: WindowsComposeWindow) {
         // 高度打印出来会是 Infinity.dp，徒增困惑。
         val availableWidth = maxWidth
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("Tetraploid · Windows 原生组件画廊", style = MaterialTheme.typography.titleMedium)
+            Text("ComposeKN · Windows 原生组件画廊", style = MaterialTheme.typography.titleMedium)
             Text(
                 text = "窗口 ${window.logicalWidth}x${window.logicalHeight}dp · 可用宽度 $availableWidth" +
                     " · dpi=${window.layer.contentScale}",
@@ -440,12 +440,12 @@ private fun LazyListScope.gallerySections(
         )
         if (trayState != null && traySupported) {
             val info = rememberNotification(
-                "Tetraploid",
+                "ComposeKN",
                 "画廊按钮发出的 Info 通知",
                 Notification.Type.Info,
             )
             val err = rememberNotification(
-                "Tetraploid",
+                "ComposeKN",
                 "画廊按钮发出的 Error 通知",
                 Notification.Type.Error,
             )
@@ -476,7 +476,7 @@ private fun LazyListScope.gallerySections(
     section("文本 / Text") {
         Text("headlineSmall 标题", style = MaterialTheme.typography.headlineSmall)
         Text("titleMedium 小标题", style = MaterialTheme.typography.titleMedium)
-        Text("bodyMedium 正文：Tetraploid 让 Compose 跑在 Kotlin/Native 上。", style = MaterialTheme.typography.bodyMedium)
+        Text("bodyMedium 正文：ComposeKN 让 Compose 跑在 Kotlin/Native 上。", style = MaterialTheme.typography.bodyMedium)
         Text("labelSmall 标签", style = MaterialTheme.typography.labelSmall)
         Text(
             text = "长文本省略号测试：Compose Multiplatform 的文本排版在 Windows 原生后端上" +
@@ -1239,7 +1239,7 @@ private fun DragAndDropDemoBox() {
                         },
                     ) { _ ->
                         DragAndDropTransferData(
-                            text = "Tetraploid Gallery 拖出的文本",
+                            text = "ComposeKN Gallery 拖出的文本",
                             onTransferCompleted = { ok ->
                                 winlog("drag: Source 文本拖放结束 success=$ok")
                             },

@@ -27,7 +27,7 @@ compose.desktop {
         nativeDistributions {
             // 让 jpackage 在 Windows 上产出真正的 exe 安装包
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
-            packageName = "Tetraploid-Windows"
+            packageName = "ComposeKN-Windows"
             packageVersion = "1.0.0"
         }
     }

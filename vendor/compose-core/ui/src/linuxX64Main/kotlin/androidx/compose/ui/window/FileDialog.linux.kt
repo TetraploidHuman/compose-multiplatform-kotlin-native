@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 The Tetraploid Authors (linuxX64 / mingw port)
+ * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
  *
  * 系统文件对话框（打开 / 保存）。
  * Windows：comdlg32 GetOpenFileNameW / GetSaveFileNameW（Wine 友好）。

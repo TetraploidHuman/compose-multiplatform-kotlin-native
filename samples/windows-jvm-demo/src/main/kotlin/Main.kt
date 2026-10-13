@@ -22,7 +22,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 
 /**
- * Tetraploid — Windows JVM 路线的最小可运行 demo。
+ * ComposeKN — Windows JVM 路线的最小可运行 demo。
  *
  * 全链路: Kotlin/JVM + Compose Desktop + skiko-windows (native, MSVC ABI, JVM 加载)。
  * UI 代码与 Linux/Wayland 的 wayland-demo 是同一套 Material3 写法。
@@ -30,7 +30,7 @@ import androidx.compose.ui.window.application
  */
 fun main() = application {
     Window(
-        title = "Tetraploid — Windows (JVM)",
+        title = "ComposeKN — Windows (JVM)",
         onCloseRequest = ::exitApplication,
     ) {
         val backgroundColor = Color(0xFF2D2D30)
@@ -51,7 +51,7 @@ fun CounterAndTextInput() {
         modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Tetraploid on Windows (Kotlin/JVM + skiko native)")
+        Text("ComposeKN on Windows (Kotlin/JVM + skiko native)")
         Text("此 demo 由 compose.desktop (JetBrains 官方打包) 构建")
         var clickCount by remember { mutableIntStateOf(0) }
         Button(onClick = { clickCount++ }) { Text("Clicked $clickCount times") }

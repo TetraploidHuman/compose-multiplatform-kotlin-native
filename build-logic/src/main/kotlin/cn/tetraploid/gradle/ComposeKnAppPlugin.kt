@@ -22,10 +22,10 @@ class ComposeKnAppPlugin : Plugin<Project> {
         project.pluginManager.apply("cn.tetraploid.host")
         project.pluginManager.apply("cn.tetraploid.resources")
 
-        val inTetraploidRepo =
+        val inComposeKnRepo =
             project.rootProject.findProject(":compose-kn-linux") != null
         project.extensions.configure(ComposeKnHostExtension::class.java) {
-            useProjectDependencies.convention(inTetraploidRepo)
+            useProjectDependencies.convention(inComposeKnRepo)
             val ver = project.findProperty("composekn.version")?.toString()
             if (!ver.isNullOrBlank()) {
                 composeknVersion.convention(ver)

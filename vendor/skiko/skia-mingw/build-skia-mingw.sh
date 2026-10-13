@@ -29,7 +29,7 @@ if [ ! -d "$SKIA/.git" ]; then
         https://github.com/JetBrains/skia "$SKIA"
 fi
 
-# 2) 应用 Tetraploid 的 mingw 补丁（可重复执行）
+# 2) 应用 ComposeKN 的 mingw 补丁（可重复执行）
 cd "$SKIA"
 if git apply --check "$HERE/skia-mingw.patch" 2>/dev/null; then
     git apply "$HERE/skia-mingw.patch"

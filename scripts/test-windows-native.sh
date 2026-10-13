@@ -294,7 +294,7 @@ APP_PID=$!
 WID=""
 for _ in $(seq 1 60); do
     sleep 0.5
-    WID="$(xwininfo -root -tree 2>/dev/null | grep -m1 'Tetraploid Windows Demo' | awk '{print $1}')" || true
+    WID="$(xwininfo -root -tree 2>/dev/null | grep -m1 'ComposeKN Windows Demo' | awk '{print $1}')" || true
     [ -n "${WID:-}" ] && break
 done
 if [ -z "${WID:-}" ]; then
@@ -399,7 +399,7 @@ export WINEDEBUG="${WINEDEBUG:--all}"
 APP_PID=$!
 for _ in $(seq 1 40); do
     sleep 0.5
-    WID="$(xwininfo -root -tree 2>/dev/null | grep -m1 'Tetraploid Windows Demo' | awk '{print $1}')" || true
+    WID="$(xwininfo -root -tree 2>/dev/null | grep -m1 'ComposeKN Windows Demo' | awk '{print $1}')" || true
     [ -n "${WID:-}" ] && break
 done
 if [ -z "${WID:-}" ]; then
@@ -416,7 +416,7 @@ sleep 4
 read_title() {
     # 注意 `"\([^"]*\)"`：用 `"\(.*\)"` 的话贪婪匹配会吃到行内最后一个引号，
     # 把 `": ("windows-demo.exe"` 这类尾巴也带进来（曾经把 59.8 解析成 9.8）。
-    xwininfo -root -tree 2>/dev/null | grep -m1 'Tetraploid Windows Demo' \
+    xwininfo -root -tree 2>/dev/null | grep -m1 'ComposeKN Windows Demo' \
       | sed -n 's/^[^"]*"\([^"]*\)".*/\1/p'
 }
 read_fps() {

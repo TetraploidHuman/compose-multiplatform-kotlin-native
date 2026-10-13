@@ -11,7 +11,7 @@
 #   ./scripts/package-windows-release.sh 0.2.8                # 用现有 exe 打包
 #   ./scripts/package-windows-release.sh 0.2.8 --build        # 先链接再打包
 #
-# 产物：build/release/Tetraploid-Windows-Native-v<version>.zip
+# 产物：build/release/ComposeKN-Windows-Native-v<version>.zip
 set -euo pipefail
 
 VERSION="${1:?用法: $0 <version> [--build]}"
@@ -22,8 +22,8 @@ EXE_DIR="$REPO/samples/windows-demo/build/bin/mingwX64/releaseExecutable"
 EXE="$EXE_DIR/windows-demo.exe"
 SKIA_WORK="${SKIA_MINGW_WORK:-/mnt/hdd2/KtLLM/skia-mingw}"
 OUT_DIR="$REPO/build/release"
-STAGE="$OUT_DIR/Tetraploid-Windows-Native"
-ZIP="$OUT_DIR/Tetraploid-Windows-Native-v$VERSION.zip"
+STAGE="$OUT_DIR/ComposeKN-Windows-Native"
+ZIP="$OUT_DIR/ComposeKN-Windows-Native-v$VERSION.zip"
 
 if [ "$DO_BUILD" = "--build" ]; then
     echo "==> 链接 windows-demo.exe（约 7 分钟；优先 mingw-graphite-vk Skia）"
@@ -44,7 +44,7 @@ if [ "$EXE_BYTES" -lt 20000000 ]; then
 fi
 
 rm -rf "$STAGE" && mkdir -p "$STAGE"
-cp -f "$EXE" "$STAGE/Tetraploid-Windows-Native.exe"
+cp -f "$EXE" "$STAGE/ComposeKN-Windows-Native.exe"
 
 # 自定义字体（compose-kn-resources）：与 exe 同级的 composeResources/font/
 FONTS_SRC="$(dirname "$EXE")/composeResources/font"
@@ -58,10 +58,10 @@ fi
 # v0.2.9/v0.3.0 的 README 就是这样丢掉了一整行的命令提示。
 # 版本号只能靠显式占位替换注入，所以下面用 sed 处理 __VERSION__。
 cat > "$STAGE/README.txt" <<'EOF'
-Tetraploid Windows 原生组件画廊 v__VERSION__
+ComposeKN Windows 原生组件画廊 v__VERSION__
 =========================================
 
-免安装：解压后双击 `Tetraploid-Windows-Native.exe` 即可。
+免安装：解压后双击 `ComposeKN-Windows-Native.exe` 即可。
 ICU 数据已内嵌进 exe。若带 `composeResources/font/`，为自定义字体（Noto /
 JetBrains Mono 等），请与 exe **保持相对路径**（compose-kn-resources 运行时查找）。
 
@@ -90,7 +90,7 @@ Kotlin/Native (mingwX64) + Compose Multiplatform + 自编译 GNU-ABI Skia，
     composekn-startup.log 里的「skialayer: 使用 …」确认实际后端
   · 渲染：**按需渲染 + 按刷新率节流**（没有内容变化就不重绘，空闲时 CPU ≈ 0；
     这个窗口的标题栏实时显示实测帧率）
-  · 想看空闲行为：Tetraploid-Windows-Native.exe --no-animate（关掉每帧动画）
+  · 想看空闲行为：ComposeKN-Windows-Native.exe --no-animate（关掉每帧动画）
   · 顶部诊断条：窗口尺寸、dpi、交互计数、**每帧重组计数**
   · 窗口 API：`windowPosition` / `setWindowPosition` / `windowSize` / `setWindowSize` /
     `alwaysOnTop` / `setAlwaysOnTop` / `isFullscreen` / `setFullscreen` / `resizable` /
@@ -131,11 +131,11 @@ Kotlin/Native (mingwX64) + Compose Multiplatform + 自编译 GNU-ABI Skia，
 exe 内置三层自检，用退出码 0/1 汇报，可以直接在 CI / 脚本里断言：
 
   普通 cmd/PowerShell:
-      set COMPOSEKN_SELFTEST=1        && Tetraploid-Windows-Native.exe
-      set COMPOSEKN_SELFTEST=all      && Tetraploid-Windows-Native.exe
+      set COMPOSEKN_SELFTEST=1        && ComposeKN-Windows-Native.exe
+      set COMPOSEKN_SELFTEST=all      && ComposeKN-Windows-Native.exe
 
   PowerShell:
-      \$env:COMPOSEKN_SELFTEST = "all"; .\Tetraploid-Windows-Native.exe
+      \$env:COMPOSEKN_SELFTEST = "all"; .\ComposeKN-Windows-Native.exe
 
 输出形如：
       SELFTEST ok   : logic/vk-rwin
@@ -250,10 +250,10 @@ sed -i "s/__VERSION__/$VERSION/g" "$STAGE/README.txt"
 
 ( cd "$OUT_DIR" && rm -f "$ZIP" && {
     if command -v zip >/dev/null 2>&1; then
-        zip -q -r "$ZIP" "Tetraploid-Windows-Native"
+        zip -q -r "$ZIP" "ComposeKN-Windows-Native"
     else
         # nix/CI 环境可能没有 zip(1)；用 Python 标准库兜底。
-        python3 - "$ZIP" "Tetraploid-Windows-Native" <<'PY'
+        python3 - "$ZIP" "ComposeKN-Windows-Native" <<'PY'
 import sys, zipfile, os
 zip_path, root = sys.argv[1], sys.argv[2]
 with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:

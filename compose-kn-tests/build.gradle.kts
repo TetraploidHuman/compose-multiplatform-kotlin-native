@@ -6,7 +6,7 @@ plugins {
     id("cn.tetraploid.linux-native-linker")
 }
 
-// Tetraploid 的自动化单元测试。
+// ComposeKN 的自动化单元测试。
 //
 // 为什么用 linuxX64 而不是 mingwX64：
 //   Windows 平台代码里有一部分是**纯逻辑**（VK→Key 映射表、事件模型、输入状态、

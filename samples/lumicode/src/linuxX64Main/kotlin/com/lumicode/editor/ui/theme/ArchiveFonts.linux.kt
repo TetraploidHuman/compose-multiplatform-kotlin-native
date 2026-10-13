@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.Font
 import com.lumicode.editor.resources.Res
 
 /**
- * Tetraploid：通过 compose-kn-resources 加载与 Desktop 相同的 Noto / JetBrains Mono
+ * ComposeKN：通过 compose-kn-resources 加载与 Desktop 相同的 Noto / JetBrains Mono
  *（`Res.font.*`，字体文件在 exe 旁 `composeResources/font/` 或 developmentPath）。
  */
 @Composable

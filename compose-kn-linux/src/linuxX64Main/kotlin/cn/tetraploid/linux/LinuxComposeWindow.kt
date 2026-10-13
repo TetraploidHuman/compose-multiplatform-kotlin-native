@@ -299,5 +299,5 @@ fun drawHelloFrame(canvas: Canvas, width: Int, height: Int) {
     canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(40f, 40f, width.toFloat() - 80f, height.toFloat() - 80f), paint)
     val font = org.jetbrains.skia.Font(null, 28f)
     val textPaint = org.jetbrains.skia.Paint().apply { color = org.jetbrains.skia.Color.WHITE }
-    canvas.drawString("Tetraploid / Wayland", 60f, 100f, font, textPaint)
+    canvas.drawString("ComposeKN / Wayland", 60f, 100f, font, textPaint)
 }

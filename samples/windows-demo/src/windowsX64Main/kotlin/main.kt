@@ -51,7 +51,7 @@ import platform.posix.getenv
 import kotlinx.cinterop.toKString
 
 /**
- * Tetraploid Windows 原生 demo。
+ * ComposeKN Windows 原生 demo。
  *
  * 两种运行模式：
  *  - 默认：`application { Window(...) }` 组件画廊（人工测试用，支持第二扇窗）
@@ -71,11 +71,11 @@ fun main(args: Array<String>) {
         exitProcess(if (passed) 0 else 1)
     }
 
-    println("Tetraploid Windows: Starting component gallery (application { Window })")
+    println("ComposeKN Windows: Starting component gallery (application { Window })")
     log("main: entry (Kotlin main reached)")
 
     val animate = resolveGalleryAnimation(args)
-    println("Tetraploid Windows: gallery animation = $animate（--no-animate / COMPOSEKN_GALLERY_ANIMATE=0 可关）")
+    println("ComposeKN Windows: gallery animation = $animate（--no-animate / COMPOSEKN_GALLERY_ANIMATE=0 可关）")
 
     registerComposeKnWindowsBackend()
 
@@ -87,12 +87,12 @@ fun main(args: Array<String>) {
         val mainState = rememberWindowState(size = DpSize(1100.dp, 760.dp))
         val trayState = rememberTrayState()
         val trayNotifyInfo = rememberNotification(
-            title = "Tetraploid",
+            title = "ComposeKN",
             message = "托盘通知（Info）——右键图标也可发",
             type = Notification.Type.Info,
         )
         val trayNotifyWarn = rememberNotification(
-            title = "Tetraploid",
+            title = "ComposeKN",
             message = "托盘通知（Warning）",
             type = Notification.Type.Warning,
         )
@@ -104,7 +104,7 @@ fun main(args: Array<String>) {
             Tray(
                 icon = ColorPainter(Color(0xFF1B6AC9)),
                 state = trayState,
-                tooltip = "Tetraploid Windows Demo",
+                tooltip = "ComposeKN Windows Demo",
                 onAction = {
                     probe.trayAction = "dblclick"
                     winlog("tray: onAction (double-click)")
@@ -129,7 +129,7 @@ fun main(args: Array<String>) {
         Window(
             onCloseRequest = ::exitApplication,
             state = mainState,
-            title = "Tetraploid Windows Demo",
+            title = "ComposeKN Windows Demo",
         ) {
             // 原生 Win32 HMENU（标题栏下方）；点选写到 probe.menuAction。
             MenuBar {
@@ -241,7 +241,7 @@ fun main(args: Array<String>) {
                         lastLoopFrames = win.layer.loopFrameCount
                         lastTickFrames = win.layer.immediateFrameCount
                         lastMark = TimeSource.Monotonic.markNow()
-                        win.setTitle("Tetraploid Windows Demo — ${fmt1(fps)} fps (frames=$total)")
+                        win.setTitle("ComposeKN Windows Demo — ${fmt1(fps)} fps (frames=$total)")
                     }
                 }
 
@@ -262,7 +262,7 @@ fun main(args: Array<String>) {
             Window(
                 onCloseRequest = { openSecond = false },
                 state = rememberWindowState(size = DpSize(480.dp, 360.dp)),
-                title = "Tetraploid · 第二扇窗",
+                title = "ComposeKN · 第二扇窗",
             ) {
                 SecondWindowContent(onClose = { openSecond = false })
             }
@@ -272,7 +272,7 @@ fun main(args: Array<String>) {
             DialogWindow(
                 onCloseRequest = { openDialog = false },
                 state = rememberDialogState(width = 420.dp, height = 280.dp),
-                title = "Tetraploid · DialogWindow",
+                title = "ComposeKN · DialogWindow",
             ) {
                 DialogWindowContent(onClose = { openDialog = false })
             }
@@ -284,7 +284,7 @@ fun main(args: Array<String>) {
             Window(
                 onCloseRequest = { openCsdMove = false },
                 state = rememberWindowState(size = DpSize(420.dp, 280.dp)),
-                title = "Tetraploid · WindowDraggableArea",
+                title = "ComposeKN · WindowDraggableArea",
                 undecorated = true,
             ) {
                 Surface(Modifier.fillMaxSize()) {
@@ -318,7 +318,7 @@ fun main(args: Array<String>) {
             }
         }
     }
-    println("Tetraploid Windows: application finished")
+    println("ComposeKN Windows: application finished")
 }
 
 /**
