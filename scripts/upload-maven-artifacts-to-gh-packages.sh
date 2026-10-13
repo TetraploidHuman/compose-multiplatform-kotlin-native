@@ -9,7 +9,8 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 OWNER="${GITHUB_REPOSITORY_OWNER:-TetraploidHuman}"
-GH_REPO_NAME="${GITHUB_REPOSITORY##*/}"
+GH_REPO_NAME="${GITHUB_REPOSITORY:-ComposeKN}"
+GH_REPO_NAME="${GH_REPO_NAME##*/}"
 GH_REPO_NAME="${GH_REPO_NAME:-ComposeKN}"
 M2_ROOT="$REPO/build/maven-repo"
 

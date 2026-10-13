@@ -45,6 +45,8 @@ need_dir "$M2/com/composekn/composekn-catalog/$VER"
 need_file "$M2/com/composekn/composekn-catalog/$VER/composekn-catalog-$VER.toml"
 need_dir "$M2/com/composekn/settings/com.composekn.settings.gradle.plugin/$VER"
 need_dir "$M2/com/composekn/host/com.composekn.host.gradle.plugin/$VER"
+need_dir "$M2/com/composekn/com.composekn.gradle.plugin/$VER"
+need_dir "$M2/com/composekn/app/com.composekn.app.gradle.plugin/$VER"
 need_file "$M2/com/composekn/composekn-build-logic/$VER/composekn-build-logic-$VER.jar"
 
 KLIB_N="$(find "$M2" -name '*.klib' | wc -l | tr -d ' ')"

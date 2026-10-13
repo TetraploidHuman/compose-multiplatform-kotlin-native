@@ -12,11 +12,14 @@ if [[ ! -f "$KEXE" ]]; then
 fi
 
 if command -v nix-shell >/dev/null 2>&1 && [[ -f "$ROOT/shell.nix" ]]; then
-  exec nix-shell "$ROOT/shell.nix" --run "
-    export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
-    export WAYLAND_DISPLAY=\${WAYLAND_DISPLAY:-wayland-0}
-    exec \"$KEXE\" \"\$@\"
-  " -- "$@"
+  # Embed argv into --run; trailing `-- "$@"` is parsed by nix-shell itself, not the kexe.
+  RUN_CMD="export XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; "
+  RUN_CMD+="export WAYLAND_DISPLAY=\${WAYLAND_DISPLAY:-wayland-0}; "
+  RUN_CMD+="exec $(printf '%q' "$KEXE")"
+  for arg in "$@"; do
+    RUN_CMD+=" $(printf '%q' "$arg")"
+  done
+  exec nix-shell "$ROOT/shell.nix" --run "$RUN_CMD"
 fi
 
 echo "On NixOS, use: ./scripts/run-linux-native.sh" >&2

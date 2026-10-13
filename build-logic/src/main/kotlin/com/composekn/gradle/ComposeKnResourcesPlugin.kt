@@ -22,8 +22,11 @@ import java.io.File
 /**
  * ComposeKN 资源管线（对齐官方 composeResources 布局的 native 子集）。
  *
- * 源：`src/commonMain/composeResources/font/` 下 ttf/otf + [ComposeKnResourcesExtension.extraFontDirs]
- * 生成：`Res.font.<name>`；链接后 copy 到 exe 旁 `composeResources/font/`。
+ * 源：`src/commonMain/composeResources/{font,drawable,values}/`
+ * 生成：`Res.font|string|drawable`（类型来自 `org.jetbrains.compose.resources`）；
+ * 链接后 copy 到 exe 旁 `composeResources/`。
+ *
+ * DSL：`composeKnResources { }`；亦可用官方风格别名 [ComposeKnResourcesExtension.packageOfResClass]。
  */
 class ComposeKnResourcesPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -31,7 +34,14 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
             "composeKnResources",
             ComposeKnResourcesExtension::class.java,
         )
-        ext.packageName.convention("composekn.resources.generated")
+        // 对齐官方默认：{group}.{module}.generated.resources；无 group 时退回稳定占位
+        val inferredPkg = buildString {
+            val g = project.group.toString().trim().trim('.')
+            if (g.isNotEmpty() && g != "unspecified") append(g).append('.')
+            append(project.name.replace('-', '_'))
+            append(".generated.resources")
+        }
+        ext.packageName.convention(inferredPkg)
         // 仅当目录存在时再挂 InputDirectory，避免样本工程无 composeResources 时任务校验失败
         val defaultRes = project.file("src/commonMain/composeResources")
         if (defaultRes.isDirectory) {
@@ -65,7 +75,20 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
         genDir: org.gradle.api.provider.Provider<org.gradle.api.file.Directory>,
     ) {
         val kotlin = project.extensions.findByType(KotlinMultiplatformExtension::class.java) ?: return
-        kotlin.sourceSets.findByName("commonMain")?.kotlin?.srcDir(genDir)
+        kotlin.sourceSets.findByName("commonMain")?.let { ss ->
+            ss.kotlin.srcDir(genDir)
+            val inRepo = project.rootProject.findProject(":compose-kn-resources") != null
+            val ver =
+                project.findProperty("composekn.version")?.toString()
+                    ?: ComposeKnHostPlugin.DEFAULT_VERSION
+            ss.dependencies {
+                if (inRepo) {
+                    implementation(project.project(":compose-kn-resources"))
+                } else {
+                    implementation("com.composekn:compose-kn-resources:$ver")
+                }
+            }
+        }
 
         project.tasks.withType(KotlinNativeCompile::class.java).configureEach {
             dependsOn(generate)
@@ -133,9 +156,17 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
 }
 
 abstract class ComposeKnResourcesExtension {
+    /** Res 类所在包（ComposeKN 原名）。 */
     abstract val packageName: Property<String>
     abstract val resourcesDir: DirectoryProperty
     abstract val extraFontDirs: ListProperty<String>
+
+    /**
+     * 官方 `compose.resources { packageOfResClass = "…" }` 同义别名，写入 [packageName]。
+     */
+    fun packageOfResClass(value: String) {
+        packageName.set(value)
+    }
 }
 
 abstract class GenerateComposeKnResourcesTask : DefaultTask() {
@@ -203,14 +234,14 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             """
             |package $pkg
             |
-            |import com.composekn.resources.DrawableResource
-            |import com.composekn.resources.FontResource
-            |import com.composekn.resources.StringResource
-            |import com.composekn.resources.drawableResource
-            |import com.composekn.resources.fontResource
-            |import com.composekn.resources.stringResource
+            |import org.jetbrains.compose.resources.DrawableResource
+            |import org.jetbrains.compose.resources.FontResource
+            |import org.jetbrains.compose.resources.StringResource
+            |import org.jetbrains.compose.resources.drawableResource
+            |import org.jetbrains.compose.resources.fontResource
+            |import org.jetbrains.compose.resources.stringResource
             |
-            |// ComposeKN 生成的资源入口（对齐官方 Res.font / string / drawable）。
+            |// ComposeKN 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
             |// 由 generateComposeKnResources 生成 —— 勿手改。
             |object Res {
             |    object font {

@@ -69,7 +69,7 @@ import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberNotification
 import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
-import com.composekn.resources.Font
+import org.jetbrains.compose.resources.Font
 import main.resources.Res
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess

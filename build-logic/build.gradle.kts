@@ -4,11 +4,19 @@ plugins {
 }
 
 group = "com.composekn"
-version = providers.gradleProperty("composekn.version").orElse("0.5.66").get()
+version = providers.gradleProperty("composekn.version").orElse("0.5.67").get()
 
 dependencies {
     implementation(gradleApi())
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
+    // Must be implementation (not compileOnly): Maven consumers load host/resources plugins
+    // in an isolated classloader; decorating ComposeKnHostPlugin needs KMP types on that path.
+    // includeBuild hid this because the composite classpath already had KGP.
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 gradlePlugin {
@@ -33,12 +41,21 @@ gradlePlugin {
             id = "com.composekn.host"
             implementationClass = "com.composekn.gradle.ComposeKnHostPlugin"
         }
+        create("composeKnApp") {
+            id = "com.composekn.app"
+            implementationClass = "com.composekn.gradle.ComposeKnAppPlugin"
+        }
         create("composeKnPublish") {
             id = "com.composekn.publish"
             implementationClass = "com.composekn.gradle.ComposeKnPublishPlugin"
         }
         create("composeKnSettings") {
             id = "com.composekn.settings"
+            implementationClass = "com.composekn.gradle.ComposeKnSettingsPlugin"
+        }
+        // 统一入口：与 settings 同一实现（坐标替换 + Release 缓存）
+        create("composeKn") {
+            id = "com.composekn"
             implementationClass = "com.composekn.gradle.ComposeKnSettingsPlugin"
         }
     }

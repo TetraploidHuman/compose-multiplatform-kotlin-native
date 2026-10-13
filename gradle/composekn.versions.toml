@@ -1,8 +1,8 @@
 [versions]
-composekn = "0.5.66"
+composekn = "0.5.67"
 kotlin = "2.4.0"
 compose-ui = "1.12.1"
-compose-ui-published = "1.12.1-ckn.0.5.66"
+compose-ui-published = "1.12.1-ckn.0.5.67"
 compose-maven-deps = "1.11.1"
 coroutines = "1.10.2"
 
@@ -17,6 +17,10 @@ composekn-compose-foundation = { module = "com.composekn.compose:foundation", ve
 composekn-compose-material3 = { module = "com.composekn.compose:material3", version.ref = "compose-ui-published" }
 
 [plugins]
+# 推荐入口
+composekn = { id = "com.composekn", version.ref = "composekn" }
+composekn-app = { id = "com.composekn.app", version.ref = "composekn" }
+# 兼容旧 ID
 composekn-host = { id = "com.composekn.host", version.ref = "composekn" }
 composekn-resources = { id = "com.composekn.resources", version.ref = "composekn" }
 composekn-settings = { id = "com.composekn.settings", version.ref = "composekn" }

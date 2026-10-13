@@ -317,13 +317,20 @@ fun SkikoProjectContext.configureNativeTarget(os: OS, arch: Arch, target: Kotlin
     // GNU-ABI (MinGW) Skia build produced by
     // vendor/skiko/skia-mingw/build-skia-mingw.sh. Kotlin/Native's mingwX64
     // backend links with the GNU ABI, so the MSVC archives cannot be used.
+    // IMPORTANT: only substitute for Windows — applying MinGW (COFF) archives
+    // to linuxX64 previously shipped a broken skiko-linuxx64 klib.
     val mingwSkiaDir = (project.findProperty("skiko.skia.mingw.dir") as? String)?.takeIf { it.isNotBlank() }
-    val mingwNativeArchives: List<String>? = mingwSkiaDir?.let { dir ->
-        val files = File(dir).listFiles { f: File -> f.isFile && f.name.endsWith(".a") } ?: emptyArray()
-        files.map { it.absolutePath }.sorted().also {
-            println("ComposeKN: embedding ${it.size} MinGW Skia archives from $dir")
+    val mingwNativeArchives: List<String>? =
+        if (os == OS.Windows) {
+            mingwSkiaDir?.let { dir ->
+                val files = File(dir).listFiles { f: File -> f.isFile && f.name.endsWith(".a") } ?: emptyArray()
+                files.map { it.absolutePath }.sorted().also {
+                    println("ComposeKN: embedding ${it.size} MinGW Skia archives from $dir")
+                }
+            }
+        } else {
+            null
         }
-    }
     val nativeArchives = mingwNativeArchives ?: resolvedBinaryInputs.staticArchivePaths.distinct()
     val allLibraries = if (requiresSymbolPatching) {
         nativeArchives.map { lib ->

@@ -8,7 +8,7 @@ plugins {
 val lumicodeFonts = file("../../../LumiCodeNext/composeApp/src/commonMain/composeResources/font")
 
 composeKnResources {
-    packageName.set("main.resources")
+    packageOfResClass("main.resources")
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }
 

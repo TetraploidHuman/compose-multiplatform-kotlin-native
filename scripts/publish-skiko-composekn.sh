@@ -11,8 +11,14 @@ CKN_VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 : "${GITHUB_ACTOR:=github}"
 OWNER="${GITHUB_REPOSITORY_OWNER:-TetraploidHuman}"
-GH_REPO_NAME="${GITHUB_REPOSITORY##*/}"
+# CI 有 GITHUB_REPOSITORY=owner/repo；本机发布时默认 ComposeKN
+GH_REPO_NAME="${GITHUB_REPOSITORY:-ComposeKN}"
+GH_REPO_NAME="${GH_REPO_NAME##*/}"
 GH_REPO_NAME="${GH_REPO_NAME:-ComposeKN}"
+LOCAL_ONLY="${COMPOSEKN_SKIKO_LOCAL_ONLY:-${COMPOSEKN_UI_LOCAL_ONLY:-0}}"
+if [ "$GITHUB_TOKEN" = "local-only" ]; then
+  LOCAL_ONLY=1
+fi
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[33m!!\033[0m %s\n' "$1"; }
@@ -97,14 +103,24 @@ gradle.projectsLoaded {
 }
 EOF
 
+SKIKO_TASKS=(
+  publishLinuxX64PublicationToComposeKnLocalRepository
+  publishMingwX64PublicationToComposeKnLocalRepository
+)
+if [ "$LOCAL_ONLY" != 1 ]; then
+  SKIKO_TASKS+=(
+    publishLinuxX64PublicationToGitHubPackagesRepository
+    publishMingwX64PublicationToGitHubPackagesRepository
+  )
+else
+  info "LOCAL_ONLY=1 — skip GitHub Packages skiko upload"
+fi
+
 cd "$REPO/vendor/skiko/skiko"
 ./gradlew --init-script "$INIT" --no-daemon \
   -Pdeploy.version="$CKN_VER" \
   -Pskiko.skia.mingw.dir="$PREBUILT/libs" \
-  publishLinuxX64PublicationToComposeKnLocalRepository \
-  publishMingwX64PublicationToComposeKnLocalRepository \
-  publishLinuxX64PublicationToGitHubPackagesRepository \
-  publishMingwX64PublicationToGitHubPackagesRepository
+  "${SKIKO_TASKS[@]}"
 
 info "Local maven-repo after skiko publish:"
 find "$REPO/build/maven-repo" -type f \( -iname '*skiko*' -o -path '*/jetbrains/skiko/*' \) 2>/dev/null | sort | head -80 || true
@@ -114,6 +130,28 @@ find "$REPO/build/maven-repo" -type f \( -iname '*skiko*' -o -path '*/jetbrains/
 [ -d "$REPO/build/maven-repo/com/composekn/skiko-mingwx64/$CKN_VER" ] \
   || die "missing com/composekn/skiko-mingwx64/$CKN_VER (groupId override failed?)"
 
+# Guard: linux klib must embed ELF libskia, not MinGW/COFF (regression check).
+COMPOSEKN_REPO="$REPO" COMPOSEKN_VERSION="$CKN_VER" python3 - <<'PY'
+import zipfile, subprocess, tempfile, os, sys
+repo = os.environ["COMPOSEKN_REPO"]
+ver = os.environ["COMPOSEKN_VERSION"]
+k = f"{repo}/build/maven-repo/com/composekn/skiko-linuxx64/{ver}/skiko-linuxx64-{ver}.klib"
+td = tempfile.mkdtemp()
+with zipfile.ZipFile(k) as z:
+    z.extract("default/targets/linux_x64/included/libskia.a", td)
+a = os.path.join(td, "default/targets/linux_x64/included/libskia.a")
+members = subprocess.check_output(["ar", "t", a], text=True).splitlines()
+m = next(x for x in members if "SkPaint.o" in x)
+od = tempfile.mkdtemp()
+subprocess.check_call(["ar", "x", a, m], cwd=od)
+with open(os.path.join(od, m), "rb") as f:
+    head = f.read(4)
+if head != b"\x7fELF":
+    print(f"!! skiko-linuxx64 libskia.a is not ELF (got {head.hex()}) — mingw skia leaked into linux?", file=sys.stderr)
+    sys.exit(1)
+print(f"OK skiko-linuxx64 libskia.a is ELF ({os.path.getsize(a)} bytes)")
+PY
+
 info "Synthesize com.composekn:skiko root"
 chmod +x "$REPO/scripts/synthesize-kmp-root-modules.sh"
 "$REPO/scripts/synthesize-kmp-root-modules.sh" "$REPO/build/maven-repo"
@@ -122,12 +160,14 @@ ROOT="$REPO/build/maven-repo/com/composekn/skiko/$CKN_VER"
 [ -f "$ROOT/skiko-$CKN_VER.module" ] \
   || die "no synthesized $ROOT/skiko-$CKN_VER.module"
 
-info "Upload synthesized skiko root → GitHub Packages"
-chmod +x "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh"
-"$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" "$ROOT"
-if [ -f "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml" ]; then
-  "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" \
-    "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml"
+if [ "$LOCAL_ONLY" != 1 ]; then
+  info "Upload synthesized skiko root → GitHub Packages"
+  chmod +x "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh"
+  "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" "$ROOT"
+  if [ -f "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml" ]; then
+    "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" \
+      "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml"
+  fi
 fi
 
 info "done"

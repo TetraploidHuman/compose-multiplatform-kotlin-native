@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import com.composekn.resources.Font
+import org.jetbrains.compose.resources.Font
 import com.lumicode.editor.resources.Res
 
 /**

@@ -6,11 +6,16 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.withType
 
 /**
  * 给 compose-kn-* 挂 maven-publish（`com.composekn:<module>:<composekn.version>`）。
  *
- * 仓库：本地 `build/maven-repo`、可选私服、GitHub Packages（`GITHUB_TOKEN`）。
+ * 仓库：
+ * - 本地 `build/maven-repo`
+ * - 可选私服（`composekn.publish.url`）
+ * - GitHub Packages（`-Pcomposekn.publish.github=true`）
+ * - Maven Central / Central Portal（`-Pcomposekn.publish.central=true`，需凭证与签名）
  *
  * `-Pcomposekn.publish.skipMetadata=true`（发布脚本默认打开）：禁用全项目
  * `*KotlinMetadata` 任务，避开 skiko/compose-core 在 KN 2.4 下的
@@ -19,7 +24,7 @@ import org.gradle.kotlin.dsl.create
 class ComposeKnPublishPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("maven-publish")
-        val version = project.findProperty("composekn.version")?.toString() ?: "0.5.66"
+        val version = project.findProperty("composekn.version")?.toString() ?: "0.5.67"
         project.group = project.findProperty("composekn.group")?.toString() ?: "com.composekn"
         project.version = version
 
@@ -71,6 +76,59 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                             }
                         }
                     }
+                    // Maven Central（OSSRH staging / Central Portal maven 端点）。
+                    // 需 composekn.publish.central.user|password + signing；默认不挂。
+                    val wantCentral =
+                        project.findProperty("composekn.publish.central")?.toString() == "true"
+                    if (wantCentral) {
+                        val centralUrl = project.findProperty("composekn.publish.central.url")
+                            ?.toString()
+                            ?: "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+                        maven {
+                            name = "MavenCentral"
+                            url = project.uri(centralUrl)
+                            val u = project.findProperty("composekn.publish.central.user")?.toString()
+                            val p = project.findProperty("composekn.publish.central.password")
+                                ?.toString()
+                            if (!u.isNullOrBlank() && !p.isNullOrBlank()) {
+                                credentials {
+                                    username = u
+                                    password = p
+                                }
+                            }
+                        }
+                    }
+                }
+                publications.withType<MavenPublication>().configureEach {
+                    pom {
+                        name.set(project.name)
+                        description.set(
+                            project.findProperty("composekn.pom.description")?.toString()
+                                ?: "ComposeKN: Compose Multiplatform on Kotlin/Native (linuxX64/mingwX64)",
+                        )
+                        url.set("https://github.com/TetraploidHuman/ComposeKN")
+                        licenses {
+                            license {
+                                name.set("Apache-2.0")
+                                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                            }
+                        }
+                        developers {
+                            developer {
+                                id.set("composekn")
+                                name.set("ComposeKN contributors")
+                            }
+                        }
+                        scm {
+                            url.set("https://github.com/TetraploidHuman/ComposeKN")
+                            connection.set(
+                                "scm:git:https://github.com/TetraploidHuman/ComposeKN.git",
+                            )
+                            developerConnection.set(
+                                "scm:git:ssh://git@github.com/TetraploidHuman/ComposeKN.git",
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -92,10 +150,12 @@ class ComposeKnPublishPlugin : Plugin<Project> {
     private fun credentialsFrom(
         project: Project,
         repo: org.gradle.api.artifacts.repositories.MavenArtifactRepository,
+        userKey: String = "composekn.publish.user",
+        passKey: String = "composekn.publish.password",
     ) {
-        val u = project.findProperty("composekn.publish.user")?.toString()
+        val u = project.findProperty(userKey)?.toString()
             ?: System.getenv("GITHUB_ACTOR")
-        val p = project.findProperty("composekn.publish.password")?.toString()
+        val p = project.findProperty(passKey)?.toString()
             ?: System.getenv("GITHUB_TOKEN")
         if (!u.isNullOrBlank() && !p.isNullOrBlank()) {
             repo.credentials {

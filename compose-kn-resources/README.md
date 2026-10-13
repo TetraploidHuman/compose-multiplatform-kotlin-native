@@ -1,16 +1,13 @@
 # ComposeKN Resources
 
-Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，对齐官方 `compose.resources`：
+Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，消费心智对齐官方 `compose.resources`：
 
+- `import org.jetbrains.compose.resources.Font`（推荐，勿再写 `com.composekn.resources`）
 - `Res.font.*` / `Font(Res.font.xxx)`
 - `Res.string.*` / `stringResource(...)`
 - `Res.drawable.*` / `loadDrawableBytes(...)`
 
-并提供 **`org.jetbrains.compose.resources`** 包名兼容层（typealias），便于官方 import 迁过来。
-
-> 官方 `components-resources` **没有** linuxX64/mingwX64。请用本模块，或在 settings 里：
-> `substitute(module("org.jetbrains.compose.components:components-resources"))
->    .using(module("com.composekn:compose-kn-resources:<ver>"))`
+> 官方 `components-resources` **没有** linuxX64/mingwX64。`com.composekn` settings 插件会把该坐标顶到本模块。
 
 ## 布局
 
@@ -24,15 +21,31 @@ src/commonMain/composeResources/
 ## Gradle
 
 ```kotlin
-plugins { id("com.composekn.resources") }
+plugins {
+    id("com.composekn.app") // 已含 resources；也可单独 id("com.composekn.resources")
+}
 
 composeKnResources {
-    packageName.set("com.example.resources")
+    // 官方同义：packageOfResClass；也可用 packageName.set("…")
+    packageOfResClass("com.example.app.generated.resources")
     extraFontDirs.add("/path/to/other/font/dir")
 }
 ```
 
+未设置包名时默认 `{group}.{module}.generated.resources`。
+
 链接后 copy 到 `<exeDir>/composeResources/{font,drawable,values}/`。
+
+## 用法
+
+```kotlin
+import org.jetbrains.compose.resources.Font
+import com.example.app.generated.resources.Res
+
+Font(Res.font.noto_sans_regular)
+stringResource(Res.string.app_name)
+loadDrawableBytes(Res.drawable.logo)
+```
 
 ## 坐标
 

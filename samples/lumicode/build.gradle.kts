@@ -10,7 +10,8 @@ val lumicodeCommon = file("$lumicodeRoot/src/commonMain/kotlin")
 val lumicodeFonts = file("$lumicodeRoot/src/commonMain/composeResources/font")
 
 composeKnResources {
-    packageName.set("com.lumicode.editor.resources")
+    // 官方 compose.resources 同义：packageOfResClass("…")
+    packageOfResClass("com.lumicode.editor.resources")
     // Prefer LumiCodeNext fonts when present; also allow local composeResources/font.
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }

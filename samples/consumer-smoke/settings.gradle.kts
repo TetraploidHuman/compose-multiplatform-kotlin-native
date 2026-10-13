@@ -4,10 +4,17 @@ pluginManagement {
         .orNull
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.66").get()
+    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.67").get()
+    // 与 settings 插件默认缓存一致；首次需已 fetch 或指向 local，才能解析插件 JAR
+    val cacheMaven = java.io.File(
+        System.getProperty("user.home"),
+        ".composekn/m2/$cknVer",
+    )
     repositories {
         if (localMaven != null) {
             maven { url = uri(localMaven) }
+        } else if (cacheMaven.isDirectory) {
+            maven { url = uri(cacheMaven) }
         }
         gradlePluginPortal()
         mavenCentral()
@@ -15,7 +22,7 @@ pluginManagement {
     }
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id.startsWith("com.composekn.")) {
+            if (requested.id.id.startsWith("com.composekn")) {
                 useVersion(cknVer)
             }
         }
@@ -23,7 +30,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.composekn.settings")
+    id("com.composekn")
 }
 
 dependencyResolutionManagement {

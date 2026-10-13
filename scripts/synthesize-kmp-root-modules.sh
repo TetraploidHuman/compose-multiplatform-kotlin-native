@@ -90,11 +90,14 @@ $variants
 }
 EOF
 
+  # Marker required: without it Gradle keeps POM-only metadata and never reads .module
+  # (variant falls back to java-api "compile", available-at is ignored).
   cat > "$root/$name-$version.pom" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- do_not_remove: published-with-gradle-metadata -->
   <modelVersion>4.0.0</modelVersion>
   <groupId>$group_id</groupId>
   <artifactId>$name</artifactId>
@@ -118,6 +121,16 @@ EOF
   </versioning>
 </metadata>
 EOF
+
+  # Checksums help file/Maven repos and some Gradle versions prefer them.
+  for f in "$root/$name-$version.module" "$root/$name-$version.pom" \
+           "$M2/$group_path/$name/maven-metadata.xml"; do
+    [ -f "$f" ] || continue
+    md5sum "$f" | awk '{print $1}' > "$f.md5"
+    sha1sum "$f" | awk '{print $1}' > "$f.sha1"
+    sha256sum "$f" | awk '{print $1}' > "$f.sha256"
+    sha512sum "$f" | awk '{print $1}' > "$f.sha512"
+  done
 
   info "synthesized $group_id:$name:$version → $root"
 }

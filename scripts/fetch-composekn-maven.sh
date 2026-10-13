@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# 从 GitHub Release 拉 compose-kn Maven 仓库（绕过 GitHub Packages / Actions Billing）。
+# 从 GitHub Release 拉 compose-kn Maven 仓库（稳定 CDN，绕过 Packages Billing）。
 #
-#   ./scripts/fetch-composekn-maven.sh                 # → build/maven-repo
+#   ./scripts/fetch-composekn-maven.sh                 # → ~/.composekn/m2/<ver>
 #   ./scripts/fetch-composekn-maven.sh /path/to/m2     # 自定义目录
 #   COMPOSEKN_VERSION=0.5.66 ./scripts/fetch-composekn-maven.sh
 #
-# 消费方 settings：
-#   maven { url = uri("/path/to/m2") }
+# 与 com.composekn settings 插件默认缓存一致。
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VER="${COMPOSEKN_VERSION:-$(grep '^composekn.version=' "$REPO/gradle.properties" 2>/dev/null | cut -d= -f2 || echo 0.5.66)}"
-DEST="${1:-$REPO/build/maven-repo}"
+DEST="${1:-$HOME/.composekn/m2/$VER}"
 OWNER="${COMPOSEKN_GH_OWNER:-TetraploidHuman}"
 REPO_NAME="${COMPOSEKN_GH_REPO:-ComposeKN}"
 ASSET="composekn-maven-${VER}.zip"
@@ -49,5 +48,6 @@ with zipfile.ZipFile("$TMP/$ASSET") as z:
     z.extractall("$DEST")
 PY
 fi
+echo "$VER" > "$DEST/.composekn-complete"
 info "Maven repo ready: $DEST"
 find "$DEST" -name '*.klib' 2>/dev/null | sort || true

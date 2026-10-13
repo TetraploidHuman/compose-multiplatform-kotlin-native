@@ -92,7 +92,7 @@ import androidx.compose.ui.window.FileDialogMode
 import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.rememberNotification
-import com.composekn.resources.Font
+import org.jetbrains.compose.resources.Font
 import com.composekn.windows.TaskbarProgressState
 import com.composekn.windows.WindowsComposeWindow
 import main.resources.Res

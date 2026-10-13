@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.composekn"
-version = providers.gradleProperty("composekn.version").orElse("0.5.66").get()
+version = providers.gradleProperty("composekn.version").orElse("0.5.67").get()
 
 catalog {
     versionCatalog {

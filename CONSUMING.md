@@ -1,103 +1,86 @@
 # 消费 ComposeKN
 
-目标：**catalog + `com.composekn.settings` + `com.composekn.host`**，尽量不再 clone / includeBuild。
+目标：**一个版本号 + `com.composekn` + `com.composekn.app`**，尽量不再 clone / includeBuild。
 
-当前矩阵（`gradle.properties`）：
+只需锁 **`composekn.version`**；UI 自动为 `1.12.1-ckn.<ver>`。
 
-| 分量 | 版本 | 说明 |
-|------|------|------|
-| ComposeKN | **0.5.66** | `com.composekn:compose-kn-*` / `com.composekn:skiko` |
-| Kotlin | **2.4.0** | 与宿主一致 |
-| Compose **UI** | **1.12.1** | 发布坐标 `com.composekn.compose:*:1.12.1-ckn.0.5.66` |
-| Maven `compose_deps` | 1.11.1 | 仅 runtime 等未顶掉坐标；**不是** UI 版本 |
+### 版本对照（官方 CMP ↔ ComposeKN）
+
+| 角色 | 官方 / 上游 | ComposeKN 0.5.67 |
+|------|-------------|------------------|
+| 产品版本 | — | **0.5.67**（宿主 / Skiko / 插件 / BOM） |
+| Kotlin | 2.4.0（与本仓库对齐） | **2.4.0** |
+| Compose UI 源码基线 | Multiplatform **1.12.1** | 发布坐标 **`1.12.1-ckn.0.5.67`** |
+| Compose Gradle 插件 / `compose_deps` | 1.11.1 | 同左（仅未顶掉的 runtime 等） |
+| `compose.resources` | `org.jetbrains.compose.resources` + `components-resources` | **同包名**；K/N 桌面由 `compose-kn-resources` 提供（settings 自动顶替） |
+
+发新版时改 `gradle.properties` 的 `composekn.version`，并同步本表一行。
 
 ### 仓库怎么拿（按优先级）
 
-1. **Release Maven zip（推荐，不依赖 Packages Billing）**
+1. **Release Maven zip（推荐，稳定 CDN）**  
+   发布资产：`composekn-maven-<ver>.zip`  
+   - 自动：settings 插件默认拉到 `~/.composekn/m2/<ver>/`（`composekn.maven.auto=true`）  
+   - 手动：`./scripts/fetch-composekn-maven.sh` → 同上缓存目录  
 
-```bash
-./scripts/fetch-composekn-maven.sh ~/composekn-m2
-# 冒烟：./scripts/smoke-composekn-consumer.sh ~/composekn-m2
-```
+2. **显式本地目录**：`composekn.maven.local=/path/to/m2`
 
-2. **GitHub Packages**（需 Billing / Packages spending limit）
+3. **GitHub Packages**（需 Billing；**显式打开**）  
+   `composekn.settings.useGithubPackages=true` + `gpr.token`
 
-```
-https://maven.pkg.github.com/TetraploidHuman/ComposeKN
-```
+4. **本机 publish**：`./scripts/publish-composekn-packages.sh` → `build/maven-repo`
 
-3. **本机 publish**：`./scripts/publish-composekn-packages.sh` → `build/maven-repo`。
+5. **Maven Central**（维护者可选）：`-Pcomposekn.publish.central=true` + Central 凭证与 signing；消费方 Central 就绪后可去掉 zip/缓存步骤。
 
 ---
 
-## A. 推荐：Release zip + settings + host
+## A. 推荐：单版本 + 统一插件
 
 ### 1. `gradle.properties`
 
 ```properties
-composekn.version=0.5.66
-composekn.compose.ui.version=1.12.1-ckn.0.5.66
-composekn.maven.local=/home/YOU/composekn-m2
-composekn.settings.skipGithubPackages=true
+composekn.version=0.5.67
 ```
 
 ### 2. `settings.gradle.kts`
 
 ```kotlin
 pluginManagement {
-    val local = providers.gradleProperty("composekn.maven.local").get()
     val ver = providers.gradleProperty("composekn.version").get()
+    val cache = file("${System.getProperty("user.home")}/.composekn/m2/$ver")
     repositories {
-        maven { url = uri(local) } // 插件 + 坐标都从 zip 解压目录来
+        if (cache.isDirectory) maven { url = uri(cache) }
         gradlePluginPortal()
         mavenCentral()
     }
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id.startsWith("com.composekn.")) {
-                useVersion(ver)
-            }
+            if (requested.id.id.startsWith("com.composekn")) useVersion(ver)
         }
     }
 }
 
 plugins {
-    id("com.composekn.settings")
-}
-
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        // settings 已加 composekn.maven.local；若要用 Packages 则去掉 skipGithubPackages
-    }
-    versionCatalogs {
-        create("composekn") {
-            from("com.composekn:composekn-catalog:0.5.66")
-        }
-    }
+    id("com.composekn") // = settings：坐标替换 + Release 缓存
 }
 ```
 
-`com.composekn.settings` 会：
+首次若缓存为空，先跑一次：
 
-1. 若设了 `composekn.maven.local` → 加入该本地仓库（pluginManagement + dependencyResolution）  
-2. 默认加 GitHub Packages；**纯 zip 时设 `composekn.settings.skipGithubPackages=true`**  
-3. 官方 Compose / Skiko / resources → ComposeKN 坐标；**linuxX64/mingwX64 configuration 顶到平台 artifact**（避开合成根 available-at）  
-4. includeBuild 时：`-Pcomposekn.settings.skipSubstitution=true`
+```bash
+./scripts/fetch-composekn-maven.sh   # → ~/.composekn/m2/0.5.67
+```
+
+（之后 `com.composekn` 也会尝试自动补全同一目录，供依赖解析使用。）
 
 ### 3. 模块
 
 ```kotlin
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.composekn.host")
-    id("com.composekn.resources") // 可选
-}
-
-composeKnHost {
-    useProjectDependencies.set(false) // 消费 Maven，非本仓库 project()
+    id("com.composekn.app") // = host + resources；会带上 kotlin-gradle-plugin
+    kotlin("multiplatform") // 不要写 version（已由 app 插件 classpath 提供 2.4.0）
+    id("org.jetbrains.compose") version "1.11.1"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.0"
 }
 
 kotlin {
@@ -106,21 +89,33 @@ kotlin {
 }
 ```
 
-`main` **不必**再写 `registerComposeKn*Backend()` / `init*MainThread()`（host 已覆盖）。
+`main` **不必**再写 `registerComposeKn*Backend()` / `init*MainThread()`。
 
-### 4. 仅用 Packages 时的凭证
+运行：
 
+```bash
+./gradlew :app:runLinuxX64
+./gradlew :app:runMingwX64
 ```
-gpr.user=YOUR_GH_USERNAME
-gpr.token=ghp_…   # packages:read
-# 并去掉 composekn.settings.skipGithubPackages / 可不设 maven.local
+
+从已有 CMP 工程迁移见 [`MIGRATING.md`](MIGRATING.md)；能力差异见 [`CAPABILITIES.md`](CAPABILITIES.md)。
+
+可选 BOM（约束宿主 + UI 发布坐标）：
+
+```kotlin
+dependencies {
+    implementation(platform("com.composekn:compose-kn-bom:0.5.67"))
+}
 ```
+
+旧 ID 仍可用：`com.composekn.settings` / `host` / `resources`。
 
 ---
 
 ## B. 开发期：clone + includeBuild
 
-与根 `settings.gradle.kts` 相同：顶掉 skiko + compose-core 源码。
+与根 `settings.gradle.kts` 相同：顶掉 skiko + compose-core 源码。  
+此时加 `-Pcomposekn.settings.skipSubstitution=true`（若仍 apply settings 插件）。
 
 ---
 
@@ -128,14 +123,14 @@ gpr.token=ghp_…   # packages:read
 
 | 坐标 | 内容 |
 |------|------|
-| `com.composekn:compose-kn-bom` | 约束 linux / windows / resources |
-| `com.composekn:compose-kn-linux` | Wayland 宿主（合成根） |
+| `com.composekn:compose-kn-bom` | 约束 linux / windows / resources / skiko / UI |
+| `com.composekn:compose-kn-linux` | Wayland 宿主 |
 | `com.composekn:compose-kn-windows` | Win32 宿主 |
 | `com.composekn:compose-kn-resources` | Res.font / string / drawable |
-| `com.composekn:skiko` | KN Skiko（合成根；解析时按 target 顶平台） |
+| `com.composekn:skiko` | KN Skiko |
 | `com.composekn:composekn-catalog` | version catalog |
-| `com.composekn.settings` 等 | host / resources / settings 插件 |
-| `com.composekn.compose:ui` 等 | UI **1.12.1**（合成根 + 平台） |
+| `com.composekn` / `com.composekn.app` | 推荐插件入口 |
+| `com.composekn.compose:ui` 等 | UI **1.12.1-ckn.*** |
 
 ---
 
@@ -147,6 +142,11 @@ GITHUB_TOKEN=… GITHUB_ACTOR=… \
 
 # 消费冒烟
 ./scripts/smoke-composekn-consumer.sh
+
+# 可选：Maven Central（需账号 + GPG signing）
+# -Pcomposekn.publish.central=true \
+# -Pcomposekn.publish.central.user=… \
+# -Pcomposekn.publish.central.password=…
 ```
 
 CI：tag `v*` → publish workflow（含 merge 断言 + consumer-smoke）。

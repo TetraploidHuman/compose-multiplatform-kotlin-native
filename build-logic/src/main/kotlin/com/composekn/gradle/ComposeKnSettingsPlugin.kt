@@ -7,81 +7,135 @@ import java.io.File
 import java.net.URI
 
 /**
- * 消费者 settings 插件：可选加本地 Maven / GitHub Packages，并把官方 Compose/Skiko
- * 顶成 ComposeKN 已发布坐标。
+ * 消费者 settings 插件（也注册为 `com.composekn`）：
+ * - 解析/缓存 Release Maven zip（稳定 CDN，默认 `~/.composekn/m2/<ver>`）
+ * - 可选 GitHub Packages（需显式打开）
+ * - 官方 Compose/Skiko/resources → ComposeKN 坐标；linuxX64/mingwX64 顶到平台 artifact
  *
+ * 用户通常只需：
  * ```
  * // gradle.properties
- * composekn.version=0.5.66
- * composekn.maven.local=/home/me/composekn-m2   # Release zip 解压目录（推荐）
- * composekn.settings.skipGithubPackages=true    # 纯本地时关掉 Packages
- * plugins { id("com.composekn.settings") }
- * ```
+ * composekn.version=0.5.67
  *
- * linuxX64/mingwX64 configuration 顶到平台坐标，避开合成根 available-at。
+ * // settings.gradle.kts
+ * plugins { id("com.composekn") version "0.5.67" }
+ * ```
+ * （`pluginManagement` 需能解析到插件 JAR：缓存目录、本机 publish 或 Packages。）
  */
 class ComposeKnSettingsPlugin : Plugin<Settings> {
     override fun apply(settings: Settings) {
         val composeknVer = settings.providers.gradleProperty("composekn.version")
             .orElse(DEFAULT_VERSION).get()
+        // 单版本：UI = <compose.ui>-ckn.<composekn.version>，一般不用手写 ui.version
+        val uiBase = settings.providers.gradleProperty("composekn.compose.ui")
+            .orElse("1.12.1").get()
         val uiVer = settings.providers.gradleProperty("composekn.compose.ui.version")
-            .orElse("1.12.1-ckn.$composeknVer").get()
+            .orElse("$uiBase-ckn.$composeknVer").get()
         val skipSub = settings.providers.gradleProperty("composekn.settings.skipSubstitution")
             .orNull == "true"
-        val localMaven = settings.providers.gradleProperty("composekn.maven.local")
+        val owner = settings.providers.gradleProperty("composekn.publish.github.owner")
+            .orElse(settings.providers.environmentVariable("GITHUB_REPOSITORY_OWNER"))
+            .orElse(ComposeKnMavenCache.DEFAULT_OWNER).get()
+        val repo = settings.providers.gradleProperty("composekn.publish.github.repo")
+            .orElse(ComposeKnMavenCache.DEFAULT_REPO).get()
+        val token = settings.providers.environmentVariable("GITHUB_TOKEN")
+            .orElse(settings.providers.environmentVariable("GH_TOKEN"))
+            .orElse(settings.providers.gradleProperty("gpr.token"))
+            .orNull
+            ?.takeIf { it.isNotBlank() }
+
+        val explicitLocal = settings.providers.gradleProperty("composekn.maven.local")
             .orElse(settings.providers.environmentVariable("COMPOSEKN_MAVEN_LOCAL"))
             .orNull
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
-        val skipGh = settings.providers.gradleProperty("composekn.settings.skipGithubPackages")
-            .orNull == "true" ||
-            settings.providers.environmentVariable("COMPOSEKN_SKIP_GITHUB_PACKAGES")
-                .orNull == "true"
-        val owner = settings.providers.gradleProperty("composekn.publish.github.owner")
-            .orElse(settings.providers.environmentVariable("GITHUB_REPOSITORY_OWNER"))
-            .orElse("TetraploidHuman").get()
-        val repo = settings.providers.gradleProperty("composekn.publish.github.repo")
-            .orElse("ComposeKN").get()
 
-        // 本地 Release zip / 本机 publish：优先
-        if (localMaven != null) {
-            val dir = File(localMaven)
+        val autoFetch = settings.providers.gradleProperty("composekn.maven.auto")
+            .orElse("true").get() != "false"
+
+        var resolvedMaven: File? = null
+        if (explicitLocal != null) {
+            val dir = File(explicitLocal)
             require(dir.isDirectory) {
-                "composekn.maven.local is not a directory: $localMaven"
+                "composekn.maven.local is not a directory: $explicitLocal"
             }
-            settings.dependencyResolutionManagement.repositories.maven {
-                name = "ComposeKNLocal"
-                url = dir.toURI()
+            resolvedMaven = dir
+        } else if (autoFetch) {
+            val cacheProp = settings.providers.gradleProperty("composekn.maven.cache")
+                .orNull
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+            val dest = if (cacheProp != null) {
+                File(cacheProp)
+            } else {
+                ComposeKnMavenCache.defaultCacheDir(composeknVer)
             }
-            settings.pluginManagement.repositories.maven {
-                name = "ComposeKNLocal"
-                url = dir.toURI()
+            resolvedMaven = ComposeKnMavenCache.ensure(
+                version = composeknVer,
+                dest = dest,
+                owner = owner,
+                repo = repo,
+                token = token,
+                log = { msg -> println(msg) },
+            )
+            if (resolvedMaven == null) {
+                System.err.println(
+                    "ComposeKN: could not auto-fetch maven $composeknVer; " +
+                        "set composekn.maven.local or run scripts/fetch-composekn-maven.sh",
+                )
             }
         }
 
-        if (!skipGh) {
+        if (resolvedMaven != null) {
+            val uri = resolvedMaven.toURI()
+            settings.dependencyResolutionManagement.repositories.maven {
+                name = "ComposeKNLocal"
+                url = uri
+            }
+            settings.pluginManagement.repositories.maven {
+                name = "ComposeKNLocal"
+                url = uri
+            }
+        }
+
+        // Packages：显式 opt-in；或 Release 拉取失败且有 token 时自动回退
+        val useGh = settings.providers.gradleProperty("composekn.settings.useGithubPackages")
+            .orNull == "true" ||
+            settings.providers.environmentVariable("COMPOSEKN_USE_GITHUB_PACKAGES")
+                .orNull == "true"
+        val explicitSkipGh = settings.providers.gradleProperty("composekn.settings.skipGithubPackages")
+            .orNull == "true" ||
+            settings.providers.environmentVariable("COMPOSEKN_SKIP_GITHUB_PACKAGES")
+                .orNull == "true"
+        val fallbackGh = resolvedMaven == null && !token.isNullOrBlank()
+        val addGh = !explicitSkipGh && (useGh || fallbackGh)
+        if (fallbackGh && !useGh && addGh) {
+            println(
+                "ComposeKN: Release cache missing; falling back to GitHub Packages " +
+                    "(set composekn.settings.skipGithubPackages=true to disable)",
+            )
+        }
+
+        if (addGh) {
             val ghUri = URI.create("https://maven.pkg.github.com/$owner/$repo")
             val user = settings.providers.environmentVariable("GITHUB_ACTOR")
                 .orElse(settings.providers.gradleProperty("gpr.user"))
                 .orElse("github")
-            val token = settings.providers.environmentVariable("GITHUB_TOKEN")
-                .orElse(settings.providers.gradleProperty("gpr.token"))
-                .orElse("")
+            val ghToken = token ?: ""
             settings.dependencyResolutionManagement.repositories.maven {
                 name = "ComposeKNGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
-                    password = token.get()
+                    password = ghToken
                 }
             }
-            // pluginManagement 也挂一份，便于 id("com.composekn.settings") version "…"
             settings.pluginManagement.repositories.maven {
                 name = "ComposeKNGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
-                    password = token.get()
+                    password = ghToken
                 }
             }
         }
@@ -158,7 +212,6 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
             subs.substitute(subs.module(from))
                 .using(subs.module(coord(artifact)))
         }
-        // lifecycle-viewmodel-compose：JetBrains 映射 + androidx 原坐标都顶
         val lifecycleArtifact = "lifecycle-viewmodel-compose"
         for (from in listOf(
             "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
@@ -170,6 +223,6 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
     }
 
     companion object {
-        const val DEFAULT_VERSION = "0.5.66"
+        const val DEFAULT_VERSION = "0.5.67"
     }
 }

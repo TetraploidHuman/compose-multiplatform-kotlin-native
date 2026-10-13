@@ -38,9 +38,13 @@ info "Publish composekn-catalog @ $CKN_VER"
   "${GH_ARGS[@]}" \
   "${TASKS_CATALOG[@]}"
 
-# 插件 marker：com.composekn.settings.gradle.plugin
-MARKER="$REPO/build/maven-repo/com/composekn/settings/com.composekn.settings.gradle.plugin/$CKN_VER"
-[ -d "$MARKER" ] || die "missing settings plugin marker at $MARKER"
+# 插件 marker：统一入口 + 旧 settings
+MARKER="$REPO/build/maven-repo/com/composekn/com.composekn.gradle.plugin/$CKN_VER"
+[ -d "$MARKER" ] || die "missing com.composekn plugin marker at $MARKER"
+MARKER_APP="$REPO/build/maven-repo/com/composekn/app/com.composekn.app.gradle.plugin/$CKN_VER"
+[ -d "$MARKER_APP" ] || die "missing com.composekn.app plugin marker at $MARKER_APP"
+MARKER_SETTINGS="$REPO/build/maven-repo/com/composekn/settings/com.composekn.settings.gradle.plugin/$CKN_VER"
+[ -d "$MARKER_SETTINGS" ] || die "missing settings plugin marker at $MARKER_SETTINGS"
 
 CATALOG_DIR="$REPO/build/maven-repo/com/composekn/composekn-catalog/$CKN_VER"
 [ -d "$CATALOG_DIR" ] || die "missing catalog at $CATALOG_DIR"
