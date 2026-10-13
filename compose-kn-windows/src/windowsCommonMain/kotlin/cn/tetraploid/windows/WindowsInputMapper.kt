@@ -38,7 +38,7 @@ internal fun ComposeScene.dispatchWindowsKeyEvent(
         isCtrlPressed = event.isCtrlPressed,
         isAltPressed = event.isAltPressed,
         isShiftPressed = event.isShiftPressed,
-        isMetaPressed = false,
+        isMetaPressed = event.isMetaPressed,
         nativeEvent = event,
     )
     // 对齐 Desktop ComposeSceneMediator：preview → scene → onKey

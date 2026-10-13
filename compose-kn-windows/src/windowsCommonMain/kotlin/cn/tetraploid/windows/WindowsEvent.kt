@@ -40,6 +40,7 @@ sealed class WindowsEvent {
         val isAltPressed: Boolean = false,
         val isCtrlPressed: Boolean = false,
         val isShiftPressed: Boolean = false,
+        val isMetaPressed: Boolean = false,
     ) : WindowsEvent()
 
     /**

@@ -173,6 +173,7 @@ fun createKeyEvent(
     isAltPressed: Boolean = false,
     isCtrlPressed: Boolean = false,
     isShiftPressed: Boolean = false,
+    isMetaPressed: Boolean = false,
 ): KeyEvent {
     val key = windowsKeyToComposeKey(vk)
     val type = if (isKeyDown) KeyEventType.KeyDown else KeyEventType.KeyUp
@@ -185,7 +186,7 @@ fun createKeyEvent(
         isCtrlPressed = isCtrlPressed,
         isAltPressed = isAltPressed,
         isShiftPressed = isShiftPressed,
-        isMetaPressed = false,
+        isMetaPressed = isMetaPressed,
         nativeEvent = null,
     )
 }

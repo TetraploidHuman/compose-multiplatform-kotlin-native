@@ -45,7 +45,7 @@
 - [ ] `Window(focusable=…)` 原生焦点策略
 - [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
 - [ ] `compose.resources` locale / plurals / XML vector
-- [ ] Windows `KeyShortcut(meta=true)`（Win 键未接入 KeyEvent.isMetaPressed）
+- [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）
 - [ ] `WindowDecoration.resizerThickness` 宿主兑现
 
 ### P2 — 平台行为诚实缺口（文档已知）

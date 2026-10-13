@@ -28,6 +28,7 @@ import androidx.compose.ui.window.shortcutActions
 import androidx.compose.ui.window.structureKey
 import cn.tetraploid.windows.internal.MOD_ALT
 import cn.tetraploid.windows.internal.MOD_CTRL
+import cn.tetraploid.windows.internal.MOD_META
 import cn.tetraploid.windows.internal.MOD_SHIFT
 import kotlin.concurrent.Volatile
 
@@ -702,6 +703,7 @@ class WindowsComposeWindow(
                         isShiftPressed = raw.modifiers and MOD_SHIFT != 0u,
                         isCtrlPressed = raw.modifiers and MOD_CTRL != 0u,
                         isAltPressed = raw.modifiers and MOD_ALT != 0u,
+                        isMetaPressed = raw.modifiers and MOD_META != 0u,
                     )
                 )
                 Win32Event.CHAR -> if (raw.b > 0) {

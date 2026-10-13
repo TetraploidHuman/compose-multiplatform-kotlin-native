@@ -13,6 +13,7 @@
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
 | 指针 / 键盘 / 滚轮 | ✅ | ✅ | |
 | 窗级 `onPreviewKeyEvent` / `onKeyEvent` | ✅ | ✅ | preview → scene → onKey（对齐 Desktop） |
+| `KeyShortcut` Meta（Win 键） | ✅ | ✅ | Win：`MOD_META`→`isMetaPressed`；Linux：wl Mod4 |
 | 触摸 | ✅ | ✅ | |
 | IME | ✅ | ✅ | Wayland text-input-v3；Win32 IME |
 | 剪贴板 | ✅ | ✅ | 多 MIME（text/html/rtf/image/…） |
