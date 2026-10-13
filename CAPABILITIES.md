@@ -29,7 +29,7 @@
 | `alwaysOnTop` | ⚠️ 记账 | ✅ | Wayland 无通用协议 |
 | `Aligned` / parent transient | ✅ | ✅ | |
 | 自定义字体 `Res.font` | ✅ | ✅ | `org.jetbrains.compose.resources.Font` + `compose-kn-resources` |
-| `painterResource` | ✅ | ✅ | 位图（png/jpeg/webp…）；无 XML vector / locale / plurals |
+| `painterResource` / `vectorResource` | ✅ | ✅ | 位图 + Android VectorDrawable `.xml`；无 SVG / locale / plurals |
 | 官方 `compose.resources` 心智 | ⚠️ 子集 | ⚠️ 子集 | 同包名 / `Res.*`；仍无 locale/plurals |
 | JVM Desktop `swing` 互操作 | ❌ | ❌ | 非 JVM |
 | macOS K/N 宿主 | ❌ | — | 未提供 |

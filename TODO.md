@@ -27,7 +27,7 @@
 
 - [x] **`Window` / `DialogWindow` 缺参对齐**：`icon` / `transparent` / `enabled` / `focusable` / `onPreviewKeyEvent` / `onKeyEvent`（签名齐；Win 宿主已接线；Linux icon 记账、focusable 丢 Key/IME）
 - [x] **`singleWindowApplication`** + `SingleWindowApplicationScope`
-- [x] **`painterResource`**（位图）；locale / plurals 仍缺 → 见下
+- [x] **`painterResource`**（位图 + XML vector）；locale / plurals 仍缺 → 见下
 
 ### P1 — API 形态不对齐，真项目会踩
 
@@ -44,7 +44,8 @@
 - [x] `Window(transparent=true)` 真透明客户区（Win：WS_EX_LAYERED+UpdateLayeredWindow/软件路径；Linux：空 opaque region + clear TRANSPARENT）
 - [x] `Window(focusable=…)` 原生焦点策略（Win：WS_EX_NOACTIVATE+MA_NOACTIVATE；Linux：丢 Key/IME + 一次日志）
 - [x] Linux MenuBar 可见实现（Compose 顶栏 + shortcut；非 HMENU）
-- [ ] `compose.resources` locale / plurals / XML vector
+- [x] `compose.resources` XML vector（`painterResource` / `vectorResource`；纯 Kotlin xmldom）
+- [ ] `compose.resources` locale overlay / plurals
 - [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）
 - [x] `WindowDecoration.resizerThickness` → Win CSD `edgeMarginDp`；Linux 记账
 

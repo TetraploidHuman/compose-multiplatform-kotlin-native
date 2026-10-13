@@ -11,20 +11,24 @@ package org.jetbrains.compose.resources
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import cn.tetraploid.resources.DrawableResource as ComposeKnDrawableResource
 import cn.tetraploid.resources.Font as ComposeKnFont
 import cn.tetraploid.resources.FontFromFile as ComposeKnFontFromFile
 import cn.tetraploid.resources.FontResource as ComposeKnFontResource
 import cn.tetraploid.resources.StringResource as ComposeKnStringResource
+import cn.tetraploid.resources.decodeToImageVector as composeKnDecodeToImageVector
 import cn.tetraploid.resources.drawableResource as composeKnDrawableResource
 import cn.tetraploid.resources.fontFamilyOf as composeKnFontFamilyOf
 import cn.tetraploid.resources.fontResource as composeKnFontResource
 import cn.tetraploid.resources.loadDrawableBytes as composeKnLoadDrawableBytes
 import cn.tetraploid.resources.painterResource as composeKnPainterResource
 import cn.tetraploid.resources.stringResource as composeKnStringResourceFactory
+import cn.tetraploid.resources.vectorResource as composeKnVectorResource
 
 typealias FontResource = ComposeKnFontResource
 typealias StringResource = ComposeKnStringResource
@@ -56,10 +60,19 @@ fun drawableResource(
 fun loadDrawableBytes(resource: DrawableResource): ByteArray? =
     composeKnLoadDrawableBytes(resource)
 
-/** 对齐官方 `painterResource(DrawableResource)`（位图；无 XML vector）。 */
+/** 对齐官方 `painterResource(DrawableResource)`（位图 + Android VectorDrawable `.xml`）。 */
 @Composable
 fun painterResource(resource: DrawableResource): Painter =
     composeKnPainterResource(resource)
+
+/** 对齐官方 `vectorResource(DrawableResource)`。 */
+@Composable
+fun vectorResource(resource: DrawableResource): ImageVector =
+    composeKnVectorResource(resource)
+
+/** 把 VectorDrawable XML 字节解析为 [ImageVector]。 */
+fun ByteArray.decodeToImageVector(density: Density): ImageVector =
+    composeKnDecodeToImageVector(density)
 
 fun Font(
     resource: FontResource,
