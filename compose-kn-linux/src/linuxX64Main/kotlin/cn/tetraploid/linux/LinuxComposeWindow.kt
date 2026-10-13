@@ -69,6 +69,9 @@ class LinuxComposeWindow(
     /** Desktop `transparent`；当前 GLES/Vulkan 路径诚实记账。 */
     internal var transparent: Boolean = false
 
+    /** CSD 边缘缩放带宽（逻辑 dp）；Wayland beginResize 不按像素带宽，仅记账。 */
+    internal var resizerThicknessDp: Float = 8f
+
     /** 窗级键盘钩子（对齐 Desktop onPreviewKeyEvent / onKeyEvent）。 */
     internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }
     internal var onKeyEvent: (KeyEvent) -> Boolean = { false }

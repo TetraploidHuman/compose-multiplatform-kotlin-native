@@ -548,6 +548,22 @@ void composekn_win32_request_close(ComposeKNWin32Window* window);
 void composekn_win32_set_title(ComposeKNWin32Window* window, const char* title);
 
 /**
+ * CSD 边缘缩放带宽（逻辑 dp，@96dpi；物理 = MulDiv(dp, dpi, 96)）。
+ * 对齐 Compose `WindowDecoration.Undecorated(resizerThickness)`。
+ */
+void composekn_win32_set_edge_margin_dp(ComposeKNWin32Window* window, int32_t dp);
+
+/**
+ * 设置窗口图标（WM_SETICON ICON_SMALL / ICON_BIG）。
+ * small/big 的 bgra 可一侧为 null（复用另一侧）；两侧都 null 则清除。
+ * BGRA 自上而下，每像素 4 字节。
+ */
+bool composekn_win32_set_window_icon(
+    ComposeKNWin32Window* window,
+    int32_t small_w, int32_t small_h, const uint8_t* small_bgra,
+    int32_t big_w, int32_t big_h, const uint8_t* big_bgra);
+
+/**
  * 系统 ClearType / 字体平滑对应的 SkPixelGeometry 序号：
  *   0 = UNKNOWN（未开平滑 / 非 ClearType）
  *   1 = RGB_H

@@ -15,14 +15,20 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 
 /** Windows 托盘常用 16；Linux StatusNotifier 也常用 22，统一先用 16。 */
-internal val TrayIconPixelSize = Size(16f, 16f)
+val TrayIconPixelSize = Size(16f, 16f)
+
+/** 任务栏 / 标题栏小图标。 */
+val WindowIconSmallPixelSize = Size(16f, 16f)
+
+/** 任务栏 / Alt-Tab 大图标。 */
+val WindowIconBigPixelSize = Size(32f, 32f)
 
 /**
  * 把 [Painter] 画进 [ImageBitmap] 再导出 BGRA（自上而下）。
  * Density 固定 1f（与 Desktop Tray 不用 LocalDensity 一致）。
  */
-internal fun Painter.toTrayIconBgra(
-    size: Size = TrayIconPixelSize,
+fun Painter.toIconBgra(
+    size: Size,
     density: Density = Density(1f),
     layoutDirection: LayoutDirection = LayoutDirection.Ltr,
 ): Triple<Int, Int, ByteArray> {
@@ -36,7 +42,7 @@ internal fun Painter.toTrayIconBgra(
         canvas = canvas,
         size = Size(w.toFloat(), h.toFloat()),
     ) {
-        with(this@toTrayIconBgra) {
+        with(this@toIconBgra) {
             draw(Size(w.toFloat(), h.toFloat()))
         }
     }
@@ -52,3 +58,10 @@ internal fun Painter.toTrayIconBgra(
     }
     return Triple(w, h, bgra)
 }
+
+/** 托盘图标光栅化（16×16）。 */
+fun Painter.toTrayIconBgra(
+    size: Size = TrayIconPixelSize,
+    density: Density = Density(1f),
+    layoutDirection: LayoutDirection = LayoutDirection.Ltr,
+): Triple<Int, Int, ByteArray> = toIconBgra(size, density, layoutDirection)

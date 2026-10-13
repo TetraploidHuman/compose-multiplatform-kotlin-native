@@ -118,7 +118,7 @@ extern "C" void composekn_win32_log(const char* message) {
 namespace {
 
 constexpr const wchar_t* kWindowClass = L"ComposeKNWin32Window";
-constexpr int kEdgeMarginBase = 6; // logical px, scaled by DPI
+constexpr int kEdgeMarginBaseDefault = 6; // logical px @96dpi；可被 set_edge_margin_dp 覆盖
 
 }  // end anonymous namespace
 
@@ -210,6 +210,11 @@ struct ComposeKNWin32Window {
     // false = 系统标题栏（Compose JVM 桌面 Window() 的默认形态：NC 全归 OS 管）；
     // true = 无边框自绘 CSD（对应 JVM 的 undecorated = true）。
     bool undecorated = false;
+    /** CSD 边缘缩放带宽（逻辑 dp @96dpi）；对齐 WindowDecoration.resizerThickness。 */
+    int edgeMarginDp = kEdgeMarginBaseDefault;
+    /** WM_SETICON 持有的图标（destroy 时 DestroyIcon）。 */
+    HICON iconSmall = nullptr;
+    HICON iconBig = nullptr;
     /**
      * place_cascaded / place_aligned 刚用物理像素定好位置后置 true：
      * 紧随的 WM_DPICHANGED 只吃建议尺寸、保留我们的坐标。
@@ -405,7 +410,42 @@ static void storeTouchSample(ComposeKNWin32Window* window, uint32_t id, uint32_t
 }
 
 static int edgeMargin(ComposeKNWin32Window* window) {
-    return MulDiv(kEdgeMarginBase, window->dpi, 96);
+    const int base = window->edgeMarginDp > 0 ? window->edgeMarginDp : kEdgeMarginBaseDefault;
+    return MulDiv(base, window->dpi, 96);
+}
+
+/** BGRA top-down → HICON（与 tray_set_icon 同路径）。 */
+static HICON createIconFromBgra(int32_t w, int32_t h, const uint8_t* bgra) {
+    if (bgra == nullptr || w <= 0 || h <= 0 || w > 256 || h > 256) return nullptr;
+    BITMAPV5HEADER bi{};
+    bi.bV5Size = sizeof(BITMAPV5HEADER);
+    bi.bV5Width = w;
+    bi.bV5Height = -h;
+    bi.bV5Planes = 1;
+    bi.bV5BitCount = 32;
+    bi.bV5Compression = BI_BITFIELDS;
+    bi.bV5RedMask = 0x00FF0000;
+    bi.bV5GreenMask = 0x0000FF00;
+    bi.bV5BlueMask = 0x000000FF;
+    bi.bV5AlphaMask = 0xFF000000;
+    void* bits = nullptr;
+    HDC screen = GetDC(nullptr);
+    HBITMAP color = CreateDIBSection(
+        screen, reinterpret_cast<BITMAPINFO*>(&bi), DIB_RGB_COLORS, &bits, nullptr, 0);
+    ReleaseDC(nullptr, screen);
+    if (!color || !bits) {
+        if (color) DeleteObject(color);
+        return nullptr;
+    }
+    std::memcpy(bits, bgra, static_cast<size_t>(w) * static_cast<size_t>(h) * 4u);
+    ICONINFO ii{};
+    ii.fIcon = TRUE;
+    ii.hbmMask = CreateBitmap(w, h, 1, 1, nullptr);
+    ii.hbmColor = color;
+    HICON icon = CreateIconIndirect(&ii);
+    if (ii.hbmMask) DeleteObject(ii.hbmMask);
+    DeleteObject(color);
+    return icon;
 }
 
 static double dpiScaleOf(const ComposeKNWin32Window* window) {
@@ -2152,6 +2192,13 @@ extern "C" void composekn_win32_destroy(ComposeKNWin32Window* window) {
     composekn_win32_vk_destroy(window);
     composekn_win32_gl_destroy(window);
     if (window->hwnd != nullptr && IsWindow(window->hwnd)) {
+        // 清 WM_SETICON，避免 DestroyWindow 后仍握着我们 DestroyIcon 的句柄。
+        if (window->iconSmall != nullptr) {
+            SendMessageW(window->hwnd, WM_SETICON, ICON_SMALL, 0);
+        }
+        if (window->iconBig != nullptr) {
+            SendMessageW(window->hwnd, WM_SETICON, ICON_BIG, 0);
+        }
         // 菜单栏在 DestroyWindow 前摘掉并销毁（窗口不会自动 DestroyMenu）。
         if (window->menuBar != nullptr) {
             SetMenu(window->hwnd, nullptr);
@@ -2187,7 +2234,58 @@ extern "C" void composekn_win32_destroy(ComposeKNWin32Window* window) {
         }
         window->oleInitialized = false;
     }
+    if (window->iconSmall != nullptr) {
+        DestroyIcon(window->iconSmall);
+        window->iconSmall = nullptr;
+    }
+    if (window->iconBig != nullptr) {
+        DestroyIcon(window->iconBig);
+        window->iconBig = nullptr;
+    }
     delete window;
+}
+
+extern "C" void composekn_win32_set_edge_margin_dp(ComposeKNWin32Window* window, int32_t dp) {
+    if (window == nullptr) return;
+    window->edgeMarginDp = dp > 0 ? dp : kEdgeMarginBaseDefault;
+}
+
+extern "C" bool composekn_win32_set_window_icon(
+    ComposeKNWin32Window* window,
+    int32_t small_w, int32_t small_h, const uint8_t* small_bgra,
+    int32_t big_w, int32_t big_h, const uint8_t* big_bgra
+) {
+    if (window == nullptr || window->hwnd == nullptr) return false;
+    // 两侧都 null → 清除图标
+    if (small_bgra == nullptr && big_bgra == nullptr) {
+        SendMessageW(window->hwnd, WM_SETICON, ICON_SMALL, 0);
+        SendMessageW(window->hwnd, WM_SETICON, ICON_BIG, 0);
+        if (window->iconSmall) { DestroyIcon(window->iconSmall); window->iconSmall = nullptr; }
+        if (window->iconBig) { DestroyIcon(window->iconBig); window->iconBig = nullptr; }
+        return true;
+    }
+    HICON smallIcon = small_bgra
+        ? createIconFromBgra(small_w, small_h, small_bgra) : nullptr;
+    HICON bigIcon = big_bgra
+        ? createIconFromBgra(big_w, big_h, big_bgra) : nullptr;
+    // 只给一侧时复用到另一侧
+    if (smallIcon == nullptr && bigIcon != nullptr) smallIcon = bigIcon;
+    if (bigIcon == nullptr && smallIcon != nullptr) bigIcon = smallIcon;
+    if (smallIcon == nullptr) return false;
+
+    SendMessageW(window->hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(smallIcon));
+    SendMessageW(window->hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(bigIcon));
+
+    HICON oldSmall = window->iconSmall;
+    HICON oldBig = window->iconBig;
+    window->iconSmall = smallIcon;
+    window->iconBig = (bigIcon == smallIcon) ? nullptr : bigIcon;
+    // iconBig==nullptr 表示与 small 共用同一 HICON（只 Destroy 一次）
+    if (oldSmall && oldSmall != smallIcon && oldSmall != bigIcon) DestroyIcon(oldSmall);
+    if (oldBig && oldBig != smallIcon && oldBig != bigIcon && oldBig != oldSmall) {
+        DestroyIcon(oldBig);
+    }
+    return true;
 }
 
 extern "C" void composekn_win32_synth_left_up_if_released(

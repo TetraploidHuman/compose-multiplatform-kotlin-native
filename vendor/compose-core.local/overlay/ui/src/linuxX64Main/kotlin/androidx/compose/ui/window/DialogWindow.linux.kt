@@ -147,6 +147,7 @@ fun DialogWindow(
         handle.setTransparent(transparent)
         handle.setIcon(icon)
         handle.setVisible(visible)
+        handle.setResizerThicknessDp(decoration.resizerThickness.value)
         handle.setWindowKeyEventHandlers(
             onPreviewKeyEvent = { latestPreview.value(it) },
             onKeyEvent = { latestKey.value(it) },

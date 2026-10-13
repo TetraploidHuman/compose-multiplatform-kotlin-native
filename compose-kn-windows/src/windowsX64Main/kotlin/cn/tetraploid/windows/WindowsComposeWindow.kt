@@ -179,6 +179,21 @@ class WindowsComposeWindow(
         win32Window?.setEnabled(enabled)
     }
 
+    /** CSD 边缘缩放带宽（逻辑 dp）。有系统边框时仍写入，仅 undecorated 命中测试用。 */
+    fun setEdgeMarginDp(dp: Int) {
+        win32Window?.setEdgeMarginDp(dp.coerceAtLeast(1))
+    }
+
+    /**
+     * 任务栏/标题栏图标（BGRA small + big）。两侧都 null 清除。
+     */
+    fun setWindowIconBgra(
+        smallW: Int, smallH: Int, smallBgra: ByteArray?,
+        bigW: Int, bigH: Int, bigBgra: ByteArray?,
+    ): Boolean = win32Window?.setWindowIcon(
+        smallW, smallH, smallBgra, bigW, bigH, bigBgra,
+    ) ?: false
+
     fun setUserEnabled(enabled: Boolean) {
         userEnabled = enabled
         applyEffectiveEnabled()

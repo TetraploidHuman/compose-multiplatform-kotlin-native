@@ -14,8 +14,11 @@ import androidx.compose.ui.window.ComposeNativeWindowCreateParams
 import androidx.compose.ui.window.ComposeNativeWindowHandle
 import androidx.compose.ui.window.NativeMenuBarModel
 import androidx.compose.ui.window.WindowGeometrySnapshot
+import androidx.compose.ui.window.WindowIconBigPixelSize
+import androidx.compose.ui.window.WindowIconSmallPixelSize
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.toIconBgra
 import org.jetbrains.skiko.initWindowsMainThread
 import org.jetbrains.skiko.composeKnFileDialogOwnerResolver
 import org.jetbrains.skiko.win32Log
@@ -172,10 +175,24 @@ class WindowsNativeWindowHandle(
         }
     }
 
+    override fun setResizerThicknessDp(dp: Float) {
+        app.window.setEdgeMarginDp(dp.toInt().coerceAtLeast(1))
+    }
+
     override fun setIcon(icon: Painter?) {
-        // 任务栏/标题栏图标：待 WM_SETICON 桥；API 已接受 Painter。
-        @Suppress("UNUSED_PARAMETER")
-        val ignored = icon
+        if (icon == null) {
+            app.window.setWindowIconBgra(0, 0, null, 0, 0, null)
+            return
+        }
+        val small = icon.toIconBgra(WindowIconSmallPixelSize)
+        val big = icon.toIconBgra(WindowIconBigPixelSize)
+        val ok = app.window.setWindowIconBgra(
+            small.first, small.second, small.third,
+            big.first, big.second, big.third,
+        )
+        if (!ok) {
+            win32Log("Window(icon): WM_SETICON failed")
+        }
     }
 
     override fun setWindowKeyEventHandlers(

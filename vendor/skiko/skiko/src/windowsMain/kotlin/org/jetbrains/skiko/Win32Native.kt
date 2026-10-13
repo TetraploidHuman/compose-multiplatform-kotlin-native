@@ -296,6 +296,20 @@ internal external fun composekn_win32_request_close(window: COpaquePointer?)
 @SymbolName("composekn_win32_set_title")
 internal external fun composekn_win32_set_title(window: COpaquePointer?, title: CPointer<ByteVar>)
 
+@SymbolName("composekn_win32_set_edge_margin_dp")
+internal external fun composekn_win32_set_edge_margin_dp(window: COpaquePointer?, dp: Int)
+
+@SymbolName("composekn_win32_set_window_icon")
+internal external fun composekn_win32_set_window_icon(
+    window: COpaquePointer?,
+    smallW: Int,
+    smallH: Int,
+    smallBgra: CPointer<UByteVar>?,
+    bigW: Int,
+    bigH: Int,
+    bigBgra: CPointer<UByteVar>?,
+): Boolean
+
 @SymbolName("composekn_win32_clipboard_get_text")
 internal external fun composekn_win32_clipboard_get_text(
     window: COpaquePointer?,
@@ -756,6 +770,29 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
 
     fun requestClose() = composekn_win32_request_close(native)
     fun setTitle(title: String) = title.useCString { composekn_win32_set_title(native, it) }
+
+    /** CSD 边缘缩放带宽（逻辑 dp）。 */
+    fun setEdgeMarginDp(dp: Int) = composekn_win32_set_edge_margin_dp(native, dp)
+
+    /**
+     * 任务栏/标题栏图标（BGRA）。任一侧 null 表示复用另一侧；两侧都 null 清除。
+     */
+    fun setWindowIcon(
+        smallW: Int, smallH: Int, smallBgra: ByteArray?,
+        bigW: Int, bigH: Int, bigBgra: ByteArray?,
+    ): Boolean {
+        fun withPinned(bytes: ByteArray?, block: (CPointer<UByteVar>?) -> Boolean): Boolean {
+            if (bytes == null) return block(null)
+            return bytes.usePinned { block(it.addressOf(0).reinterpret()) }
+        }
+        return withPinned(smallBgra) { smallPtr ->
+            withPinned(bigBgra) { bigPtr ->
+                composekn_win32_set_window_icon(
+                    native, smallW, smallH, smallPtr, bigW, bigH, bigPtr,
+                )
+            }
+        }
+    }
 
     // ---- 窗口 API（位置/置顶/全屏/可缩放/任务栏进度）----
 

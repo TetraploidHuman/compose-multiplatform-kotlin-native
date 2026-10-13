@@ -27,6 +27,12 @@ interface ComposeNativeWindowHandle {
     fun setVisible(visible: Boolean) {}
 
     /**
+     * CSD 边缘缩放带宽（逻辑 dp），对齐 [WindowDecoration] `resizerThickness`。
+     * 有系统边框时宿主可忽略。
+     */
+    fun setResizerThicknessDp(dp: Float) {}
+
+    /**
      * 启用/禁用用户输入（对齐 Desktop `enabled`）。
      * 与 Dialog 软模态共同决定有效开关；默认实现 no-op。
      */

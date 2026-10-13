@@ -124,10 +124,11 @@ class LinuxNativeWindowHandle(
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
     companion object {
-        /** Absolute / always-on-top / transparent 限制只打一次日志，避免 SideEffect 刷屏。 */
+        /** Absolute / always-on-top / transparent / icon 限制只打一次日志，避免 SideEffect 刷屏。 */
         private var absolutePositionLogged = false
         private var alwaysOnTopLogged = false
         private var transparentLogged = false
+        private var iconLogged = false
     }
 
     override fun asPlatformWindow(): Any? = app.composeWindow
@@ -176,10 +177,19 @@ class LinuxNativeWindowHandle(
         }
     }
 
+    override fun setResizerThicknessDp(dp: Float) {
+        app.composeWindow.resizerThicknessDp = dp
+    }
+
     override fun setIcon(icon: Painter?) {
-        // Wayland 无标准 per-toplevel 图标协议；桌面图标走 .desktop / app_id。
-        @Suppress("UNUSED_PARAMETER")
-        val ignored = icon
+        // 标准 xdg-shell 无 per-toplevel 图标；桌面图标走 .desktop / app_id。
+        if (icon != null && !iconLogged) {
+            iconLogged = true
+            println(
+                "composekn: Window(icon=…) has no portable Wayland API " +
+                    "(use .desktop Icon= / app_id; Painter accepted but not applied)",
+            )
+        }
     }
 
     override fun setWindowKeyEventHandlers(
