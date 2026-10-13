@@ -38,7 +38,7 @@ jobs:
       - name: Upload Windows exe
         uses: actions/upload-artifact@v4
         with:
-          name: tetraploid-windows-jvm
+          name: composekn-windows-jvm
           path: |
             samples/windows-jvm-demo/build/compose/binaries/main/**/*.exe
             samples/windows-jvm-demo/build/compose/binaries/main/**/*.msi

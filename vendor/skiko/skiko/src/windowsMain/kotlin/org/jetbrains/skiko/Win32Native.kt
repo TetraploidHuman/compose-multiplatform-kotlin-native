@@ -596,7 +596,7 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
      */
     val clientOverflowCount: Int get() = composekn_win32_client_overflow_count(native)
 
-    /** 触摸通道是否启用（TETRAPLOID_TOUCH=0 关闭）。 */
+    /** 触摸通道是否启用（COMPOSEKN_TOUCH=0 关闭）。 */
     val touchEnabled: Boolean get() = composekn_win32_touch_enabled(native)
 
     /**
@@ -1555,7 +1555,7 @@ fun removeWindowsRenderTick(action: () -> Unit) {
 
 @SymbolName("composekn_win32_log")
 internal external fun composekn_win32_log(message: CPointer<ByteVar>)
-/** Append a line to tetraploid-startup.log (next to the exe). */
+/** Append a line to composekn-startup.log (next to the exe). */
 fun win32Log(message: String) = message.useCString { composekn_win32_log(it) }
 
 /** 逻辑处理器数量（把进程 CPU 时间换算成「占整机百分比」用）。 */

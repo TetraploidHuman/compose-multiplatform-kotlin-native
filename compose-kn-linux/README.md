@@ -1,4 +1,4 @@
-# Tetraploid Linux
+# ComposeKN Linux
 
 Kotlin/Native **linuxX64** 宿主：Wayland + Graphite/Vulkan（回退 EGL/GLES）+ Skia 上的 Compose Multiplatform。
 
@@ -57,11 +57,11 @@ Stable 链接若 UP-TO-DATE 未吃到 native 改动：先删上述 `.kexe` 再�
 ./scripts/run-linux-native.sh
 
 # 强制后端
-TETRAPLOID_RENDER_API=vulkan ./scripts/run-linux-native.sh
-TETRAPLOID_RENDER_API=gl     ./scripts/run-linux-native.sh
+COMPOSEKN_RENDER_API=vulkan ./scripts/run-linux-native.sh
+COMPOSEKN_RENDER_API=gl     ./scripts/run-linux-native.sh
 
 # 无交互自检（tray + portal + placement + 双窗）
-TETRAPLOID_SELFTEST=1 ./scripts/run-linux-native.sh
+COMPOSEKN_SELFTEST=1 ./scripts/run-linux-native.sh
 # 或
 .../wayland-demo.kexe --selftest
 ```
@@ -77,7 +77,7 @@ TETRAPLOID_SELFTEST=1 ./scripts/run-linux-native.sh
 真机 GPU：
 
 ```bash
-TETRAPLOID_VK_HARDWARE=1 nix-shell ./shell.nix --run './scripts/run-linux-native.sh'
+COMPOSEKN_VK_HARDWARE=1 nix-shell ./shell.nix --run './scripts/run-linux-native.sh'
 ```
 
 ## Architecture

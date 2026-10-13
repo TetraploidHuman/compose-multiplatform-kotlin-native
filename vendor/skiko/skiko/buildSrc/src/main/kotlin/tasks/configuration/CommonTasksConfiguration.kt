@@ -119,7 +119,7 @@ fun skiaPreprocessorFlags(
             "-DWIN32_LEAN_AND_MEAN",
             "-DNOMINMAX",
             "-DSK_GAMMA_APPLY_TO_A8",
-            // Tetraploid: 上游这里无条件定义 SK_DIRECT3D / SK_ANGLE（因为它假设 Windows
+            // ComposeKN: 上游这里无条件定义 SK_DIRECT3D / SK_ANGLE（因为它假设 Windows
             // 版 Skia 一定编了 D3D/ANGLE）。我们用的是自建 GNU-ABI Skia，gn args 里
             // skia_use_direct3d / skia_use_angle 都是 false —— 若仍然定义这两个宏，
             // nativeJsMain/cpp 里的包装函数就会走 D3D 分支、引用 Skia 里不存在的符号
@@ -390,7 +390,7 @@ fun KotlinTarget.generateVersion(
 
 
 /**
- * Tetraploid: 找到「实际链接的那份 Skia」的 args.gn。
+ * ComposeKN: 找到「实际链接的那份 Skia」的 args.gn。
  *
  * 查找顺序：gradle 属性 `skiko.skia.mingw.dir`（预编译包是 <pkg>/libs，源码构建是
  * skia/out/mingw）→ 环境变量 SKIA_MINGW_PREBUILT / SKIA_MINGW_WORK。
@@ -411,7 +411,7 @@ private fun mingwGnArgEnabled(mingwSkiaDir: String?, name: String): Boolean {
 }
 
 /**
- * Tetraploid: Windows bridge 要不要定义 `SK_DIRECT3D` / `SK_ANGLE`。
+ * ComposeKN: Windows bridge 要不要定义 `SK_DIRECT3D` / `SK_ANGLE`。
  *
  * 上游是无条件定义的（它假设 Windows 版 Skia 一定编了 D3D/ANGLE）。我们用的是自建
  * GNU-ABI Skia，gn args 里这些后端可能全是 false —— 若仍然定义这两个宏，
@@ -444,7 +444,7 @@ fun mingwGpuBackendFlags(mingwSkiaDir: String? = null): Array<String> {
 }
 
 /**
- * Tetraploid: 这份 MinGW Skia 到底有没有 GPU 后端。
+ * ComposeKN: 这份 MinGW Skia 到底有没有 GPU 后端。
  *
  * 用来决定要不要定义 `SKIKO_MINGW_NO_GPU`（那个宏会把 Surface/Image 的 GPU 入口
  * 整个打桩成 return nullptr）。拿不到 args.gn 时按「没有 GPU」处理 = 保持旧行为。

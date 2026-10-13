@@ -13,7 +13,7 @@ import platform.posix.getenv
 /**
  * LumiCode on Tetraploid / Kotlin Native (linuxX64 · Wayland).
  *
- * initLinuxMainThread + registerBackend：由 com.tetraploid.host entry wrapper 负责。
+ * initLinuxMainThread + registerBackend：由 cn.tetraploid.host entry wrapper 负责。
  */
 fun main(args: Array<String>) {
     val windowSize = LumiCodeDesktop.parseSize(getenv("LUMICODE_WINDOW_SIZE")?.toKString())

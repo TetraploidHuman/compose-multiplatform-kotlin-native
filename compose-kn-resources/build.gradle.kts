@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    id("com.tetraploid.publish")
+    id("cn.tetraploid.publish")
 }
 
 kotlin {

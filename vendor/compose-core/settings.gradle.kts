@@ -18,17 +18,17 @@ dependencyResolutionManagement {
 
 rootProject.name = "compose-core"
 
-// 仅当独立启动（CI: -p vendor/compose-core -Ptetraploid.compose.standalone=true）
+// 仅当独立启动（CI: -p vendor/compose-core -Pcomposekn.compose.standalone=true）
 val composeStandalone =
-    settings.startParameter.projectProperties["tetraploid.compose.standalone"] == "true"
+    settings.startParameter.projectProperties["composekn.compose.standalone"] == "true"
 val usePublishedSkiko =
-    settings.startParameter.projectProperties["tetraploid.usePublishedSkiko"] == "true"
+    settings.startParameter.projectProperties["composekn.usePublishedSkiko"] == "true"
 
 if (composeStandalone) {
-    // 解析已发布的 com.tetraploid:skiko（上一 job / 本机 maven-repo）
+    // 解析已发布的 cn.tetraploid:skiko（上一 job / 本机 maven-repo）
     dependencyResolutionManagement.repositories.apply {
         maven {
-            name = "TetraploidLocal"
+            name = "ComposeKnLocal"
             url = uri(settings.rootDir.resolve("../../build/maven-repo"))
         }
         val ghToken = System.getenv("GITHUB_TOKEN")

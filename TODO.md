@@ -2,9 +2,9 @@
 
 ## 已完成（近期，v0.5.68）
 
-- [x] **统一插件 + 单版本 BOM**：`com.tetraploid` + `com.tetraploid.app`；BOM 约束宿主/Skiko/UI；消费方主要锁 `tetraploid.version`
-- [x] **稳定 CDN 分发**：Release `tetraploid-maven-*.zip` → `~/.tetraploid/m2/<ver>`（脚本 + settings 自动拉取）；Packages 改为 opt-in；Central 发布钩子已预留
-- [ ] **发版**：坐标/品牌对齐后需重打 `tetraploid-maven-0.5.68.zip` 并上传 Release
+- [x] **统一插件 + 单版本 BOM**：`cn.tetraploid` + `cn.tetraploid.app`；BOM 约束宿主/Skiko/UI；消费方主要锁 `composekn.version`
+- [x] **稳定 CDN 分发**：Release `composekn-maven-*.zip` → `~/.composekn/m2/<ver>`（脚本 + settings 自动拉取）；Packages 改为 opt-in；Central 发布钩子已预留
+- [ ] **发版**：坐标/品牌对齐后需重打 `composekn-maven-0.5.68.zip` 并上传 Release
 - [x] **消费冒烟**（0.5.67 基线已绿）：KGP classpath、GMM marker、mingw skia、`run-linux-native`；0.5.68 待新 zip 后再冒烟
 
 ## 待做

@@ -7,8 +7,8 @@
 #
 # 用法：
 #   ./scripts/fetch-skia-mingw.sh [目标目录]
-#       # 默认 $SKIA_MINGW_WORK，未设置则用 /tmp/tetraploid-skia-mingw
-#   TETRAPLOID_SKIA_PREBUILT_URL=file:///path/to.tar.zst ./scripts/fetch-skia-mingw.sh /tmp/x
+#       # 默认 $SKIA_MINGW_WORK，未设置则用 /tmp/composekn-skia-mingw
+#   COMPOSEKN_SKIA_PREBUILT_URL=file:///path/to.tar.zst ./scripts/fetch-skia-mingw.sh /tmp/x
 #
 # 解包后目录布局：<dir>/skia-mingw-<tag>/{libs,runtime,shim,icudtl.dat,manifest.json}
 # 打包/上传见 vendor/skiko/skia-mingw/package-prebuilt.sh。
@@ -17,10 +17,10 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SKIA_TAG="$(cat "$REPO/vendor/skiko/skia-mingw/SKIA_TAG")"
 PKG_NAME="skia-mingw-$SKIA_TAG"
-DEST="${1:-${SKIA_MINGW_WORK:-/tmp/tetraploid-skia-mingw}}"
+DEST="${1:-${SKIA_MINGW_WORK:-/tmp/composekn-skia-mingw}}"
 SHA_FILE="$REPO/vendor/skiko/skia-mingw/prebuilt.sha256"
 
-URL="${TETRAPLOID_SKIA_PREBUILT_URL:-}"
+URL="${COMPOSEKN_SKIA_PREBUILT_URL:-}"
 if [ -z "$URL" ]; then
     URL="https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/download/${PKG_NAME}/${PKG_NAME}.tar.zst"
 fi
@@ -41,14 +41,14 @@ info "下载 $PKG_NAME.tar.zst"
 
 # 私有仓库的 Release 资产需要带 token（curl 直接请求会 404，不是 403）。
 # 本地可用 `gh auth token`，CI 里用 `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`。
-TOKEN="${TETRAPLOID_GH_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
+TOKEN="${COMPOSEKN_GH_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
 
 case "$URL" in
     file://*|/*) cp -f "${URL#file://}" "$TARBALL" ;;
     *)
         # 私有仓库的 Release 资产：浏览器下载地址（releases/download/...）带 token 也是 404，
         # 必须走 API（或 gh）。见下面两个分支。
-        if [ -n "$TOKEN" ] && [ -z "${TETRAPLOID_FORCE_API_DOWNLOAD:-}" ] &&
+        if [ -n "$TOKEN" ] && [ -z "${COMPOSEKN_FORCE_API_DOWNLOAD:-}" ] &&
            [[ "$URL" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/(.+)$ ]]; then
             gh_owner="${BASH_REMATCH[1]}"
             gh_repo="${BASH_REMATCH[2]}"

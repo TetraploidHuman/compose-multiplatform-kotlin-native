@@ -81,13 +81,13 @@ Kotlin/Native (mingwX64) + Compose Multiplatform + 自编译 GNU-ABI Skia，
   · 横向/纵向 Lazy 列表虚拟化 + **鼠标滚轮滚动**（横向列表：**Shift+滚轮** 或横向滚轮/
     触控板横滑 —— 与上游 Compose Desktop 一致；普通竖直滚轮会落到外层竖直列表上）
     + **触摸屏拖动滚动**
-    （触摸走 WM_POINTER -> PointerType.Touch；`set TETRAPLOID_TOUCH=0` 可关掉，
+    （触摸走 WM_POINTER -> PointerType.Touch；`set COMPOSEKN_TOUCH=0` 可关掉，
       退回系统「触摸提升成鼠标」的老行为）
   · Canvas 绘制（渐变/路径/描边/旋转）、FlowRow 自动换行、主题切换（深/浅色）
   · 渲染：**默认 Graphite/Vulkan**；创建失败自动回退 OpenGL/WGL（Ganesh），再失败回退
     软件路径（CPU raster + GDI）。真机有 Vulkan 驱动时应走 Graphite；Wine 上常会回退 GL。
-  · 想强制后端：set TETRAPLOID_RENDER_API=vulkan（或 gl / software）——看
-    tetraploid-startup.log 里的「skialayer: 使用 …」确认实际后端
+  · 想强制后端：set COMPOSEKN_RENDER_API=vulkan（或 gl / software）——看
+    composekn-startup.log 里的「skialayer: 使用 …」确认实际后端
   · 渲染：**按需渲染 + 按刷新率节流**（没有内容变化就不重绘，空闲时 CPU ≈ 0；
     这个窗口的标题栏实时显示实测帧率）
   · 想看空闲行为：Tetraploid-Windows-Native.exe --no-animate（关掉每帧动画）
@@ -124,18 +124,18 @@ Kotlin/Native (mingwX64) + Compose Multiplatform + 自编译 GNU-ABI Skia，
   · 触摸板 / 精确滚轮：Win32 的 WM_MOUSEWHEEL `zDelta` **不保证**是 120 的倍数
     （触控板常送 40/80 这种值），宿主按上游 Compose Desktop 的模型换算成**浮点**的
     「格」（zDelta / 120），不再被整数除法截断成 0 —— 想确认自己设备的触控板送了什么，
-    看 tetraploid-startup.log 里的 `wheel: 竖直|横向 delta=…`（原始值，不折算）
+    看 composekn-startup.log 里的 `wheel: 竖直|横向 delta=…`（原始值，不折算）
 
 自检（自动化测试）
 ------------------
 exe 内置三层自检，用退出码 0/1 汇报，可以直接在 CI / 脚本里断言：
 
   普通 cmd/PowerShell:
-      set TETRAPLOID_SELFTEST=1        && Tetraploid-Windows-Native.exe
-      set TETRAPLOID_SELFTEST=all      && Tetraploid-Windows-Native.exe
+      set COMPOSEKN_SELFTEST=1        && Tetraploid-Windows-Native.exe
+      set COMPOSEKN_SELFTEST=all      && Tetraploid-Windows-Native.exe
 
   PowerShell:
-      \$env:TETRAPLOID_SELFTEST = "all"; .\Tetraploid-Windows-Native.exe
+      \$env:COMPOSEKN_SELFTEST = "all"; .\Tetraploid-Windows-Native.exe
 
 输出形如：
       SELFTEST ok   : logic/vk-rwin
@@ -192,7 +192,7 @@ exe 内置三层自检，用退出码 0/1 汇报，可以直接在 CI / 脚本�
            真实的帧率/CPU 数据请单独跑 `window`。
 
 外部验证（`scripts/test-windows-native.sh`，不依赖程序自述）：
-  1. 宿主日志断言 —— 从 tetraploid-startup.log 里确认 `mouse:` / `wheel:` / `key:` / `drag:` 行
+  1. 宿主日志断言 —— 从 composekn-startup.log 里确认 `mouse:` / `wheel:` / `key:` / `drag:` 行
      真的出现过（这些行**只有 C++ wndproc 分支会打印**），并确认鼠标消息没有串进
      触摸通道（`touch:` 行为 0）。光看 Kotlin 侧 PASS 无法排除“断言改成不经过宿主也能过”。
   2. xdotool 真实注入 —— 往 X 服务器打真的鼠标/键盘事件，走
@@ -201,12 +201,12 @@ exe 内置三层自检，用退出码 0/1 汇报，可以直接在 CI / 脚本�
   3. 截图 —— 抓真实窗口 PNG，检查标题栏像素与颜色数（不是空白窗口）。
 
 性能日志（排查 CPU/帧率时直接拷这个文件）：
-  tetraploid-startup.log —— exe 同目录，含启动诊断 + 每秒一行 GALLERY-STATS
+  composekn-startup.log —— exe 同目录，含启动诊断 + 每秒一行 GALLERY-STATS
   （帧率 / 各作用域重组次数 / 本进程 CPU 占用）+ 每 120 帧一行 profile
   （update / replay / present 耗时拆解、呈现路径 direct 还是 copy）。
   想复现「静止」对照：再加 --no-animate 跑一遍（预期 frames/s=+0、cpu≈0ms/s）。
 
-日志：tetraploid-startup.log（exe 同目录，含启动诊断与事件日志）。
+日志：composekn-startup.log（exe 同目录，含启动诊断与事件日志）。
 
 触摸 / 鼠标 / hover（一条已知的"看起来像 bug"的行为）
 ----------------------------------------------------

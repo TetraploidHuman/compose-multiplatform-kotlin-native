@@ -490,12 +490,12 @@ internal fun COpaquePointer.drainImeEvents(): List<WaylandImeEvent> = memScoped 
         ) {
             val text = textBuf.toKString()
             when (kind.value) {
-                TETRAPLOID_IME_ENTER -> add(WaylandImeEvent.Enter)
-                TETRAPLOID_IME_LEAVE -> add(WaylandImeEvent.Leave)
-                TETRAPLOID_IME_PREEDIT -> add(WaylandImeEvent.Preedit(text, a.value.toInt(), b.value.toInt()))
-                TETRAPLOID_IME_COMMIT -> add(WaylandImeEvent.Commit(text))
-                TETRAPLOID_IME_DELETE -> add(WaylandImeEvent.Delete(a.value.toInt(), b.value.toInt()))
-                TETRAPLOID_IME_DONE -> add(WaylandImeEvent.Done)
+                COMPOSEKN_IME_ENTER -> add(WaylandImeEvent.Enter)
+                COMPOSEKN_IME_LEAVE -> add(WaylandImeEvent.Leave)
+                COMPOSEKN_IME_PREEDIT -> add(WaylandImeEvent.Preedit(text, a.value.toInt(), b.value.toInt()))
+                COMPOSEKN_IME_COMMIT -> add(WaylandImeEvent.Commit(text))
+                COMPOSEKN_IME_DELETE -> add(WaylandImeEvent.Delete(a.value.toInt(), b.value.toInt()))
+                COMPOSEKN_IME_DONE -> add(WaylandImeEvent.Done)
             }
         }
     }
@@ -503,9 +503,9 @@ internal fun COpaquePointer.drainImeEvents(): List<WaylandImeEvent> = memScoped 
 
 internal const val IME_TEXT_BUFFER = 8192
 
-internal const val TETRAPLOID_IME_ENTER = 1
-internal const val TETRAPLOID_IME_LEAVE = 2
-internal const val TETRAPLOID_IME_PREEDIT = 3
-internal const val TETRAPLOID_IME_COMMIT = 4
-internal const val TETRAPLOID_IME_DELETE = 5
-internal const val TETRAPLOID_IME_DONE = 6
+internal const val COMPOSEKN_IME_ENTER = 1
+internal const val COMPOSEKN_IME_LEAVE = 2
+internal const val COMPOSEKN_IME_PREEDIT = 3
+internal const val COMPOSEKN_IME_COMMIT = 4
+internal const val COMPOSEKN_IME_DELETE = 5
+internal const val COMPOSEKN_IME_DONE = 6

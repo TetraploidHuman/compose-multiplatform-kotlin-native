@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    id("com.tetraploid.host")
-    id("com.tetraploid.resources")
+    id("cn.tetraploid.host")
+    id("cn.tetraploid.resources")
 }
 
 val lumicodeFonts = file("../../../LumiCodeNext/composeApp/src/commonMain/composeResources/font")
 
-tetraploidResources {
+composeKnResources {
     packageOfResClass("main.resources")
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }
@@ -24,7 +24,7 @@ kotlin {
     sourceSets {
         val linuxX64Main by getting {
             dependencies {
-                // compose-kn-linux 由 com.tetraploid.host 注入
+                // compose-kn-linux 由 cn.tetraploid.host 注入
                 implementation(project(":compose-kn-resources"))
             }
         }

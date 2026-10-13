@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tetraploid Windows 原生 exe 的自动化测试驱动。
+# ComposeKN Windows 原生 exe 的自动化测试驱动。
 #
 # 四层验证（对应 exe 内置的 `--selftest` + 两个外部阶段）：
 #   1. logic  —— 纯逻辑断言（键位映射/消息解码/输入状态），不需要窗口
@@ -26,7 +26,7 @@
 #   SKIA_MINGW_PREBUILT=<dir>  预编译 mingw-Skia 包（跳过 Skia 构建；icudtl.dat 在链接期被
 #                              直接编进 exe，测试运行时**不需要**同目录数据文件）
 #   SKIA_MINGW_WORK=<dir>      从源码构建时的 Skia 工作目录
-#   TETRAPLOID_WINTEST_XDOTOOL_DX/DY  外部注入阶段两次点击的像素间隔（默认 40x25）
+#   COMPOSEKN_WINTEST_XDOTOOL_DX/DY  外部注入阶段两次点击的像素间隔（默认 40x25）
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -39,7 +39,7 @@ PREBUILT="${SKIA_MINGW_PREBUILT:-}"
 # 注意：这里**没有** icudtl.dat 的路径 —— ICU 数据已经在链接期编进 exe 了
 # （见 scripts/../vendor/skiko/skia-mingw/build-windows-native-demo.sh），
 # 测试必须有本事证明「只拷 exe 也能跑」，所以运行目录里故意不放数据文件。
-RUN_DIR="${TETRAPLOID_WINTEST_DIR:-/tmp/tetraploid-wintest}"
+RUN_DIR="${COMPOSEKN_WINTEST_DIR:-/tmp/composekn-wintest}"
 export WINEPREFIX="${WINEPREFIX:-/mnt/hdd2/KtLLM/wineprefix}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 
@@ -130,16 +130,16 @@ start_xvfb() {
     sleep 1
 }
 
-run_phase() {   # $1 = 阶段名, $2 = TETRAPLOID_SELFTEST 取值, $3 = 是否需要 X
+run_phase() {   # $1 = 阶段名, $2 = COMPOSEKN_SELFTEST 取值, $3 = 是否需要 X
     local name="$1" mode="$2" need_x="$3" log="$RUN_DIR/$1.log"
-    info "阶段 $name (TETRAPLOID_SELFTEST=$mode)"
+    info "阶段 $name (COMPOSEKN_SELFTEST=$mode)"
     # 启动日志是 append 模式：先删掉，免得上一阶段的旧行让后面的断言假通过。
-    rm -f "$RUN_DIR/tetraploid-startup.log"
+    rm -f "$RUN_DIR/composekn-startup.log"
     [ "$need_x" = "1" ] && start_xvfb
     set +e
     # 每个阶段都加硬超时：自检挂住时立刻失败并打出「最后跑到哪一条断言」，
     # 而不是耗到 CI job 超时、日志里什么线索都没有（这个坑真的踩过）。
-    timeout "${PHASE_TIMEOUT:-600}" env TETRAPLOID_SELFTEST="$mode" "$WINECMD" "$EXE_RUN" >"$log" 2>&1
+    timeout "${PHASE_TIMEOUT:-600}" env COMPOSEKN_SELFTEST="$mode" "$WINECMD" "$EXE_RUN" >"$log" 2>&1
     local rc=$?
     set -e
     local checks failed
@@ -176,7 +176,7 @@ fi
 # 两个文件、单独拷走 exe 就会崩；现在数据编在 exe 里（.incbin + 覆盖版 SkLoadICU）。
 # 这里直接查启动日志里的那一行 —— 它来自 win32_icu.cc，只有"真的用上内嵌数据"才会打印。
 if [ -z "$ONLY" ] || [ "$ONLY" = "logic" ]; then
-    STARTUP_LOG="$RUN_DIR/tetraploid-startup.log"
+    STARTUP_LOG="$RUN_DIR/composekn-startup.log"
     if grep -q 'icu: 使用内嵌数据初始化成功' "$STARTUP_LOG" 2>/dev/null; then
         pass "icu: 内嵌数据初始化成功（exe 单文件可跑，无需 icudtl.dat）"
     else
@@ -194,7 +194,7 @@ fi
 # 外层/内层 scrollable 的位置写进启动日志（~20Hz 节流、只在变化时记）。这条在 logic
 # 阶段就能验证：画廊离屏渲染时 LaunchedEffect 会写第一条基线。
 if [ -z "$ONLY" ] || [ "$ONLY" = "logic" ]; then
-    STARTUP_LOG="$RUN_DIR/tetraploid-startup.log"
+    STARTUP_LOG="$RUN_DIR/composekn-startup.log"
     if grep -q 'gallery: outer=' "$STARTUP_LOG" 2>/dev/null; then
         pass "gallery: 滚动/缩放状态日志已写入（$(grep -c 'gallery: outer=' "$STARTUP_LOG") 行）"
     else
@@ -219,7 +219,7 @@ fi
 # 改回「从 Kotlin 侧合成事件」也能全绿；日志行是只有真的走过 wndproc 才会有的
 # 证据（`mouse:`/`key:`/`wheel:` 三条都只在 C++ 分支里打印）。
 if [ -z "$ONLY" ] || [ "$ONLY" = "window" ]; then
-    STARTUP_LOG="$RUN_DIR/tetraploid-startup.log"
+    STARTUP_LOG="$RUN_DIR/composekn-startup.log"
     check_log_line() {   # $1 = 名字, $2 = 必须出现的字面量
         if grep -qF -- "$2" "$STARTUP_LOG" 2>/dev/null; then
             pass "win32msg: 宿主日志出现『$1』"
@@ -283,9 +283,9 @@ if { [ -z "$ONLY" ] && [ "$DO_INPUT" = "1" ]; } || [ "$ONLY" = "input" ]; then
     else
         info "阶段 input（xdotool 真实注入：X11 -> wine -> WndProc）"
         IN_LOG="$RUN_DIR/input.log"
-        rm -f "$IN_LOG" "$RUN_DIR/tetraploid-startup.log"
-        IN_DX="${TETRAPLOID_WINTEST_XDOTOOL_DX:-40}"
-        IN_DY="${TETRAPLOID_WINTEST_XDOTOOL_DY:-25}"
+        rm -f "$IN_LOG" "$RUN_DIR/composekn-startup.log"
+        IN_DX="${COMPOSEKN_WINTEST_XDOTOOL_DX:-40}"
+        IN_DY="${COMPOSEKN_WINTEST_XDOTOOL_DY:-25}"
         cat > "$RUN_DIR/input.sh" <<'EOIN'
 set -e
 export WINEDEBUG="${WINEDEBUG:--all}"
@@ -338,7 +338,7 @@ EOIN
             IN_DX="$IN_DX" IN_DY="$IN_DY" bash "$RUN_DIR/input.sh" \
             > "$RUN_DIR/input.out" 2>&1
         set -e
-        STARTUP_LOG="$RUN_DIR/tetraploid-startup.log"
+        STARTUP_LOG="$RUN_DIR/composekn-startup.log"
         if ! grep -q INPUT-OK "$RUN_DIR/input.out"; then
             fail "input: 注入脚本没跑完（见 $RUN_DIR/input.out）"
             tail -20 "$RUN_DIR/input.out" || true

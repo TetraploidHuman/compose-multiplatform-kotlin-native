@@ -89,29 +89,29 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
-import com.tetraploid.windows.MouseButton
-import com.tetraploid.windows.TaskbarProgressState
-import com.tetraploid.windows.TouchPhase
-import com.tetraploid.windows.WindowsApplicationHost
-import com.tetraploid.windows.WindowsComposeApplication
-import com.tetraploid.windows.WindowsComposeWindow
-import com.tetraploid.windows.WindowsEvent
-import com.tetraploid.windows.WindowsInputState
-import com.tetraploid.windows.WindowsNativeWindowHandle
-import com.tetraploid.windows.charToCodePoint
-import com.tetraploid.windows.createKeyEvent
-import com.tetraploid.windows.duplicateVkEntries
-import com.tetraploid.windows.internal.GET_WHEEL_DELTA_WPARAM
-import com.tetraploid.windows.internal.GET_X_LPARAM
-import com.tetraploid.windows.internal.Win32Modifier
-import com.tetraploid.windows.internal.winlog
-import com.tetraploid.windows.test.FrameSnapshot
-import com.tetraploid.windows.test.OffscreenDriver
-import com.tetraploid.windows.test.TestColors
-import com.tetraploid.windows.test.renderOffscreen
-import com.tetraploid.windows.test.snapshotSolidColor
-import com.tetraploid.windows.vkPairCount
-import com.tetraploid.windows.windowsVirtualKeyToComposeKey
+import cn.tetraploid.windows.MouseButton
+import cn.tetraploid.windows.TaskbarProgressState
+import cn.tetraploid.windows.TouchPhase
+import cn.tetraploid.windows.WindowsApplicationHost
+import cn.tetraploid.windows.WindowsComposeApplication
+import cn.tetraploid.windows.WindowsComposeWindow
+import cn.tetraploid.windows.WindowsEvent
+import cn.tetraploid.windows.WindowsInputState
+import cn.tetraploid.windows.WindowsNativeWindowHandle
+import cn.tetraploid.windows.charToCodePoint
+import cn.tetraploid.windows.createKeyEvent
+import cn.tetraploid.windows.duplicateVkEntries
+import cn.tetraploid.windows.internal.GET_WHEEL_DELTA_WPARAM
+import cn.tetraploid.windows.internal.GET_X_LPARAM
+import cn.tetraploid.windows.internal.Win32Modifier
+import cn.tetraploid.windows.internal.winlog
+import cn.tetraploid.windows.test.FrameSnapshot
+import cn.tetraploid.windows.test.OffscreenDriver
+import cn.tetraploid.windows.test.TestColors
+import cn.tetraploid.windows.test.renderOffscreen
+import cn.tetraploid.windows.test.snapshotSolidColor
+import cn.tetraploid.windows.vkPairCount
+import cn.tetraploid.windows.windowsVirtualKeyToComposeKey
 import org.jetbrains.skiko.initWindowsMainThread
 import kotlin.concurrent.Volatile
 import kotlin.math.abs
@@ -129,7 +129,7 @@ import org.jetbrains.skiko.Win32HitTest
 import org.jetbrains.skiko.Win32Message
 
 // =====================================================================
-// 自动化自检（`TETRAPLOID_SELFTEST=1` / `--selftest`）
+// 自动化自检（`COMPOSEKN_SELFTEST=1` / `--selftest`）
 //
 // 三层：
 //   1) logic    —— 纯函数断言（键位映射表、消息参数解码、输入状态机）
@@ -245,7 +245,7 @@ private const val DRAG_W_DP = 90
 private const val DRAG_H_DP = 60
 
 /**
- * C 侧自检 IDataObject（`TetraploidTestDataObject`）里固定的两条路径与文本。
+ * C 侧自检 IDataObject（`ComposeKNTestDataObject`）里固定的两条路径与文本。
  *
  * 两边必须一致：C 侧构造的是真的 CF_HDROP / CF_UNICODETEXT，这里断言解出来的就是这份；
  * 对不上说明 FORMATETC/DROPFILES 解码错了（而不是"断言写错了"）。
@@ -2559,7 +2559,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             )
             // 真机（MS 拼音）实测：它发的 IMR_DOCUMENTFEED 是 **lParam = NULL** 的。
             // 默认策略是"没有缓冲区就不声称支持"（不处理 = 老行为，什么都不改），
-            // 只有 TETRAPLOID_IME_DOCUMENTFEED=2（探针模式）才会对 NULL 回 TRUE。
+            // 只有 COMPOSEKN_IME_DOCUMENTFEED=2（探针模式）才会对 NULL 回 TRUE。
             val nullProbe = app.window.imeTestReconvert(kind = 0, bufferChars = -1)
             report.check(
                 "window/ime-document-feed-null-not-claimed",
@@ -2688,12 +2688,12 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             )
             report.check(
                 "window/file-dialog-available",
-                org.jetbrains.skiko.TetraploidFileDialog.available(),
+                org.jetbrains.skiko.ComposeKNFileDialog.available(),
                 "comdlg32 已链接；CI 不弹交互对话框，只断言 available",
             )
             report.check(
                 "window/tray-available",
-                org.jetbrains.skiko.TetraploidTray.available(),
+                org.jetbrains.skiko.ComposeKNTray.available(),
                 "Shell_NotifyIcon 已链接；CI 不弹气泡，只断言 available",
             )
             // 只收文件的框：位置要落在它**自己**的矩形里（onMoved/onEntered 是按
@@ -3180,7 +3180,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
  */
 private fun runConcurrentWindowTests(report: SelfTestReport) {
     report.section("window-multi 并发 A+B")
-    com.tetraploid.windows.registerTetraploidWindowsBackend()
+    cn.tetraploid.windows.registerComposeKnWindowsBackend()
     initWindowsMainThread()
 
     val appA = WindowsComposeApplication(
@@ -3265,7 +3265,7 @@ private fun runConcurrentWindowTests(report: SelfTestReport) {
  */
 private fun runApplicationApiSelfTest(report: SelfTestReport) {
     report.section("application{} 声明式入口保活 + 双窗 GL + WindowState 同步 + DialogWindow")
-    com.tetraploid.windows.registerTetraploidWindowsBackend()
+    cn.tetraploid.windows.registerComposeKnWindowsBackend()
 
     var frames = 0
     var framesSecond = 0
@@ -3684,7 +3684,7 @@ private fun assertWindowPerfReport(
     // 后台线程的一次状态写入必须被画出来（消息泵被唤醒），且只画这一帧。
     // 动画必须持续跑（没被节流卡死），又必须被节流（不是无节制重绘）。
     //
-    // ⚠ `TETRAPLOID_SELFTEST=all`（离屏 logic 阶段先在这个进程里跑过）时**这三条不判定**：
+    // ⚠ `COMPOSEKN_SELFTEST=all`（离屏 logic 阶段先在这个进程里跑过）时**这三条不判定**：
     //   实测窗口阶段的「后台写状态 -> 唤醒消息泵」链路在这个进程里已经不再驱动帧
     //   （三个子阶段全是 0 帧，见 HANDOVER §17.17），perf 契约只在独占进程的 window
     //   阶段才有意义。渲染本身仍被断言（frame-count / wheel-scroll / 逐帧绘制等），
@@ -3880,7 +3880,7 @@ private fun postRealKey(
  */
 private fun twoFingerGesture(
     app: WindowsComposeApplication,
-    driver: com.tetraploid.windows.test.OffscreenDriver,
+    driver: cn.tetraploid.windows.test.OffscreenDriver,
     density: Float,
     start1: Pair<Float, Float>,
     end1: Pair<Float, Float>,

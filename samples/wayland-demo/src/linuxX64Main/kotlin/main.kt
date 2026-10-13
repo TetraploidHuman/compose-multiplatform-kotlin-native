@@ -74,8 +74,8 @@ import main.resources.Res
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 import kotlinx.coroutines.delay
-import org.jetbrains.skiko.TetraploidFileDialog
-import org.jetbrains.skiko.TetraploidTray
+import org.jetbrains.skiko.ComposeKNFileDialog
+import org.jetbrains.skiko.ComposeKNTray
 import org.jetbrains.skiko.WaylandClipboard
 import platform.posix.getenv
 import kotlinx.cinterop.toKString
@@ -83,9 +83,9 @@ import kotlinx.cinterop.toKString
 private const val SKIA_ONLY_TEST = false
 
 fun main(args: Array<String>) {
-    // initLinuxMainThread + registerBackend：由 com.tetraploid.host entry wrapper /
-    // registerTetraploidLinuxBackend() 负责（幂等）。自检路径无 wrapper 时补登记：
-    com.tetraploid.linux.registerTetraploidLinuxBackend()
+    // initLinuxMainThread + registerBackend：由 cn.tetraploid.host entry wrapper /
+    // registerComposeKnLinuxBackend() 负责（幂等）。自检路径无 wrapper 时补登记：
+    cn.tetraploid.linux.registerComposeKnLinuxBackend()
     if (SKIA_ONLY_TEST) {
         return
     }
@@ -115,7 +115,7 @@ fun main(args: Array<String>) {
                 icon = ColorPainter(Color(0xFF1B6AC9)),
                 state = trayState,
                 tooltip = "Tetraploid Wayland Demo",
-                onAction = { println("tetraploid: tray onAction") },
+                onAction = { println("composekn: tray onAction") },
             ) {
                 Item("Notify Info") { trayState.sendNotification(notifyInfo) }
                 Separator()
@@ -141,7 +141,7 @@ fun main(args: Array<String>) {
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
-                            "tray=${TetraploidTray.available()} fileDialog=${TetraploidFileDialog.available()} " +
+                            "tray=${ComposeKNTray.available()} fileDialog=${ComposeKNFileDialog.available()} " +
                                 "placement=${mainState.placement}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray,
@@ -200,7 +200,7 @@ fun main(args: Array<String>) {
                     onCloseRequest = { paths ->
                         openFileDialog = false
                         fileResult = if (paths.isEmpty()) "(cancelled)" else paths.joinToString()
-                        println("tetraploid: filedialog -> $fileResult")
+                        println("composekn: filedialog -> $fileResult")
                     },
                     mode = FileDialogMode.Load,
                     title = "Open file",
@@ -268,12 +268,12 @@ fun main(args: Array<String>) {
 
 /**
  * 无交互自检：断言 tray/filedialog available、短暂挂 application 后正常退出。
- * 用法：`--selftest` 或 `TETRAPLOID_SELFTEST=1`
+ * 用法：`--selftest` 或 `COMPOSEKN_SELFTEST=1`
  */
 private fun runLinuxSelfTest() {
     println("SELFTEST: linux start")
-    val trayOk = TetraploidTray.available()
-    val fdOk = TetraploidFileDialog.available()
+    val trayOk = ComposeKNTray.available()
+    val fdOk = ComposeKNFileDialog.available()
     println("SELFTEST: tray.available=$trayOk filedialog.available=$fdOk")
     // portal / SNI 在无桌面会话时可能 false；有 wayland 会话时期望至少能连 display。
     var frames = 0
@@ -295,18 +295,18 @@ private fun runLinuxSelfTest() {
                     delay(400)
                     // Rich clipboard roundtrip (local cache; no compositor required)
                     WaylandClipboard.setRich(
-                        text = "tetraploid-selftest",
+                        text = "composekn-selftest",
                         html = "<b>tetraploid</b>",
                         rtf = null,
                         image = null,
-                        files = listOf("/tmp/tetraploid-selftest.txt"),
+                        files = listOf("/tmp/composekn-selftest.txt"),
                     )
                     val gotText = WaylandClipboard.getText()
                     val gotHtml = WaylandClipboard.getHtml()
                     val gotFiles = WaylandClipboard.getFiles()
-                    clipboardOk = gotText == "tetraploid-selftest" &&
+                    clipboardOk = gotText == "composekn-selftest" &&
                         gotHtml?.contains("tetraploid") == true &&
-                        gotFiles.contains("/tmp/tetraploid-selftest.txt")
+                        gotFiles.contains("/tmp/composekn-selftest.txt")
                     println(
                         "SELFTEST: clipboard text=${gotText != null} html=${gotHtml != null} " +
                             "files=${gotFiles.size} ok=$clipboardOk",
@@ -374,10 +374,10 @@ private fun runLinuxSelfTest() {
 }
 
 /**
- * 本地默认要求 tray+portal；CI 或 `TETRAPLOID_SELFTEST_RELAX=1` 时只断言核心渲染/双窗。
+ * 本地默认要求 tray+portal；CI 或 `COMPOSEKN_SELFTEST_RELAX=1` 时只断言核心渲染/双窗。
  */
 private fun selftestExtrasRequired(): Boolean {
-    val relax = getenv("TETRAPLOID_SELFTEST_RELAX")?.toKString()?.trim()
+    val relax = getenv("COMPOSEKN_SELFTEST_RELAX")?.toKString()?.trim()
     if (relax == "1") return false
     val ci = getenv("CI")?.toKString()?.trim()
     if (!ci.isNullOrEmpty() && ci != "0" && !ci.equals("false", ignoreCase = true)) {
@@ -388,7 +388,7 @@ private fun selftestExtrasRequired(): Boolean {
 
 private fun resolveSelfTest(args: Array<String>): Boolean {
     if (args.any { it == "--selftest" || it.startsWith("--selftest=") }) return true
-    val env = getenv("TETRAPLOID_SELFTEST")?.toKString()?.trim()
+    val env = getenv("COMPOSEKN_SELFTEST")?.toKString()?.trim()
     return !(env.isNullOrEmpty() || env == "0")
 }
 
@@ -514,7 +514,7 @@ private fun ClipboardDemoBox() {
                 ),
             )
             status = "已写入 HTML+plain"
-            println("tetraploid: clipboard setRich html")
+            println("composekn: clipboard setRich html")
         }) { Text("复制 HTML") }
         Button(onClick = {
             val entry = clipboard.getClip()
@@ -525,7 +525,7 @@ private fun ClipboardDemoBox() {
                 !plain.isNullOrEmpty() -> "文本: ${plain.take(40)}"
                 else -> "空"
             }
-            println("tetraploid: clipboard get -> $status")
+            println("composekn: clipboard get -> $status")
         }) { Text("粘贴") }
     }
     Text(status, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
@@ -535,7 +535,7 @@ private fun ClipboardDemoBox() {
 @Composable
 private fun DragAndDropDemoBox() {
     val paths = remember {
-        listOf("/tmp/tetraploid-gallery-drag-1.txt", "/tmp/tetraploid-gallery-drag-2.txt")
+        listOf("/tmp/composekn-gallery-drag-1.txt", "/tmp/composekn-gallery-drag-2.txt")
     }
     var dropStatus by remember { mutableStateOf("把文件/文本拖到虚线框") }
     var hovering by remember { mutableStateOf(false) }
@@ -553,7 +553,7 @@ private fun DragAndDropDemoBox() {
                     !event.text.isNullOrEmpty() -> "文本: ${event.text!!.take(48)}"
                     else -> "放下了，但没有文件/文本"
                 }
-                println("tetraploid: drag drop -> $dropStatus")
+                println("composekn: drag drop -> $dropStatus")
                 return true
             }
         }
@@ -570,7 +570,7 @@ private fun DragAndDropDemoBox() {
                         DragAndDropTransferData(
                             files = paths,
                             onTransferCompleted = { ok ->
-                                println("tetraploid: drag files done success=$ok")
+                                println("composekn: drag files done success=$ok")
                             },
                         )
                     },
@@ -586,7 +586,7 @@ private fun DragAndDropDemoBox() {
                         DragAndDropTransferData(
                             text = "Tetraploid Wayland 拖出的文本",
                             onTransferCompleted = { ok ->
-                                println("tetraploid: drag text done success=$ok")
+                                println("composekn: drag text done success=$ok")
                             },
                         )
                     },

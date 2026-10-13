@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 为只发了平台 variant 的 KMP 模块合成根坐标，
-# 让 implementation("com.tetraploid:compose-kn-linux:$VER") /
-# implementation("com.tetraploid.compose:ui:$UI_VER") 能按 native target 解析。
+# 让 implementation("cn.tetraploid:compose-kn-linux:$VER") /
+# implementation("cn.tetraploid.compose:ui:$UI_VER") 能按 native target 解析。
 #
 # 用法：./scripts/synthesize-kmp-root-modules.sh [maven-repo-root]
 #
@@ -10,14 +10,14 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 M2="${1:-$REPO/build/maven-repo}"
-VER="$(grep '^tetraploid.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="$(grep '^tetraploid.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
-UI_VER="${UI_VER:-1.12.1-tp.$VER}"
+VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="$(grep '^composekn.compose.ui.version=' "$REPO/gradle.properties" | cut -d= -f2)"
+UI_VER="${UI_VER:-1.12.1-ckn.$VER}"
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
 
 # synthesize <group.path> <artifact> <version> <platform...>
-# group.path 例：com/tetraploid 或 com/tetraploid/compose
+# group.path 例：cn/tetraploid 或 cn/tetraploid/compose
 synthesize() {
   local group_path="$1"
   local name="$2"
@@ -135,13 +135,13 @@ EOF
   info "synthesized $group_id:$name:$version → $root"
 }
 
-# —— host / skiko（com.tetraploid）——
-synthesize com/tetraploid compose-kn-linux "$VER" linuxx64
-synthesize com/tetraploid compose-kn-windows "$VER" mingwx64
-synthesize com/tetraploid compose-kn-resources "$VER" linuxx64 mingwx64
-synthesize com/tetraploid skiko "$VER" linuxx64 mingwx64
+# —— host / skiko（cn.tetraploid）——
+synthesize cn/tetraploid compose-kn-linux "$VER" linuxx64
+synthesize cn/tetraploid compose-kn-windows "$VER" mingwx64
+synthesize cn/tetraploid compose-kn-resources "$VER" linuxx64 mingwx64
+synthesize cn/tetraploid skiko "$VER" linuxx64 mingwx64
 
-# —— compose UI（com.tetraploid.compose，版本 = tetraploid.compose.ui.version）——
+# —— compose UI（cn.tetraploid.compose，版本 = composekn.compose.ui.version）——
 UI_MODULES=(
   ui-util ui-geometry ui-unit ui-graphics ui-text ui-backhandler
   lifecycle-viewmodel-compose ui
@@ -150,7 +150,7 @@ UI_MODULES=(
   material-ripple material3
 )
 for m in "${UI_MODULES[@]}"; do
-  synthesize com/tetraploid/compose "$m" "$UI_VER" linuxx64 mingwx64
+  synthesize cn/tetraploid/compose "$m" "$UI_VER" linuxx64 mingwx64
 done
 
 info "done"

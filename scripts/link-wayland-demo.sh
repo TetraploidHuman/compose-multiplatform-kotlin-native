@@ -12,7 +12,7 @@ if command -v nix-shell >/dev/null 2>&1 && [[ -f "$ROOT/shell.nix" ]]; then
       echo '==> JDK is not Zulu/Temurin; installing to /tmp/temurin21'
       bash '$ROOT/scripts/bootstrap-temurin.sh'
       export JAVA_HOME=/tmp/temurin21
-      export TETRAPLOID_JAVA_HOME=/tmp/temurin21
+      export COMPOSEKN_JAVA_HOME=/tmp/temurin21
       export PATH=/tmp/temurin21/bin:\$PATH
     fi
     echo \"==> Using JAVA_HOME=\$JAVA_HOME\"

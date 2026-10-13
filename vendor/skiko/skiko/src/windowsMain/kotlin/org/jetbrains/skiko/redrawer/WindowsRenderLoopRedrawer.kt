@@ -163,7 +163,7 @@ internal abstract class WindowsRenderLoopRedrawer(
         val w = window.width
         val h = window.height
         if (w <= 0 || h <= 0) return
-        // 每帧拆成三段，始终记录（真机日志 tetraploid-startup.log 直接可读）：
+        // 每帧拆成三段，始终记录（真机日志 composekn-startup.log 直接可读）：
         //   update —— Compose 场景渲染（重组/布局/绘制 -> 录制 Picture）
         //   draw   —— 回放 Picture 到 surface（软件路径 = CPU 光栅化；GL = GPU 提交）
         //   present—— 上传/交换（软件路径 = GDI blit；GL = SwapBuffers）

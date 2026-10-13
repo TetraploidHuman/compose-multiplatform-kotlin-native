@@ -2,11 +2,11 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.jetbrains.compose) apply false
-    id("com.tetraploid.konan-link-workaround")
+    id("cn.tetraploid.konan-link-workaround")
 }
 
 tasks.register("linkLinuxX64Stable") {
-    group = "tetraploid"
+    group = "composekn"
     description = "Link all linuxX64 release executables (konanc shutdown-crash workaround)."
     dependsOn(
         ":samples:link-smoke:linkReleaseExecutableLinuxX64Stable",
@@ -16,7 +16,7 @@ tasks.register("linkLinuxX64Stable") {
 }
 
 tasks.register("linkWindowsX64Stable") {
-    group = "tetraploid"
+    group = "composekn"
     description = "Link all windowsX64 release executables."
     dependsOn(
         ":samples:windows-demo:linkReleaseExecutableWindowsX64",

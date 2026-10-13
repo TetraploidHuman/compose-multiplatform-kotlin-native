@@ -9,15 +9,15 @@
 ### 1. `gradle.properties`
 
 ```properties
-tetraploid.version=0.5.68
+composekn.version=0.5.68
 ```
 
 ### 2. `settings.gradle.kts`
 
 ```kotlin
 pluginManagement {
-    val ver = providers.gradleProperty("tetraploid.version").get()
-    val cache = file("${System.getProperty("user.home")}/.tetraploid/m2/$ver")
+    val ver = providers.gradleProperty("composekn.version").get()
+    val cache = file("${System.getProperty("user.home")}/.composekn/m2/$ver")
     repositories {
         if (cache.isDirectory) maven { url = uri(cache) }
         gradlePluginPortal()
@@ -26,30 +26,30 @@ pluginManagement {
     }
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id.startsWith("com.tetraploid")) useVersion(ver)
+            if (requested.id.id.startsWith("cn.tetraploid")) useVersion(ver)
         }
     }
 }
 
 plugins {
     // 已有插件保留
-    id("com.tetraploid") // 坐标替换 + Release 缓存
+    id("cn.tetraploid") // 坐标替换 + Release 缓存
 }
 ```
 
 首次：
 
 ```bash
-# 若尚未有 ~/.tetraploid/m2/0.5.68
+# 若尚未有 ~/.composekn/m2/0.5.68
 curl -fsSL … 或使用本仓库的:
-./scripts/fetch-tetraploid-maven.sh
+./scripts/fetch-composekn-maven.sh
 ```
 
 ### 3. 应用模块 `build.gradle.kts`
 
 ```kotlin
 plugins {
-    id("com.tetraploid.app") // host + resources；带上 kotlin-gradle-plugin
+    id("cn.tetraploid.app") // host + resources；带上 kotlin-gradle-plugin
     kotlin("multiplatform") // 不要写 version（与 app 插件 classpath 冲突）
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -66,7 +66,7 @@ kotlin {
 
     sourceSets {
         // commonMain 继续用 compose.runtime / foundation / material3 / ui
-        // 无需改成 com.tetraploid.compose 坐标（settings 会顶掉）
+        // 无需改成 cn.tetraploid.compose 坐标（settings 会顶掉）
     }
 }
 ```
@@ -83,7 +83,7 @@ fun main() = application {
 }
 ```
 
-- **不必**手写 `registerTetraploid*Backend()`（`com.tetraploid.app` / host 已包一层）。
+- **不必**手写 `registerComposeKn*Backend()`（`cn.tetraploid.app` / host 已包一层）。
 
 ### 5. 运行
 
@@ -107,13 +107,13 @@ Linux（尤其 NixOS）若直接跑 `.kexe` 缺库，优先用仓库内 `scripts
 
 ## 迁移检查清单
 
-- [ ] 只增加 `tetraploid.version`，未混用「宿主 0.5.x + 手写错误 UI 坐标」
-- [ ] `pluginManagement` 能解析到 `com.tetraploid` 插件 JAR（缓存 / local / Packages）
-- [ ] 已 apply `com.tetraploid` + `com.tetraploid.app`
+- [ ] 只增加 `composekn.version`，未混用「宿主 0.5.x + 手写错误 UI 坐标」
+- [ ] `pluginManagement` 能解析到 `cn.tetraploid` 插件 JAR（缓存 / local / Packages）
+- [ ] 已 apply `cn.tetraploid` + `cn.tetraploid.app`
 - [ ] 声明了 `linuxX64` 和/或 `mingwX64` executable
 - [ ] `commonMain` 依赖仍写官方 `compose.*` 名
 - [ ] Linux 有 Wayland 会话；需要时用 `runLinuxX64`
 - [ ] 资源：布局仍用 `composeResources/`；代码 `import org.jetbrains.compose.resources.Font`（settings 已顶 `components-resources` → `compose-kn-resources`）
-- [ ] 可选：`tetraploidResources { packageOfResClass("….generated.resources") }`（与官方 `packageOfResClass` 同义）
+- [ ] 可选：`composeKnResources { packageOfResClass("….generated.resources") }`（与官方 `packageOfResClass` 同义）
 
 能力差异见 `CAPABILITIES.md`。

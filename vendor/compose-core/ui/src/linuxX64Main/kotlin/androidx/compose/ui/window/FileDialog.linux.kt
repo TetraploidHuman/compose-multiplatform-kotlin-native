@@ -11,7 +11,7 @@ package androidx.compose.ui.window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
-import org.jetbrains.skiko.TetraploidFileDialog
+import org.jetbrains.skiko.ComposeKNFileDialog
 
 /** 打开（Load）或保存（Save）。 */
 enum class FileDialogMode { Load, Save }
@@ -131,9 +131,9 @@ private fun runNativeFileDialog(
     initialFileName: String?,
     multiple: Boolean,
     filters: List<FileDialogFilter>,
-): List<String> = TetraploidFileDialog.show(
+): List<String> = ComposeKNFileDialog.show(
     ownerPlatform = ownerPlatform,
-    mode = if (mode == FileDialogMode.Save) TetraploidFileDialog.MODE_SAVE else TetraploidFileDialog.MODE_LOAD,
+    mode = if (mode == FileDialogMode.Save) ComposeKNFileDialog.MODE_SAVE else ComposeKNFileDialog.MODE_LOAD,
     title = title,
     initialDirectory = initialDirectory,
     initialFileName = initialFileName,

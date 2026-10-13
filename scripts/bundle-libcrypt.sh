@@ -13,9 +13,9 @@ LIBDIR="$(dirname "$KEXE")/lib"
 mkdir -p "$LIBDIR"
 
 if command -v nix-shell >/dev/null 2>&1 && [[ -f "$ROOT/shell.nix" ]]; then
-  nix-shell "$ROOT/shell.nix" --run "cp -L \"\$TETRAPLOID_LIBCRYPT_LIB/libcrypt.so.1\" \"$LIBDIR/\""
+  nix-shell "$ROOT/shell.nix" --run "cp -L \"\$COMPOSEKN_LIBCRYPT_LIB/libcrypt.so.1\" \"$LIBDIR/\""
 else
-  echo "Need nix-shell + shell.nix (TETRAPLOID_LIBCRYPT_LIB)." >&2
+  echo "Need nix-shell + shell.nix (COMPOSEKN_LIBCRYPT_LIB)." >&2
   exit 1
 fi
 

@@ -1,15 +1,15 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    id("com.tetraploid.host")
-    id("com.tetraploid.resources")
+    id("cn.tetraploid.host")
+    id("cn.tetraploid.resources")
 }
 
 val lumicodeRoot = file("../../../LumiCodeNext/composeApp")
 val lumicodeCommon = file("$lumicodeRoot/src/commonMain/kotlin")
 val lumicodeFonts = file("$lumicodeRoot/src/commonMain/composeResources/font")
 
-tetraploidResources {
+composeKnResources {
     // 官方 compose.resources 同义：packageOfResClass("…")
     packageOfResClass("com.lumicode.editor.resources")
     // Prefer LumiCodeNext fonts when present; also allow local composeResources/font.
@@ -63,7 +63,7 @@ kotlin {
         val linuxX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
             dependencies {
-                // compose-kn-linux 由 com.tetraploid.host 注入
+                // compose-kn-linux 由 cn.tetraploid.host 注入
                 implementation(project(":compose-kn-resources"))
             }
         }
@@ -71,7 +71,7 @@ kotlin {
         val mingwX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
             dependencies {
-                // compose-kn-windows 由 com.tetraploid.host 注入
+                // compose-kn-windows 由 cn.tetraploid.host 注入
                 implementation(project(":compose-kn-resources"))
             }
         }
@@ -92,7 +92,7 @@ tasks.named("compileKotlinLinuxX64") { dependsOn("verifyLumicodeSources") }
 tasks.matching { it.name.startsWith("compileKotlinMingw") }.configureEach {
     dependsOn("verifyLumicodeSources")
 }
-tasks.named("generateTetraploidResources") { dependsOn("verifyLumicodeSources") }
+tasks.named("generateComposeKnResources") { dependsOn("verifyLumicodeSources") }
 
 configurations.configureEach {
     resolutionStrategy.force("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")

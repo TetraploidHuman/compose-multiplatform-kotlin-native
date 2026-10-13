@@ -1,7 +1,7 @@
 name: linux-native-selftest
 
 # 在 ubuntu runner 上链接 wayland-demo，并用 headless weston 跑 --selftest。
-# 默认 lavapipe / llvmpipe；CI 下 tray/portal 为 soft check（见 TETRAPLOID_SELFTEST_RELAX）。
+# 默认 lavapipe / llvmpipe；CI 下 tray/portal 为 soft check（见 COMPOSEKN_SELFTEST_RELAX）。
 
 on:
   workflow_dispatch:
@@ -77,23 +77,23 @@ jobs:
 
       - name: Build wayland-demo
         env:
-          TETRAPLOID_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
+          COMPOSEKN_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
         run: |
           chmod +x scripts/test-linux-native.sh
           ./scripts/test-linux-native.sh --build-only
 
       - name: Selftest Graphite/Vulkan
         env:
-          TETRAPLOID_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
-          TETRAPLOID_SELFTEST_RELAX: "1"
+          COMPOSEKN_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
+          COMPOSEKN_SELFTEST_RELAX: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
         run: ./scripts/test-linux-native.sh --skip-build --api=vulkan
 
       - name: Selftest GLES fallback
         env:
-          TETRAPLOID_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
-          TETRAPLOID_SELFTEST_RELAX: "1"
+          COMPOSEKN_LIBCRYPT_LIB: /lib/x86_64-linux-gnu
+          COMPOSEKN_SELFTEST_RELAX: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
         run: ./scripts/test-linux-native.sh --skip-build --api=gl
@@ -104,6 +104,6 @@ jobs:
         with:
           name: linux-selftest-logs
           path: |
-            /tmp/tetraploid-xdg-*/weston.log
+            /tmp/composekn-xdg-*/weston.log
             samples/wayland-demo/build/reports/**
           if-no-files-found: ignore

@@ -16,7 +16,7 @@ import platform.posix.getenv
 /**
  * SkiaLayer for Kotlin/Native Linux with Wayland.
  *
- * Default: Graphite/Vulkan → fallback GLES. Override with `TETRAPLOID_RENDER_API`.
+ * Default: Graphite/Vulkan → fallback GLES. Override with `COMPOSEKN_RENDER_API`.
  */
 actual open class SkiaLayer {
     actual var renderApi: GraphicsApi = defaultLinuxRenderApi()
@@ -129,7 +129,7 @@ actual open class SkiaLayer {
     }
 
     /**
-     * 建后端：默认 Graphite/Vulkan → GLES；可用 `TETRAPLOID_RENDER_API` 强制。
+     * 建后端：默认 Graphite/Vulkan → GLES；可用 `COMPOSEKN_RENDER_API` 强制。
      */
     private fun createRedrawer(window: WaylandWindow): Redrawer {
         val requested = linuxRenderApiOverride() ?: renderApi
@@ -142,7 +142,7 @@ actual open class SkiaLayer {
                 return LinuxWaylandVulkanRedrawer(this, window)
             } catch (t: Throwable) {
                 println(
-                    "tetraploid: Graphite/Vulkan unavailable (${t.message}); falling back to GLES",
+                    "composekn: Graphite/Vulkan unavailable (${t.message}); falling back to GLES",
                 )
                 window.setVulkanPreferred(false)
             }
@@ -161,11 +161,11 @@ actual open class SkiaLayer {
 actual val currentSystemTheme: SystemTheme = SystemTheme.UNKNOWN
 
 /**
- * `TETRAPLOID_RENDER_API=vulkan|vk|graphite|gl|opengl|gles`：强制指定后端。
+ * `COMPOSEKN_RENDER_API=vulkan|vk|graphite|gl|opengl|gles`：强制指定后端。
  * 未设置时返回 null，表示按 [SkiaLayer.renderApi] 走默认逻辑。
  */
 private fun linuxRenderApiOverride(): GraphicsApi? {
-    val raw = getenv("TETRAPLOID_RENDER_API")?.toKString()?.trim()?.lowercase() ?: return null
+    val raw = getenv("COMPOSEKN_RENDER_API")?.toKString()?.trim()?.lowercase() ?: return null
     return when (raw) {
         "vulkan", "vk", "graphite", "graphite-vk" -> GraphicsApi.VULKAN
         "gl", "opengl", "gles", "gpu" -> GraphicsApi.OPENGL

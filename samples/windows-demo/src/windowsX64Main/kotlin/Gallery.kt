@@ -93,18 +93,18 @@ import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.rememberNotification
 import org.jetbrains.compose.resources.Font
-import com.tetraploid.windows.TaskbarProgressState
-import com.tetraploid.windows.WindowsComposeWindow
+import cn.tetraploid.windows.TaskbarProgressState
+import cn.tetraploid.windows.WindowsComposeWindow
 import main.resources.Res
 import kotlin.concurrent.Volatile
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.graphicsLayer
-import com.tetraploid.windows.internal.winlog
+import cn.tetraploid.windows.internal.winlog
 import androidx.compose.runtime.withFrameNanos
-import org.jetbrains.skiko.TetraploidFileDialog
-import org.jetbrains.skiko.TetraploidTray
+import org.jetbrains.skiko.ComposeKNFileDialog
+import org.jetbrains.skiko.ComposeKNTray
 
 /**
  * 组件画廊的「观测点」。
@@ -255,7 +255,7 @@ fun ComponentGallery(
             val outerState = rememberLazyListState()
             val innerState = rememberLazyListState()
 
-            // 诊断：把「外层/内层滚动位置 + 缩放值」写进 tetraploid-startup.log（~20Hz 节流）。
+            // 诊断：把「外层/内层滚动位置 + 缩放值」写进 composekn-startup.log（~20Hz 节流）。
             //
             // 为什么需要：真机反馈「缩放之后还会跳 / 嵌套滚动有时候也跳」，但那种"跳"是
             // 肉眼看到的现象，日志里只有触摸轨迹，无法判断**是哪个滚动容器在动、动了多少**。
@@ -429,7 +429,7 @@ private fun LazyListScope.gallerySections(
 
     section("托盘 / Tray + Notification") {
         Text(
-            "available=${TetraploidTray.available()} / isTraySupported=$traySupported。" +
+            "available=${ComposeKNTray.available()} / isTraySupported=$traySupported。" +
                 "任务栏通知区应有蓝底白圆图标；双击 = onAction，右键 = 菜单。",
             style = MaterialTheme.typography.bodySmall,
         )
@@ -855,7 +855,7 @@ private fun LazyListScope.gallerySections(
 /**
  * 文件对话框手动验证：命令式 open/save + 声明式 [FileDialog]。
  *
- * CI 不弹交互对话框（只断言 `TetraploidFileDialog.available()`）；这里是给人点的。
+ * CI 不弹交互对话框（只断言 `ComposeKNFileDialog.available()`）；这里是给人点的。
  */
 @Composable
 private fun FileDialogBox(window: WindowsComposeWindow) {
@@ -873,7 +873,7 @@ private fun FileDialogBox(window: WindowsComposeWindow) {
         Column(Modifier.padding(12.dp)) {
             Text("文件对话框", style = MaterialTheme.typography.titleSmall)
             Text(
-                "available=${TetraploidFileDialog.available()}（comdlg32）",
+                "available=${ComposeKNFileDialog.available()}（comdlg32）",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 4.dp),
             )

@@ -12,25 +12,25 @@ plugins {
 }
 
 /**
- * 发布到 Tetraploid 坐标（默认关；`-Ptetraploid.publish.composeUi=true` 打开）：
- *   group = com.tetraploid.compose
- *   version = 1.12.1-tp.<tetraploid.version>
+ * 发布到 Tetraploid 坐标（默认关；`-Pcomposekn.publish.composeUi=true` 打开）：
+ *   group = cn.tetraploid.compose
+ *   version = 1.12.1-ckn.<composekn.version>
  *   artifactId = 子工程名（ui / foundation / material3 / …）
  *
- * 消费者用 settings 插件 `com.tetraploid.settings` 把
+ * 消费者用 settings 插件 `cn.tetraploid.settings` 把
  * `org.jetbrains.compose.*` 顶成这些坐标，无需 includeBuild。
  */
 val publishComposeUi =
-    providers.gradleProperty("tetraploid.publish.composeUi").orNull == "true"
+    providers.gradleProperty("composekn.publish.composeUi").orNull == "true"
 val skipMetadata =
-    providers.gradleProperty("tetraploid.publish.skipMetadata").orNull == "true"
+    providers.gradleProperty("composekn.publish.skipMetadata").orNull == "true"
 val usePublishedSkiko =
-    providers.gradleProperty("tetraploid.usePublishedSkiko").orNull == "true"
-val tetraploidVer =
-    providers.gradleProperty("tetraploid.version").orElse("0.5.66")
+    providers.gradleProperty("composekn.usePublishedSkiko").orNull == "true"
+val composeknVer =
+    providers.gradleProperty("composekn.version").orElse("0.5.66")
 val composeUiVer =
-    providers.gradleProperty("tetraploid.compose.ui.version")
-        .orElse(tetraploidVer.map { "1.12.1-tp.$it" })
+    providers.gradleProperty("composekn.compose.ui.version")
+        .orElse(composeknVer.map { "1.12.1-ckn.$it" })
 
 // 覆盖 includeBuild 进来的 skiko：禁用其 metadata（init-script 是双保险）
 if (skipMetadata) {
@@ -45,7 +45,7 @@ if (skipMetadata) {
 
 if (usePublishedSkiko) {
     // 按 configuration 名直接顶到平台坐标，避开合成根 .module 的 available-at 解析问题。
-    val skikoVer = tetraploidVer.get()
+    val skikoVer = composeknVer.get()
     allprojects {
         configurations.configureEach {
             val confName = name
@@ -53,10 +53,10 @@ if (usePublishedSkiko) {
                 when {
                     confName.contains("linuxX64", ignoreCase = true) ||
                         confName.contains("linuxx64", ignoreCase = true) ->
-                        "com.tetraploid:skiko-linuxx64:$skikoVer"
+                        "cn.tetraploid:skiko-linuxx64:$skikoVer"
                     confName.contains("mingwX64", ignoreCase = true) ||
                         confName.contains("mingwx64", ignoreCase = true) ->
-                        "com.tetraploid:skiko-mingwx64:$skikoVer"
+                        "cn.tetraploid:skiko-mingwx64:$skikoVer"
                     else -> null
                 }
             if (target != null) {
@@ -101,12 +101,12 @@ subprojects {
 
         if (publishComposeUi) {
             pluginManager.apply("maven-publish")
-            group = "com.tetraploid.compose"
+            group = "cn.tetraploid.compose"
             version = composeUiVer.get()
             extensions.configure<PublishingExtension> {
                 repositories {
                     maven {
-                        name = "TetraploidLocal"
+                        name = "ComposeKnLocal"
                         // 发到 Tetraploid 仓库根的 build/maven-repo（本工程在 vendor/compose-core）
                         url = uri(rootProject.projectDir.resolve("../../build/maven-repo"))
                     }
@@ -127,7 +127,7 @@ subprojects {
                 }
             }
             logger.lifecycle(
-                "Tetraploid: will publish ${project.path} as com.tetraploid.compose:${project.name}:$version",
+                "ComposeKN: will publish ${project.path} as cn.tetraploid.compose:${project.name}:$version",
             )
         }
     }

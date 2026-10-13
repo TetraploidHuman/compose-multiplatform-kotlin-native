@@ -2,12 +2,12 @@
 
 Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，消费心智对齐官方 `compose.resources`：
 
-- `import org.jetbrains.compose.resources.Font`（推荐，勿再写 Kotlin 包 `com.tetraploid.resources`）
+- `import org.jetbrains.compose.resources.Font`（推荐，勿再写 Kotlin 包 `cn.tetraploid.resources`）
 - `Res.font.*` / `Font(Res.font.xxx)`
 - `Res.string.*` / `stringResource(...)`
 - `Res.drawable.*` / `loadDrawableBytes(...)`
 
-> 官方 `components-resources` **没有** linuxX64/mingwX64。`com.tetraploid` settings 插件会把该坐标顶到本模块。
+> 官方 `components-resources` **没有** linuxX64/mingwX64。`cn.tetraploid` settings 插件会把该坐标顶到本模块。
 
 ## 布局
 
@@ -22,10 +22,10 @@ src/commonMain/composeResources/
 
 ```kotlin
 plugins {
-    id("com.tetraploid.app") // 已含 resources；也可单独 id("com.tetraploid.resources")
+    id("cn.tetraploid.app") // 已含 resources；也可单独 id("cn.tetraploid.resources")
 }
 
-tetraploidResources {
+composeKnResources {
     // 官方同义：packageOfResClass；也可用 packageName.set("…")
     packageOfResClass("com.example.app.generated.resources")
     extraFontDirs.add("/path/to/other/font/dir")
@@ -49,4 +49,4 @@ loadDrawableBytes(Res.drawable.logo)
 
 ## 坐标
 
-`com.tetraploid:compose-kn-resources`（见 [CONSUMING.md](../CONSUMING.md)）
+`cn.tetraploid:compose-kn-resources`（见 [CONSUMING.md](../CONSUMING.md)）

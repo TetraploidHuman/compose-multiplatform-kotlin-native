@@ -1,4 +1,4 @@
-# Tetraploid Windows
+# ComposeKN Windows
 
 Kotlin/Native **windowsX64** 宿主：Win32 + Skia（Graphite/Vulkan 优先，可回退 GL）上的
 Compose Multiplatform。
@@ -48,12 +48,12 @@ nix-shell ./shell.nix --run ./vendor/skiko/skia-mingw/build-windows-native-demo.
 samples/windows-demo/build/bin/windowsX64/releaseExecutable/windows-demo.exe
 ```
 
-日志默认写在 **exe 同目录** `tetraploid-startup.log`。
+日志默认写在 **exe 同目录** `composekn-startup.log`。
 
 ## Running / 自检
 
 ```bash
-TETRAPLOID_SELFTEST=window   # 或 all / logic
+COMPOSEKN_SELFTEST=window   # 或 all / logic
 # 交互画廊：直接运行 exe；托盘 / 第二扇窗 / FileDialog / MenuBar 均在画廊内
 ```
 

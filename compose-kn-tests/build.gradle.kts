@@ -3,7 +3,7 @@ plugins {
     // windowsCommonMain 里的映射表用到 compose-ui 的 Key/KeyEvent，
     // 而 :ui (linuxX64) 的 klib 携带 wayland/EGL 的 linkerOpts，
     // 所以测试二进制也要按 Linux 原生目标补 pkg-config 的 -L 路径。
-    id("com.tetraploid.linux-native-linker")
+    id("cn.tetraploid.linux-native-linker")
 }
 
 // Tetraploid 的自动化单元测试。

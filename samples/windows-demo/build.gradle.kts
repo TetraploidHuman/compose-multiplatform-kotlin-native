@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    id("com.tetraploid.windows-native-linker")
-    id("com.tetraploid.resources")
+    id("cn.tetraploid.windows-native-linker")
+    id("cn.tetraploid.resources")
 }
 
 val lumicodeFonts = file("../../../LumiCodeNext/composeApp/src/commonMain/composeResources/font")
 
-tetraploidResources {
+composeKnResources {
     packageOfResClass("main.resources")
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }
