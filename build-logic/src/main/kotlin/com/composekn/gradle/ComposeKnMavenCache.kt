@@ -16,7 +16,7 @@ import java.util.zip.ZipInputStream
  */
 object ComposeKnMavenCache {
     const val DEFAULT_OWNER = "TetraploidHuman"
-    const val DEFAULT_REPO = "ComposeKN"
+    const val DEFAULT_REPO = "compose-multiplatform-kotlin-native"
 
     fun defaultCacheDir(version: String): File =
         File(System.getProperty("user.home"), ".composekn/m2/$version")

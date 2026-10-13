@@ -11,10 +11,10 @@ CKN_VER="$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 : "${GITHUB_ACTOR:=github}"
 OWNER="${GITHUB_REPOSITORY_OWNER:-TetraploidHuman}"
-# CI 有 GITHUB_REPOSITORY=owner/repo；本机发布时默认 ComposeKN
-GH_REPO_NAME="${GITHUB_REPOSITORY:-ComposeKN}"
+# CI 有 GITHUB_REPOSITORY=owner/repo；本机发布时默认仓库名
+GH_REPO_NAME="${GITHUB_REPOSITORY:-compose-multiplatform-kotlin-native}"
 GH_REPO_NAME="${GH_REPO_NAME##*/}"
-GH_REPO_NAME="${GH_REPO_NAME:-ComposeKN}"
+GH_REPO_NAME="${GH_REPO_NAME:-compose-multiplatform-kotlin-native}"
 LOCAL_ONLY="${COMPOSEKN_SKIKO_LOCAL_ONLY:-${COMPOSEKN_UI_LOCAL_ONLY:-0}}"
 if [ "$GITHUB_TOKEN" = "local-only" ]; then
   LOCAL_ONLY=1

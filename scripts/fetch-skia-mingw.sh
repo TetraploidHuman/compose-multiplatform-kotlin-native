@@ -22,7 +22,7 @@ SHA_FILE="$REPO/vendor/skiko/skia-mingw/prebuilt.sha256"
 
 URL="${COMPOSEKN_SKIA_PREBUILT_URL:-}"
 if [ -z "$URL" ]; then
-    URL="https://github.com/TetraploidHuman/ComposeKN/releases/download/${PKG_NAME}/${PKG_NAME}.tar.zst"
+    URL="https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/download/${PKG_NAME}/${PKG_NAME}.tar.zst"
 fi
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }

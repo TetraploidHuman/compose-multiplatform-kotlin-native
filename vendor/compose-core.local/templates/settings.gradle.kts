@@ -34,7 +34,8 @@ if (composeStandalone) {
         val ghToken = System.getenv("GITHUB_TOKEN")
         if (!ghToken.isNullOrBlank()) {
             val owner = System.getenv("GITHUB_REPOSITORY_OWNER") ?: "TetraploidHuman"
-            val repo = System.getenv("GITHUB_REPOSITORY")?.substringAfter('/') ?: "ComposeKN"
+            val repo = System.getenv("GITHUB_REPOSITORY")?.substringAfter('/')
+                ?: "compose-multiplatform-kotlin-native"
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/$owner/$repo")

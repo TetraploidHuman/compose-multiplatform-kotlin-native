@@ -71,7 +71,8 @@ publishing {
         val wantGh = providers.gradleProperty("composekn.publish.github").orNull == "true"
         if (wantGh && !ghToken.isNullOrBlank()) {
             val owner = System.getenv("GITHUB_REPOSITORY_OWNER") ?: "TetraploidHuman"
-            val repo = System.getenv("GITHUB_REPOSITORY")?.substringAfter('/') ?: "ComposeKN"
+            val repo = System.getenv("GITHUB_REPOSITORY")?.substringAfter('/')
+                ?: "compose-multiplatform-kotlin-native"
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/$owner/$repo")

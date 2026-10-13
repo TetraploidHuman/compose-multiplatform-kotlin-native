@@ -64,7 +64,7 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                             ?: "TetraploidHuman"
                         val repo = project.findProperty("composekn.publish.github.repo")?.toString()
                             ?: System.getenv("GITHUB_REPOSITORY")?.substringAfter('/')
-                            ?: "ComposeKN"
+                            ?: "compose-multiplatform-kotlin-native"
                         maven {
                             name = "GitHubPackages"
                             url = project.uri("https://maven.pkg.github.com/$owner/$repo")
@@ -106,7 +106,7 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                             project.findProperty("composekn.pom.description")?.toString()
                                 ?: "ComposeKN: Compose Multiplatform on Kotlin/Native (linuxX64/mingwX64)",
                         )
-                        url.set("https://github.com/TetraploidHuman/ComposeKN")
+                        url.set("https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native")
                         licenses {
                             license {
                                 name.set("Apache-2.0")
@@ -120,12 +120,12 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                             }
                         }
                         scm {
-                            url.set("https://github.com/TetraploidHuman/ComposeKN")
+                            url.set("https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native")
                             connection.set(
-                                "scm:git:https://github.com/TetraploidHuman/ComposeKN.git",
+                                "scm:git:https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native.git",
                             )
                             developerConnection.set(
-                                "scm:git:ssh://git@github.com/TetraploidHuman/ComposeKN.git",
+                                "scm:git:ssh://git@github.com/TetraploidHuman/compose-multiplatform-kotlin-native.git",
                             )
                         }
                     }

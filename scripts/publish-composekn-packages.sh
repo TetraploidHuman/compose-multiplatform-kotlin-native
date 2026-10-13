@@ -241,7 +241,7 @@ PY
   fi
   gh release delete-asset "$TAG" "composekn-maven-${CKN_VER}.zip" -y 2>/dev/null || true
   gh release upload "$TAG" "$ZIP" --clobber
-  info "Release asset: https://github.com/TetraploidHuman/ComposeKN/releases/tag/$TAG"
+  info "Release asset: https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/tag/$TAG"
   info "Consumer: ./scripts/fetch-composekn-maven.sh"
 fi
 

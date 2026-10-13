@@ -11,7 +11,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VER="${COMPOSEKN_VERSION:-$(grep '^composekn.version=' "$REPO/gradle.properties" 2>/dev/null | cut -d= -f2 || echo 0.5.66)}"
 DEST="${1:-$HOME/.composekn/m2/$VER}"
 OWNER="${COMPOSEKN_GH_OWNER:-TetraploidHuman}"
-REPO_NAME="${COMPOSEKN_GH_REPO:-ComposeKN}"
+REPO_NAME="${COMPOSEKN_GH_REPO:-compose-multiplatform-kotlin-native}"
 ASSET="composekn-maven-${VER}.zip"
 TAG="v${VER}"
 

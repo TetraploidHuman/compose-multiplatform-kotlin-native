@@ -9,9 +9,9 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 OWNER="${GITHUB_REPOSITORY_OWNER:-TetraploidHuman}"
-GH_REPO_NAME="${GITHUB_REPOSITORY:-ComposeKN}"
+GH_REPO_NAME="${GITHUB_REPOSITORY:-compose-multiplatform-kotlin-native}"
 GH_REPO_NAME="${GH_REPO_NAME##*/}"
-GH_REPO_NAME="${GH_REPO_NAME:-ComposeKN}"
+GH_REPO_NAME="${GH_REPO_NAME:-compose-multiplatform-kotlin-native}"
 M2_ROOT="$REPO/build/maven-repo"
 
 info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
