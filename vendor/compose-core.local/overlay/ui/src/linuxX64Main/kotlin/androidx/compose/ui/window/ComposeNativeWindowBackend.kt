@@ -21,6 +21,12 @@ interface ComposeNativeWindowHandle {
     fun setAlwaysOnTop(alwaysOnTop: Boolean)
 
     /**
+     * 显示/隐藏原生窗（对齐 Desktop `visible`）。
+     * Win32 = ShowWindow；Wayland 无廉价 unmap 时为软隐藏（跳过输入/绘制）。
+     */
+    fun setVisible(visible: Boolean) {}
+
+    /**
      * 启用/禁用用户输入（对齐 Desktop `enabled`）。
      * 与 Dialog 软模态共同决定有效开关；默认实现 no-op。
      */

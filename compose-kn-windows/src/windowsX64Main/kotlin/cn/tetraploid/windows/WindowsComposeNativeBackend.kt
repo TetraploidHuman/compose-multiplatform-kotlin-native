@@ -152,6 +152,10 @@ class WindowsNativeWindowHandle(
         app.window.setAlwaysOnTop(alwaysOnTop)
     }
 
+    override fun setVisible(visible: Boolean) {
+        if (visible) app.window.show() else app.window.hide()
+    }
+
     override fun setEnabled(enabled: Boolean) {
         app.window.setUserEnabled(enabled)
     }

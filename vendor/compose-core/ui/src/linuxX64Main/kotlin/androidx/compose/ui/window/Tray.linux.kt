@@ -115,7 +115,11 @@ private fun List<NativeMenuNode>.toTrayMenuItems(): List<TrayMenuItem> {
     fun convert(node: NativeMenuNode): TrayMenuItem = when (node) {
         is NativeMenuNode.Separator -> TrayMenuItem(isSeparator = true)
         is NativeMenuNode.Item -> TrayMenuItem(
-            text = node.text,
+            text = when (node.checked) {
+                true -> "✓ ${node.text}"
+                false -> "    ${node.text}"
+                null -> node.text
+            },
             enabled = node.enabled,
             onClick = node.onClick,
         )

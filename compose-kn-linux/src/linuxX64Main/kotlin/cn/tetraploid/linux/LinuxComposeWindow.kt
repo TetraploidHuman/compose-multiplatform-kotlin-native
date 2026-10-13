@@ -58,6 +58,11 @@ class LinuxComposeWindow(
      */
     internal var userEnabled: Boolean = true
 
+    /**
+     * Desktop `visible`。Wayland 无廉价 unmap：软隐藏 = 跳过输入/绘制（surface 仍挂着）。
+     */
+    internal var userVisible: Boolean = true
+
     /** Desktop `focusable`；标准 xdg-shell 无协议，仅记账。 */
     internal var focusable: Boolean = true
 
@@ -68,9 +73,9 @@ class LinuxComposeWindow(
     internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }
     internal var onKeyEvent: (KeyEvent) -> Boolean = { false }
 
-    /** 有效输入开关 = 软模态 ∧ 用户 enabled。 */
+    /** 有效输入开关 = 软模态 ∧ 用户 enabled ∧ visible。 */
     internal val effectivelyInputEnabled: Boolean
-        get() = inputEnabled && userEnabled
+        get() = inputEnabled && userEnabled && userVisible
 
     var resizable: Boolean = true
     var alwaysOnTop: Boolean = false
@@ -107,6 +112,7 @@ class LinuxComposeWindow(
     }
 
     private fun renderFrameGuarded() {
+        if (!userVisible) return
         beginHostRender()
         try {
             layer.renderImmediately()

@@ -37,11 +37,16 @@
 
 ### P0/P1 残留（宿主语义，非签名）
 
+- [x] `Window(visible)` 切换（Win ShowWindow；Linux 软隐藏跳过输入/绘制）
+- [x] 菜单加速键标签（`Ctrl+S` 而非 `Key keyCode: N`）
+- [x] Tray Checkbox/Radio 勾选态（文本前缀 `✓`；无原生 checkmark API）
 - [ ] `Window(icon=…)` → 原生任务栏/标题栏图标（Win `WM_SETICON`；Linux desktop entry）
 - [ ] `Window(transparent=true)` 真透明客户区
 - [ ] `Window(focusable=…)` 原生焦点策略
 - [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
 - [ ] `compose.resources` locale / plurals / XML vector
+- [ ] Windows `KeyShortcut(meta=true)`（Win 键未接入 KeyEvent.isMetaPressed）
+- [ ] `WindowDecoration.resizerThickness` 宿主兑现
 
 ### P2 — 平台行为诚实缺口（文档已知）
 

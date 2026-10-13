@@ -8,7 +8,7 @@
 |------|--------------------|------------------|------|
 | `application` / `Window` | ✅ | ✅ | Desktop 风格 API，`ComposeNativeWindowBackend` |
 | `singleWindowApplication` | ✅ | ✅ | 对齐 Desktop |
-| `Window` 缺参（icon / transparent / enabled / focusable / key） | ⚠️ | ⚠️ | 签名齐；icon/transparent/focusable 宿主多为记账；enabled + 窗级 key 已接线 |
+| `Window` 缺参（icon / transparent / enabled / focusable / key / visible） | ⚠️ | ⚠️ | 签名齐；`enabled`+窗级 key+`visible` 已接线（Win 真 hide；Linux 软隐藏）；icon/transparent/focusable 多为记账 |
 | `WindowDecoration` | ✅ | ✅ | sealed；`undecorated` 布尔仍兼容 |
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
 | 指针 / 键盘 / 滚轮 | ✅ | ✅ | |

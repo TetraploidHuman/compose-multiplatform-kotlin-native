@@ -209,7 +209,6 @@ class LinuxComposeApplication(
             return
         }
         if (event.type == WaylandEventType.Key) {
-            println("composekn: key keyCode=${event.keyCode} keysym=${event.keysym} pressed=${event.pressed}")
             scene.dispatchWaylandKeyEvent(
                 event,
                 inputState,

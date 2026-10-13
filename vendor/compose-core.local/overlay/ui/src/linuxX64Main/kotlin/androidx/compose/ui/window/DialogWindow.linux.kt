@@ -146,6 +146,7 @@ fun DialogWindow(
         handle.setFocusable(focusable)
         handle.setTransparent(transparent)
         handle.setIcon(icon)
+        handle.setVisible(visible)
         handle.setWindowKeyEventHandlers(
             onPreviewKeyEvent = { latestPreview.value(it) },
             onKeyEvent = { latestKey.value(it) },
@@ -170,10 +171,8 @@ fun DialogWindow(
     }
 
     DisposableEffect(handle) {
-        if (visible) {
-            handle.setContent {
-                latestContent.value.invoke(scope)
-            }
+        handle.setContent {
+            latestContent.value.invoke(scope)
         }
         onDispose {
             handle.dispose()

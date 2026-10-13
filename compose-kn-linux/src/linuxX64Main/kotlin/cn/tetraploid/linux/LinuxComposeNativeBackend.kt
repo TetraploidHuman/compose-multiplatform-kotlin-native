@@ -153,6 +153,10 @@ class LinuxNativeWindowHandle(
         }
     }
 
+    override fun setVisible(visible: Boolean) {
+        app.composeWindow.userVisible = visible
+    }
+
     override fun setEnabled(enabled: Boolean) {
         app.composeWindow.userEnabled = enabled
     }
