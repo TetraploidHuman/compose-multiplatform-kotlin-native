@@ -29,8 +29,9 @@
 | `alwaysOnTop` | ⚠️ 记账 | ✅ | Wayland 无通用协议 |
 | `Aligned` / parent transient | ✅ | ✅ | |
 | 自定义字体 `Res.font` | ✅ | ✅ | `org.jetbrains.compose.resources.Font` + `compose-kn-resources` |
-| `painterResource` / `vectorResource` | ✅ | ✅ | 位图 + Android VectorDrawable `.xml`；无 SVG / locale / plurals |
-| 官方 `compose.resources` 心智 | ⚠️ 子集 | ⚠️ 子集 | 同包名 / `Res.*`；仍无 locale/plurals |
+| `painterResource` / `vectorResource` | ✅ | ✅ | 位图 + Android VectorDrawable `.xml`；无 SVG |
+| `stringResource` locale / `pluralStringResource` | ⚠️ | ⚠️ | `values-*` overlay；plurals 为 one/other 子集（非完整 CLDR） |
+| 官方 `compose.resources` 心智 | ⚠️ 子集 | ⚠️ 子集 | 同包名 / `Res.*`；无完整 CLDR / SVG |
 | JVM Desktop `swing` 互操作 | ❌ | ❌ | 非 JVM |
 | macOS K/N 宿主 | ❌ | — | 未提供 |
 | iOS / Android / WASM | — | — | 用官方 target，非本仓库 |

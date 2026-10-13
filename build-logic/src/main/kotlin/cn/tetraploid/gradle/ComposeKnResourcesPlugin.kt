@@ -22,9 +22,9 @@ import java.io.File
 /**
  * ComposeKN 资源管线（对齐官方 composeResources 布局的 native 子集）。
  *
- * 源：`src/commonMain/composeResources/{font,drawable,values}/`
- * 生成：`Res.font|string|drawable`（类型来自 `org.jetbrains.compose.resources`）；
- * 链接后 copy 到 exe 旁 `composeResources/`。
+ * 源：`src/commonMain/composeResources/{font,drawable,values,values-*}/`
+ * 生成：`Res.font|string|plurals|drawable`（类型来自 `org.jetbrains.compose.resources`）；
+ * 链接后 copy 到 exe 旁 `composeResources/`（含全部 `values-*` locale overlay）。
  *
  * DSL：`composeKnResources { }`；亦可用官方风格别名 [ComposeKnResourcesExtension.packageOfResClass]。
  */
@@ -138,14 +138,19 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
                         drawableFiles.values.forEach { src ->
                             src.copyTo(File(drawableOut, src.name), overwrite = true)
                         }
-                        resRoot?.resolve("values")?.takeIf { it.isDirectory }?.let { values ->
-                            val valuesOut = File(rootOut, "values")
-                            valuesOut.mkdirs()
-                            values.copyRecursively(valuesOut, overwrite = true)
-                        }
+                        // values / values-zh / values-zh-rCN …
+                        var valuesDirs = 0
+                        resRoot?.listFiles()
+                            ?.filter { it.isDirectory && (it.name == "values" || it.name.startsWith("values-")) }
+                            ?.forEach { values ->
+                                val valuesOut = File(rootOut, values.name)
+                                valuesOut.mkdirs()
+                                values.copyRecursively(valuesOut, overwrite = true)
+                                valuesDirs++
+                            }
                         logger.lifecycle(
                             "ComposeKN resources: copied fonts=${fontFiles.size} " +
-                                "drawables=${drawableFiles.size} → $rootOut",
+                                "drawables=${drawableFiles.size} valuesDirs=$valuesDirs → $rootOut",
                         )
                     }
                 }
@@ -191,6 +196,7 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
         )
         val drawables = collectDrawables(resourcesDirectory.orNull?.asFile)
         val strings = collectStrings(resourcesDirectory.orNull?.asFile)
+        val plurals = collectPlurals(resourcesDirectory.orNull?.asFile)
         val outRoot = outputDirectory.get().asFile
         outRoot.deleteRecursively()
         val pkg = packageName.get()
@@ -220,12 +226,24 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             """.trimMargin()
         }
         val stringProps = strings.entries.sortedBy { it.key }.joinToString("\n") { (id, value) ->
-            val escaped = value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+            val escaped = escapeKotlinString(value)
             """
             |        val $id: StringResource = stringResource(
             |            identity = "$id",
             |            relativePath = "values/strings.xml",
             |            defaultValue = "$escaped",
+            |        )
+            """.trimMargin()
+        }
+        val pluralProps = plurals.entries.sortedBy { it.key }.joinToString("\n") { (id, items) ->
+            val mapLit = items.entries.joinToString(", ") { (q, v) ->
+                "\"$q\" to \"${escapeKotlinString(v)}\""
+            }
+            """
+            |        val $id: PluralStringResource = pluralStringResource(
+            |            identity = "$id",
+            |            relativePath = "values/strings.xml",
+            |            items = mapOf($mapLit),
             |        )
             """.trimMargin()
         }
@@ -236,12 +254,14 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             |
             |import org.jetbrains.compose.resources.DrawableResource
             |import org.jetbrains.compose.resources.FontResource
+            |import org.jetbrains.compose.resources.PluralStringResource
             |import org.jetbrains.compose.resources.StringResource
             |import org.jetbrains.compose.resources.drawableResource
             |import org.jetbrains.compose.resources.fontResource
+            |import org.jetbrains.compose.resources.pluralStringResource
             |import org.jetbrains.compose.resources.stringResource
             |
-            |// ComposeKN 生成的资源入口（官方 compose.resources 心智：Res.font / string / drawable）。
+            |// ComposeKN 生成的资源入口（官方 compose.resources 心智）。
             |// 由 generateComposeKnResources 生成 —— 勿手改。
             |object Res {
             |    object font {
@@ -249,6 +269,9 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             |    }
             |    object string {
             |$stringProps
+            |    }
+            |    object plurals {
+            |$pluralProps
             |    }
             |    object drawable {
             |$drawableProps
@@ -260,7 +283,7 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
 
         logger.lifecycle(
             "ComposeKN resources: Res.font=${fonts.size} string=${strings.size} " +
-                "drawable=${drawables.size} → ${dir.resolve("Res.kt")}",
+                "plurals=${plurals.size} drawable=${drawables.size} → ${dir.resolve("Res.kt")}",
         )
     }
 
@@ -294,21 +317,50 @@ abstract class GenerateComposeKnResourcesTask : DefaultTask() {
             return out
         }
 
-        /** 极简 strings.xml：`<string name="x">y</string>` */
+        /** 极简 strings.xml：`<string name="x">y</string>`（仅默认 `values/`）。 */
         fun collectStrings(resourcesRoot: File?): Map<String, String> {
             val out = linkedMapOf<String, String>()
-            val file = resourcesRoot?.resolve("values/strings.xml") ?: return out
-            if (!file.isFile) return out
-            val text = file.readText()
-            val re = Regex("""<string\s+name\s*=\s*"([^"]+)"\s*>([^<]*)</string>""")
-            re.findAll(text).forEach { m ->
-                out[m.groupValues[1]] = m.groupValues[2]
-                    .replace("&lt;", "<")
-                    .replace("&gt;", ">")
-                    .replace("&amp;", "&")
-                    .replace("&quot;", "\"")
+            for (name in listOf("strings.xml", "plurals.xml")) {
+                val file = resourcesRoot?.resolve("values/$name") ?: continue
+                if (!file.isFile) continue
+                val re = Regex("""<string\s+name\s*=\s*"([^"]+)"\s*>([\s\S]*?)</string>""")
+                re.findAll(file.readText()).forEach { m ->
+                    out[m.groupValues[1]] = unescapeXml(m.groupValues[2].trim())
+                }
             }
             return out
         }
+
+        /** `<plurals name>` / `<item quantity>`（仅默认 `values/`）。 */
+        fun collectPlurals(resourcesRoot: File?): Map<String, Map<String, String>> {
+            val out = linkedMapOf<String, Map<String, String>>()
+            for (name in listOf("strings.xml", "plurals.xml")) {
+                val file = resourcesRoot?.resolve("values/$name") ?: continue
+                if (!file.isFile) continue
+                val block = Regex(
+                    """<plurals\s+name\s*=\s*"([^"]+)"\s*>([\s\S]*?)</plurals>""",
+                )
+                val item = Regex(
+                    """<item\s+quantity\s*=\s*"([^"]+)"\s*>([\s\S]*?)</item>""",
+                )
+                block.findAll(file.readText()).forEach { m ->
+                    val quantities = linkedMapOf<String, String>()
+                    item.findAll(m.groupValues[2]).forEach { im ->
+                        quantities[im.groupValues[1]] = unescapeXml(im.groupValues[2].trim())
+                    }
+                    if (quantities.isNotEmpty()) out[m.groupValues[1]] = quantities
+                }
+            }
+            return out
+        }
+
+        fun escapeKotlinString(value: String): String =
+            value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+
+        fun unescapeXml(s: String): String =
+            s.replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
     }
 }

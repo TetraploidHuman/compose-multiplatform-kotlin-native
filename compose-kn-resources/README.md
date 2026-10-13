@@ -15,8 +15,10 @@ Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，消费心智对齐�
 ```
 src/commonMain/composeResources/
   font/*.ttf|otf
-  drawable/*
-  values/strings.xml      # <string name="app_name">…</string>
+  drawable/*              # 位图或 Android VectorDrawable .xml
+  values/strings.xml      # 默认文案 + 可选 <plurals>
+  values-zh/strings.xml   # locale overlay（运行时）
+  values-zh-rCN/…
 ```
 
 ## Gradle
@@ -44,14 +46,20 @@ import org.jetbrains.compose.resources.Font
 import com.example.app.generated.resources.Res
 
 Font(Res.font.noto_sans_regular)
-stringResource(Res.string.app_name)
+stringResource(Res.string.app_name)           // values-{lang}[-rREGION] → values
+pluralStringResource(Res.plurals.items, 3)    // one/other 子集 + %d
 loadDrawableBytes(Res.drawable.logo)
-painterResource(Res.drawable.logo)      // png/jpeg/webp/bmp…
-painterResource(Res.drawable.ic_foo)    // Android VectorDrawable .xml
+painterResource(Res.drawable.logo)            // png/jpeg/webp/bmp…
+painterResource(Res.drawable.ic_foo)          // Android VectorDrawable .xml
 vectorResource(Res.drawable.ic_foo)
+
+// 强制 locale（测试 / 覆盖系统）：
+resourceLocaleOverride = ResourceLocale("zh", "CN")
+// 或环境变量 COMPOSEKN_LOCALE=zh-CN
 ```
 
-仍缺：locale 字符串 overlay / plurals（见根 [`CAPABILITIES.md`](../CAPABILITIES.md)）。
+Locale 解析：`COMPOSEKN_LOCALE` → `LC_*`/`LANG` → Win `GetUserDefaultLocaleName`。  
+复数 quantity：东亚语系一律 `other`；其它语言 `one`/`other`（完整 CLDR 未移植）。
 
 ## 坐标
 

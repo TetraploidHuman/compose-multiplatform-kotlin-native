@@ -1,14 +1,14 @@
 package cn.tetraploid.resources
 
 /**
- * 字符串资源句柄（对齐官方 `StringResource` 形态；v0.5.54 起）。
- * 内容来自 `composeResources/values/strings.xml` 的 name → 生成 `Res.string.*`。
+ * 字符串资源句柄（对齐官方 `StringResource` 形态）。
+ * 默认文案来自 `composeResources/values/strings.xml`；运行时按 locale 覆盖。
  */
 class StringResource internal constructor(
     val identity: String,
     val relativePath: String,
     val developmentPath: String? = null,
-    /** 已解析的默认文案（生成期写入）；运行时可被 values-xx 覆盖（后续）。 */
+    /** 生成期默认文案（`values/`）；运行时优先 [StringCatalog] overlay。 */
     val defaultValue: String,
 ) {
     override fun toString(): String = "StringResource($identity)"
@@ -21,8 +21,68 @@ fun stringResource(
     developmentPath: String? = null,
 ): StringResource = StringResource(identity, relativePath, developmentPath, defaultValue)
 
-/** 读取字符串（当前 = [StringResource.defaultValue]；后续接 locale overlay）。 */
-fun stringResource(resource: StringResource): String = resource.defaultValue
+/**
+ * 读取字符串：`values-{lang}-r{REGION}` → `values-{lang}` → [StringResource.defaultValue]。
+ */
+fun stringResource(resource: StringResource): String =
+    StringCatalog.string(resource.identity, currentResourceLocale())
+        ?: resource.defaultValue
+
+/**
+ * 复数资源句柄（对齐官方 `PluralStringResource` 子集）。
+ * [items] 的 key 为 quantity：`zero` / `one` / `two` / `few` / `many` / `other`。
+ */
+class PluralStringResource internal constructor(
+    val identity: String,
+    val relativePath: String,
+    val developmentPath: String? = null,
+    val items: Map<String, String>,
+) {
+    override fun toString(): String = "PluralStringResource($identity)"
+}
+
+fun pluralStringResource(
+    identity: String,
+    relativePath: String,
+    items: Map<String, String>,
+    developmentPath: String? = null,
+): PluralStringResource =
+    PluralStringResource(identity, relativePath, developmentPath, items)
+
+/**
+ * 按 [quantity] 选复数文案，并把 `%d` / `%s` 替换为数量。
+ */
+fun pluralStringResource(resource: PluralStringResource, quantity: Int): String {
+    val locale = currentResourceLocale()
+    val items = StringCatalog.plurals(resource.identity, locale) ?: resource.items
+    val key = selectPluralQuantity(locale.language, quantity)
+    val template = items[key]
+        ?: items["other"]
+        ?: items.values.firstOrNull()
+        ?: ""
+    return formatQuantity(template, quantity)
+}
+
+/**
+ * 极简 CLDR 子集：东亚语系一律 `other`；其它语言 `one`/`other`。
+ * （完整 CLDR 规则表后续可再对齐官方。）
+ */
+internal fun selectPluralQuantity(language: String, count: Int): String {
+    val abs = if (count < 0) -count else count
+    return when (language.lowercase()) {
+        "zh", "ja", "ko", "vi", "th", "id", "ms", "my", "km", "lo" -> "other"
+        else -> if (abs == 1) "one" else "other"
+    }
+}
+
+internal fun formatQuantity(template: String, quantity: Int): String {
+    val q = quantity.toString()
+    return template
+        .replace("%d", q)
+        .replace("%s", q)
+        .replace("%1\$d", q)
+        .replace("%1\$s", q)
+}
 
 /**
  * Drawable / 图片资源句柄（对齐官方 `DrawableResource` 形态）。
@@ -42,7 +102,7 @@ fun drawableResource(
     developmentPath: String? = null,
 ): DrawableResource = DrawableResource(identity, relativePath, developmentPath)
 
-/** 读 drawable 字节（png/webp/svg 等）；查找顺序同字体。 */
+/** 读 drawable 字节（png/webp/svg/xml 等）；查找顺序同字体。 */
 fun loadDrawableBytes(resource: DrawableResource): ByteArray? =
     ResourceLoads.loadBytes(
         FontResource(resource.identity, resource.relativePath, resource.developmentPath),
