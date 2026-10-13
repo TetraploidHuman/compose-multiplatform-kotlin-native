@@ -6,8 +6,8 @@
 ## 布局要求
 
 ```
-~/ComposeKN/          # 本仓库
-~/LumiCodeNext/       # sibling（main 或 experiment/tetraploid-native，功能已同步）
+~/compose-multiplatform-kotlin-native/   # 本仓库
+~/LumiCodeNext/                          # sibling（功能已同步）
 ```
 
 `build.gradle.kts` 通过相对路径引用：

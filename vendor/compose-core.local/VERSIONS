@@ -6,6 +6,7 @@
 #   Compose UI 源码      v1.12.1  ← 唯一 UI 基线（linuxX64/mingwX64 靠 includeBuild substitution）
 #   Maven compose_deps  1.11.1  ← 仅 runtime 等「没被顶掉」的坐标；禁止当作 UI 版本宣传
 #   ComposeKN           见 gradle.properties composekn.version
+#   发布者 group        cn.tetraploid / cn.tetraploid.compose
 #
 # 消费者请读仓库根 CONSUMING.md，不要混用 Maven UI 1.11.1 + ComposeKN 宿主。
 #

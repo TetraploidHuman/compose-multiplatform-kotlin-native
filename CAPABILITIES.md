@@ -1,6 +1,7 @@
 # ComposeKN 能力矩阵（相对官方 Compose Desktop）
 
-基线宿主 **0.5.68**；UI 源码 **1.12.1**（发布 `1.12.1-ckn.*`）。  
+产品：`compose-multiplatform-kotlin-native`。基线宿主见 `composekn.version`；UI 源码 **1.12.1**（发布 `1.12.1-ckn.*`）。  
+
 状态：✅ 对齐 / ⚠️ 部分或平台差异 / ❌ 未做或诚实 no-op。
 
 | 能力 | linuxX64 (Wayland) | mingwX64 (Win32) | 备注 |

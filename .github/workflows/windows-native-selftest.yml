@@ -76,7 +76,7 @@ jobs:
     # 已于 2026-09-13 跑绿（run 34750507633：73 + 18 + 3 条断言全过），
     # 因此它是真正的门禁，不再是 continue-on-error。
     # 如果将来 runner 环境变化导致它红了，先看 job 摘要里的 SELFTEST 行与
-    # 上传的 artifacts（exe / *.log / *.png）——常见坑见文件内注释与 HANDOVER §14.10。
+    # 上传的 artifacts（exe / *.log / *.png）——常见坑见文件内注释与 docs/archive/HANDOVER.md。
     steps:
       - name: Checkout
         uses: actions/checkout@v4

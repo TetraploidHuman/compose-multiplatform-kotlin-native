@@ -19,3 +19,5 @@
 ## 待做
 
 - [ ] **发版**：重打并上传 `composekn-maven-0.5.68.zip`（`cn.tetraploid` 坐标），再跑 `./scripts/smoke-composekn-consumer.sh`
+
+入口文档见 [README.md](README.md)。

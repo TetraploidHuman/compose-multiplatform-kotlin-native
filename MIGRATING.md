@@ -40,8 +40,7 @@ plugins {
 首次：
 
 ```bash
-# 若尚未有 ~/.composekn/m2/0.5.68
-curl -fsSL … 或使用本仓库的:
+# 若尚未有 ~/.composekn/m2/<ver>
 ./scripts/fetch-composekn-maven.sh
 ```
 

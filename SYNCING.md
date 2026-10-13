@@ -15,7 +15,7 @@
 
 全部本地改动外置在 **`vendor/compose-core.local/`**（详见其中的 README）：
 
-- `VERSIONS` — 上游基线：tag `v1.12.0-beta01+dev4339`（⚠️ 源码基线**不是** v1.11.1）
+- `VERSIONS` — 上游基线：tag `v1.12.1`（⚠️ Maven `compose_deps` 仍可能是 1.11.1，见该文件）
 - `templates/` — 17 个 build 文件（上游 Groovy `build.gradle` → 本地 KMP+linuxX64 Kotlin DSL）
 - `overlay/` — 50 个本地新增/冻结文件（39 个 `linuxX64Main` actual、1 个 skikoMain actual、
   整模块冻结的 `ui-backhandler` 与 `lifecycle-viewmodel-compose`）

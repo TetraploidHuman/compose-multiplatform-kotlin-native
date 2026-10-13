@@ -2,7 +2,7 @@
 
 Kotlin/Native **linuxX64** 宿主：Wayland + Graphite/Vulkan（回退 EGL/GLES）+ Skia 上的 Compose Multiplatform。
 
-当前文档基线：**v0.5.54**（详见仓库根 `HANDOVER.md` / `CONSUMING.md`）。
+当前文档基线：见仓库根 `gradle.properties` / [CONSUMING.md](../CONSUMING.md)。
 
 ## Status
 

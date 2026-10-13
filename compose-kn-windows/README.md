@@ -3,7 +3,7 @@
 Kotlin/Native **windowsX64** 宿主：Win32 + Skia（Graphite/Vulkan 优先，可回退 GL）上的
 Compose Multiplatform。
 
-当前文档基线：**v0.5.54**（详见仓库根 `HANDOVER.md` / `CONSUMING.md`）。
+当前文档基线：见仓库根 `gradle.properties` / [CONSUMING.md](../CONSUMING.md)。
 
 ## Status
 
@@ -70,7 +70,7 @@ COMPOSEKN_SELFTEST=window   # 或 all / logic
 
 - 自定义装饰图拖出未做（拖移已对齐 `WindowDraggableArea`；beginMove / DoDragDrop /
   FileDialog 结束后合成 UP，避免 `primaryPressed` 卡住）
-- Wine 下退出期偶发 AV（真机关窗路径已收口；见 HANDOVER Vulkan 节）
+- Wine 下退出期偶发 AV（真机关窗路径已收口）
 
 ## License
 

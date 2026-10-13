@@ -1,11 +1,13 @@
 # 工作交接文档：Compose 上游同步管线（compose-core）
 
+> **已归档。** 现行命名与消费方式以仓库根 [README.md](../../README.md) /
+> [CONSUMING.md](../../CONSUMING.md) 为准（发布者 `cn.tetraploid`，产品短名 `composekn`）。
+> 下文坐标、路径、版本号可能过时，仅作历史参考。
+>
 > 写于 2026-09-08。给下一个有完整文件系统权限的 AI / 开发者。
 > 用户用中文交流，回复请用中文。
 >
-> **当前平台宿主基线：v0.5.66**（GitHub Packages + settings 顶 UI；
-> host/register 含 `init*MainThread`；BOM/host 见 `CONSUMING.md`）。
-> **compose-core UI：`1.12.1`** → 发布坐标 `com.tetraploid.compose:*:1.12.1-ckn.0.5.66`。
+> **归档时宿主基线约 v0.5.66**；compose-core UI `1.12.1`。
 > **本轮已补**：消费闭环 + Release zip 只打包 + settings 本地优先/skip Packages +
 > UI/skiko/resources 按 target 顶平台 + maven-repo 断言 + consumer-smoke。
 
