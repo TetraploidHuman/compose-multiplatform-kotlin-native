@@ -48,7 +48,7 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                     val remote = project.findProperty("composekn.publish.url")?.toString()
                     if (!remote.isNullOrBlank()) {
                         maven {
-                            name = "TetraploidRemote"
+                            name = "ComposeKnRemote"
                             url = project.uri(remote)
                             credentialsFrom(project, this)
                         }

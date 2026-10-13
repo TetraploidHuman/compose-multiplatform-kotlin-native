@@ -35,7 +35,7 @@ import platform.posix.write
  * - **定位**：标准 xdg-shell 无绝对坐标；[placeCascaded] / [placeAligned] 通过
  *   `xdg_toplevel_set_parent` 把新窗标成相对锚点的 transient（compositor 通常居中/叠放）
  *
- * 多窗共享同一 `wl_display`（native `TetraploidSharedDisplay`）；每轮迭代先
+ * 多窗共享同一 `wl_display`（native `ComposeKNSharedDisplay`）；每轮迭代先
  * [composekn_display_begin_poll_cycle]，再逐窗 poll（仅首窗 prepare_read）。
  * wake 用 eventfd + 短超时 poll（≤2ms），不阻塞跨线程 Main 任务。
  */

@@ -123,7 +123,7 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
                 .orElse("github")
             val ghToken = token ?: ""
             settings.dependencyResolutionManagement.repositories.maven {
-                name = "TetraploidGitHubPackages"
+                name = "ComposeKnGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
@@ -131,7 +131,7 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
                 }
             }
             settings.pluginManagement.repositories.maven {
-                name = "TetraploidGitHubPackages"
+                name = "ComposeKnGitHubPackages"
                 url = ghUri
                 credentials {
                     username = user.get()
