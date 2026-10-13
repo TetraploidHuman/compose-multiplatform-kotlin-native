@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 /**
  * 字符串资源句柄（对齐官方 `StringResource` 形态）。

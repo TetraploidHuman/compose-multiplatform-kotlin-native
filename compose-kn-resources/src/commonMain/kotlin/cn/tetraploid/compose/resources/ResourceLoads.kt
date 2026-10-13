@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 /**
  * 解析并读取 ComposeKN 资源字节。

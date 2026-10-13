@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily

@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 /**
  * 资源语言标签（对齐官方 ResourceEnvironment 的 language + region 子集）。

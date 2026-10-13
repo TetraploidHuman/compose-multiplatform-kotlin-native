@@ -16,24 +16,24 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
-import cn.tetraploid.resources.DrawableResource as ComposeKnDrawableResource
-import cn.tetraploid.resources.Font as ComposeKnFont
-import cn.tetraploid.resources.FontFromFile as ComposeKnFontFromFile
-import cn.tetraploid.resources.FontResource as ComposeKnFontResource
-import cn.tetraploid.resources.PluralStringResource as ComposeKnPluralStringResource
-import cn.tetraploid.resources.ResourceLocale as ComposeKnResourceLocale
-import cn.tetraploid.resources.StringResource as ComposeKnStringResource
-import cn.tetraploid.resources.currentResourceLocale as composeKnCurrentResourceLocale
-import cn.tetraploid.resources.decodeToImageVector as composeKnDecodeToImageVector
-import cn.tetraploid.resources.drawableResource as composeKnDrawableResource
-import cn.tetraploid.resources.fontFamilyOf as composeKnFontFamilyOf
-import cn.tetraploid.resources.fontResource as composeKnFontResource
-import cn.tetraploid.resources.loadDrawableBytes as composeKnLoadDrawableBytes
-import cn.tetraploid.resources.painterResource as composeKnPainterResource
-import cn.tetraploid.resources.pluralStringResource as composeKnPluralStringResourceFactory
-import cn.tetraploid.resources.resourceLocaleOverride as composeKnResourceLocaleOverride
-import cn.tetraploid.resources.stringResource as composeKnStringResourceFactory
-import cn.tetraploid.resources.vectorResource as composeKnVectorResource
+import cn.tetraploid.compose.resources.DrawableResource as ComposeKnDrawableResource
+import cn.tetraploid.compose.resources.Font as ComposeKnFont
+import cn.tetraploid.compose.resources.FontFromFile as ComposeKnFontFromFile
+import cn.tetraploid.compose.resources.FontResource as ComposeKnFontResource
+import cn.tetraploid.compose.resources.PluralStringResource as ComposeKnPluralStringResource
+import cn.tetraploid.compose.resources.ResourceLocale as ComposeKnResourceLocale
+import cn.tetraploid.compose.resources.StringResource as ComposeKnStringResource
+import cn.tetraploid.compose.resources.currentResourceLocale as composeKnCurrentResourceLocale
+import cn.tetraploid.compose.resources.decodeToImageVector as composeKnDecodeToImageVector
+import cn.tetraploid.compose.resources.drawableResource as composeKnDrawableResource
+import cn.tetraploid.compose.resources.fontFamilyOf as composeKnFontFamilyOf
+import cn.tetraploid.compose.resources.fontResource as composeKnFontResource
+import cn.tetraploid.compose.resources.loadDrawableBytes as composeKnLoadDrawableBytes
+import cn.tetraploid.compose.resources.painterResource as composeKnPainterResource
+import cn.tetraploid.compose.resources.pluralStringResource as composeKnPluralStringResourceFactory
+import cn.tetraploid.compose.resources.resourceLocaleOverride as composeKnResourceLocaleOverride
+import cn.tetraploid.compose.resources.stringResource as composeKnStringResourceFactory
+import cn.tetraploid.compose.resources.vectorResource as composeKnVectorResource
 
 typealias FontResource = ComposeKnFontResource
 typealias StringResource = ComposeKnStringResource

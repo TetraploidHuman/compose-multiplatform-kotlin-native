@@ -5,6 +5,7 @@
 | 角色 | 值 |
 |------|-----|
 | 发布者 | `cn.tetraploid` / `cn.tetraploid.compose`；插件 `cn.tetraploid*` |
+| 资源实现包 | `cn.tetraploid.compose.resources`（对外门面仍为 `org.jetbrains.compose.resources`） |
 | 产品短名 | `composekn`（属性 / 缓存 / 脚本 / `ComposeKN*`） |
 | 产品全名 | `compose-multiplatform-kotlin-native` |
 

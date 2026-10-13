@@ -1,6 +1,6 @@
 @file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.memScoped

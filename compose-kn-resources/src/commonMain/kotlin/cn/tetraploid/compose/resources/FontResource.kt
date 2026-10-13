@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 /**
  * ComposeKN 字体资源句柄 —— API 形态对齐官方 `compose.resources` 的 `FontResource`，

@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

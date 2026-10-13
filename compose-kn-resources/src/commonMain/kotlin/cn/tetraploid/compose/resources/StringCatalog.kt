@@ -1,4 +1,4 @@
-package cn.tetraploid.resources
+package cn.tetraploid.compose.resources
 
 /**
  * 运行时解析 `composeResources/values(-*)/strings.xml` 与 `plurals.xml`。
