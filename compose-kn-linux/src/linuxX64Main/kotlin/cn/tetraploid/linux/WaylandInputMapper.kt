@@ -65,7 +65,9 @@ internal fun ComposeScene.dispatchWaylandKeyEvent(
     event: WaylandEvent,
     inputState: WaylandInputState,
     backNavigationInput: LinuxBackNavigationInput,
-) {
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+): Boolean {
     inputState.syncWaylandModifiers(event.modifiers)
     val key = waylandKeyToComposeKey(event.keyCode, event.keysym)
     val type = if (event.pressed) KeyEventType.KeyDown else KeyEventType.KeyUp
@@ -80,10 +82,12 @@ internal fun ComposeScene.dispatchWaylandKeyEvent(
         isMetaPressed = inputState.modifiers.isMetaPressed,
         nativeEvent = event,
     )
-    if (backNavigationInput.onKeyEvent(keyEvent)) {
-        return
-    }
-    sendKeyEvent(keyEvent)
+    // 对齐 Desktop ComposeSceneMediator：preview → scene → onKey → back
+    if (onPreviewKeyEvent(keyEvent)) return true
+    if (sendKeyEvent(keyEvent)) return true
+    if (onKeyEvent(keyEvent)) return true
+    if (backNavigationInput.onKeyEvent(keyEvent)) return true
+    return false
 }
 
 internal fun ComposeScene.dispatchWaylandEvent(

@@ -25,15 +25,23 @@
 
 ### P0 — commonMain 共享编译 / 迁移摩擦最大
 
-- [ ] **`Window` / `DialogWindow` 缺参对齐**：补 `icon`、`transparent`、`enabled`、`focusable`、`onPreviewKeyEvent`、`onKeyEvent`（`undecorated` 可先保留）
-- [ ] **`singleWindowApplication`**：Desktop 常用入口薄封装
-- [ ] **`compose.resources` 子集**：至少 `painterResource`；其次 locale / plurals
+- [x] **`Window` / `DialogWindow` 缺参对齐**：`icon` / `transparent` / `enabled` / `focusable` / `onPreviewKeyEvent` / `onKeyEvent`（签名齐；icon/transparent/focusable 宿主多为记账，enabled 已接线）
+- [x] **`singleWindowApplication`** + `SingleWindowApplicationScope`
+- [x] **`painterResource`**（位图）；locale / plurals 仍缺 → 见下
 
 ### P1 — API 形态不对齐，真项目会踩
 
-- [ ] **MenuBar 能力**：`icon` / `mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win 先对齐；Linux 可仍为 no-op 或自绘）
-- [ ] **`WindowDecoration` + resizerThickness**：跟 1.12 sealed 心智（可从 `undecorated` 布尔兼容层迁）
-- [ ] **窗级快捷键路径**：`onPreviewKeyEvent` / `onKeyEvent` 接到宿主键盘事件链
+- [x] **MenuBar 能力**：`mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win HMENU + 快捷键；`icon` 忽略；Linux 显示仍 no-op）
+- [x] **`WindowDecoration` + resizerThickness**（`undecorated` 布尔兼容保留）
+- [x] **窗级快捷键路径**：preview → scene → onKey（Linux / Windows）
+
+### P0/P1 残留（宿主语义，非签名）
+
+- [ ] `Window(icon=…)` → 原生任务栏/标题栏图标（Win `WM_SETICON`；Linux desktop entry）
+- [ ] `Window(transparent=true)` 真透明客户区
+- [ ] `Window(focusable=…)` 原生焦点策略
+- [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
+- [ ] `compose.resources` locale / plurals / XML vector
 
 ### P2 — 平台行为诚实缺口（文档已知）
 
@@ -48,7 +56,5 @@
 - [ ] `androidx.compose.ui.window.v2.*` — 等 v1 签名对齐后再跟
 - [ ] macOS K/N 宿主 — 新产品线
 - [ ] `InteropView` 真原生嵌入 — 现 `Any`
-
-**建议落地顺序：** P0 窗参 + `singleWindowApplication` → `painterResource` → P1 Win MenuBar → `WindowDecoration` → Linux 协议限制按需。
 
 入口文档见 [README.md](README.md)。

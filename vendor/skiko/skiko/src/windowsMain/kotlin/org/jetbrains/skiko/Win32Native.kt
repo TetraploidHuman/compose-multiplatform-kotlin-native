@@ -132,6 +132,7 @@ internal external fun composekn_win32_menu_append_string(
     id: UInt,
     utf8: CPointer<ByteVar>?,
     enabled: Boolean,
+    checked: Boolean,
 ): Boolean
 
 @SymbolName("composekn_win32_menu_append_separator")
@@ -1630,10 +1631,15 @@ data class Win32Event(
 class Win32Menu private constructor(internal val handle: COpaquePointer) {
     private var transferred = false
 
-    fun appendString(id: Int, text: String, enabled: Boolean = true): Boolean {
+    fun appendString(
+        id: Int,
+        text: String,
+        enabled: Boolean = true,
+        checked: Boolean = false,
+    ): Boolean {
         check(!transferred) { "Win32Menu 所有权已转移，不能再 append" }
         return text.useCString {
-            composekn_win32_menu_append_string(handle, id.toUInt(), it, enabled)
+            composekn_win32_menu_append_string(handle, id.toUInt(), it, enabled, checked)
         }
     }
 

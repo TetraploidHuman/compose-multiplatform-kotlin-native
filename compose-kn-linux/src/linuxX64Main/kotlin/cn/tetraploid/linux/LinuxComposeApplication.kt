@@ -150,7 +150,7 @@ class LinuxComposeApplication(
         setContent(withChrome = undecorated, content = content)
 
         composeWindow.window.onImeEvent = { imeEvent ->
-            if (composeWindow.inputEnabled) textInputService.handleImeEvent(imeEvent)
+            if (composeWindow.effectivelyInputEnabled) textInputService.handleImeEvent(imeEvent)
         }
         composeWindow.run(onEvent = ::handleEvent)
 
@@ -181,7 +181,7 @@ class LinuxComposeApplication(
             }
         }
         composeWindow.window.onImeEvent = { imeEvent ->
-            if (composeWindow.inputEnabled) textInputService.handleImeEvent(imeEvent)
+            if (composeWindow.effectivelyInputEnabled) textInputService.handleImeEvent(imeEvent)
         }
         if (onCloseRequest != null) {
             composeWindow.onCloseRequest = onCloseRequest
@@ -204,13 +204,19 @@ class LinuxComposeApplication(
             // 宿主已在 attachToHost 里 noteFocus；此处无需再派发到 Compose。
             return
         }
-        // 软模态：有 Dialog 时非对话框丢弃 pointer/key/touch（对齐 Win32 EnableWindow）
-        if (!composeWindow.inputEnabled && event.type.isPointerKeyOrTouch()) {
+        // 软模态 ∧ Window(enabled)：非有效窗丢弃 pointer/key/touch
+        if (!composeWindow.effectivelyInputEnabled && event.type.isPointerKeyOrTouch()) {
             return
         }
         if (event.type == WaylandEventType.Key) {
             println("composekn: key keyCode=${event.keyCode} keysym=${event.keysym} pressed=${event.pressed}")
-            scene.dispatchWaylandKeyEvent(event, inputState, backNavigationInput)
+            scene.dispatchWaylandKeyEvent(
+                event,
+                inputState,
+                backNavigationInput,
+                onPreviewKeyEvent = composeWindow.onPreviewKeyEvent,
+                onKeyEvent = composeWindow.onKeyEvent,
+            )
             return
         }
         if (event.type.isDrag()) {

@@ -3,6 +3,8 @@
 package cn.tetraploid.windows
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
@@ -69,6 +71,9 @@ private object WindowsComposeNativeBackend : ComposeNativeWindowBackend {
         val handle = WindowsNativeWindowHandle(app)
         handle.setResizable(params.resizable)
         handle.setAlwaysOnTop(params.alwaysOnTop)
+        handle.setEnabled(params.enabled)
+        handle.setFocusable(params.focusable)
+        handle.setTransparent(params.transparent)
         handle.setOnCloseRequest(params.onCloseRequest)
         if (params.isDialog) {
             app.window.isDialogWindow = true
@@ -129,6 +134,10 @@ class WindowsNativeWindowHandle(
     private var pendingContent: (@Composable () -> Unit)? = null
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
+    companion object {
+        private var transparentLogged = false
+    }
+
     override fun asPlatformWindow(): Any? = app.window
 
     override fun setTitle(title: String) {
@@ -141,6 +150,36 @@ class WindowsNativeWindowHandle(
 
     override fun setAlwaysOnTop(alwaysOnTop: Boolean) {
         app.window.setAlwaysOnTop(alwaysOnTop)
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        app.window.setUserEnabled(enabled)
+    }
+
+    override fun setFocusable(focusable: Boolean) {
+        app.window.focusable = focusable
+    }
+
+    override fun setTransparent(transparent: Boolean) {
+        app.window.transparent = transparent
+        if (transparent && !transparentLogged) {
+            transparentLogged = true
+            win32Log("Window(transparent=true) not yet wired on Win32 (flag stored)")
+        }
+    }
+
+    override fun setIcon(icon: Painter?) {
+        // 任务栏/标题栏图标：待 WM_SETICON 桥；API 已接受 Painter。
+        @Suppress("UNUSED_PARAMETER")
+        val ignored = icon
+    }
+
+    override fun setWindowKeyEventHandlers(
+        onPreviewKeyEvent: (KeyEvent) -> Boolean,
+        onKeyEvent: (KeyEvent) -> Boolean,
+    ) {
+        app.window.onPreviewKeyEvent = onPreviewKeyEvent
+        app.window.onKeyEvent = onKeyEvent
     }
 
     override fun applyPlacement(placement: WindowPlacement, isMinimized: Boolean) {

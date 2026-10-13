@@ -1,5 +1,6 @@
 package cn.tetraploid.linux
 
+import androidx.compose.ui.input.key.KeyEvent
 import org.jetbrains.skia.Canvas
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoRenderDelegate
@@ -51,6 +52,25 @@ class LinuxComposeWindow(
      * 有任一 DialogWindow 时，非对话框由 Host 置为 false，派发侧跳过 pointer/key/touch。
      */
     internal var inputEnabled: Boolean = true
+
+    /**
+     * 用户侧 [androidx.compose.ui.window.Window] `enabled`（与 [inputEnabled] AND）。
+     */
+    internal var userEnabled: Boolean = true
+
+    /** Desktop `focusable`；标准 xdg-shell 无协议，仅记账。 */
+    internal var focusable: Boolean = true
+
+    /** Desktop `transparent`；当前 GLES/Vulkan 路径诚实记账。 */
+    internal var transparent: Boolean = false
+
+    /** 窗级键盘钩子（对齐 Desktop onPreviewKeyEvent / onKeyEvent）。 */
+    internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }
+    internal var onKeyEvent: (KeyEvent) -> Boolean = { false }
+
+    /** 有效输入开关 = 软模态 ∧ 用户 enabled。 */
+    internal val effectivelyInputEnabled: Boolean
+        get() = inputEnabled && userEnabled
 
     var resizable: Boolean = true
     var alwaysOnTop: Boolean = false

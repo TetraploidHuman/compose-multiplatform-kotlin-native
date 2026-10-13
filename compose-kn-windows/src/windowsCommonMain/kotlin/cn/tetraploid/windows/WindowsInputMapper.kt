@@ -24,7 +24,9 @@ import cn.tetraploid.windows.internal.*
 internal fun ComposeScene.dispatchWindowsKeyEvent(
     event: WindowsEvent.KeyEvent,
     inputState: WindowsInputState,
-) {
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+): Boolean {
     val key = windowsKeyToComposeKey(event.virtualKeyCode)
     val type = if (event.isKeyDown) KeyEventType.KeyDown else KeyEventType.KeyUp
     val codePoint = if (event.isKeyDown) event.character.code else 0
@@ -39,7 +41,11 @@ internal fun ComposeScene.dispatchWindowsKeyEvent(
         isMetaPressed = false,
         nativeEvent = event,
     )
-    sendKeyEvent(keyEvent)
+    // 对齐 Desktop ComposeSceneMediator：preview → scene → onKey
+    if (onPreviewKeyEvent(keyEvent)) return true
+    if (sendKeyEvent(keyEvent)) return true
+    if (onKeyEvent(keyEvent)) return true
+    return false
 }
 
 /**

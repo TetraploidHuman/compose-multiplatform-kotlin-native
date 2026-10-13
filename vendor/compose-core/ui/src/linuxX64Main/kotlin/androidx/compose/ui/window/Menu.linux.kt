@@ -4,6 +4,9 @@
  * Win32 原生 HMENU 菜单栏（FrameWindowScope.MenuBar）。
  * 策略：composition 用稳定 slot 收集树 → SideEffect rebuild-on-change → SetMenu。
  * 非 Windows / 无边框窗口：ComposeNativeWindowHandle.setMenuBar 为 no-op。
+ *
+ * API 对齐 Desktop MenuScope：Item / CheckboxItem / RadioButtonItem +
+ * icon / mnemonic / shortcut（icon 在原生 HMENU 上忽略；mnemonic→`&`；shortcut→`\t` 标签）。
  */
 
 package androidx.compose.ui.window
@@ -16,6 +19,9 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.input.key.toMenuAcceleratorLabel
 
 /**
  * 原生菜单树节点（平台无关模型；Windows 上映射为 HMENU）。
@@ -24,12 +30,17 @@ sealed class NativeMenuNode {
     data class Menu(
         val text: String,
         val enabled: Boolean = true,
+        val mnemonic: Char? = null,
         val children: List<NativeMenuNode> = emptyList(),
     ) : NativeMenuNode()
 
     data class Item(
         val text: String,
         val enabled: Boolean = true,
+        val mnemonic: Char? = null,
+        val shortcut: KeyShortcut? = null,
+        /** null = 普通项；true/false = 勾选态（Checkbox / Radio）。 */
+        val checked: Boolean? = null,
         val onClick: () -> Unit,
     ) : NativeMenuNode()
 
@@ -55,11 +66,21 @@ fun NativeMenuBarModel.structureKey(): String = buildString {
                     append('I')
                     append(n.text.length).append(':').append(n.text)
                     append(if (n.enabled) '1' else '0')
+                    append(n.mnemonic ?: '-')
+                    append(n.shortcut?.toString() ?: "-")
+                    append(
+                        when (n.checked) {
+                            null -> 'n'
+                            true -> 't'
+                            false -> 'f'
+                        },
+                    )
                 }
                 is NativeMenuNode.Menu -> {
                     append('M')
                     append(n.text.length).append(':').append(n.text)
                     append(if (n.enabled) '1' else '0')
+                    append(n.mnemonic ?: '-')
                     append('{')
                     walk(n.children)
                     append('}')
@@ -68,6 +89,25 @@ fun NativeMenuBarModel.structureKey(): String = buildString {
         }
     }
     walk(menus)
+}
+
+/** 收集带 shortcut 的菜单项（窗级键盘分发用）。 */
+fun NativeMenuBarModel.shortcutActions(): List<Pair<KeyShortcut, () -> Unit>> {
+    val out = mutableListOf<Pair<KeyShortcut, () -> Unit>>()
+    fun walk(nodes: List<NativeMenuNode>) {
+        for (n in nodes) {
+            when (n) {
+                is NativeMenuNode.Separator -> Unit
+                is NativeMenuNode.Item -> {
+                    val s = n.shortcut
+                    if (s != null && n.enabled) out += s to n.onClick
+                }
+                is NativeMenuNode.Menu -> if (n.enabled) walk(n.children)
+            }
+        }
+    }
+    walk(menus)
+    return out
 }
 
 /** 组合期稳定挂载点：同一 slot 重复 ensure 不会打乱顺序。 */
@@ -100,8 +140,6 @@ internal val LocalMenuCollector =
  * 在窗口标题栏下挂原生菜单栏（Win32 = HMENU；其它平台 no-op）。
  *
  * 无边框窗口（`undecorated = true`）不会显示系统菜单栏，宿主会忽略本次设置。
- *
- * @param content 菜单列表（[MenuBarScope.Menu]）
  */
 @Composable
 fun FrameWindowScope.MenuBar(content: @Composable MenuBarScope.() -> Unit) {
@@ -117,36 +155,29 @@ fun FrameWindowScope.MenuBar(content: @Composable MenuBarScope.() -> Unit) {
     }
 }
 
-/**
- * [FrameWindowScope.MenuBar] 的 receiver：往菜单栏追加顶层 [Menu]。
- */
+/** [FrameWindowScope.MenuBar] 的 receiver：往菜单栏追加顶层 [Menu]。 */
 class MenuBarScope internal constructor() {
-    /**
-     * @param text 菜单栏上显示的标题
-     * @param enabled 是否可打开
-     * @param content 子项（[MenuScope.Item] / [MenuScope.Separator] / 嵌套 [MenuScope.Menu]）
-     */
     @Composable
     fun Menu(
         text: String,
         enabled: Boolean = true,
+        mnemonic: Char? = null,
         content: @Composable MenuScope.() -> Unit,
     ) {
-        menuNode(text, enabled, content)
+        menuNode(text, enabled, mnemonic, content)
     }
 }
 
-/**
- * 单个弹出菜单 / 子菜单的 receiver。
- */
+/** 单个弹出菜单 / 子菜单的 receiver。 */
 class MenuScope internal constructor() {
     @Composable
     fun Menu(
         text: String,
         enabled: Boolean = true,
+        mnemonic: Char? = null,
         content: @Composable MenuScope.() -> Unit,
     ) {
-        menuNode(text, enabled, content)
+        menuNode(text, enabled, mnemonic, content)
     }
 
     @Composable
@@ -160,35 +191,100 @@ class MenuScope internal constructor() {
         }
     }
 
-    /**
-     * @param onClick 用户点选该项时回调（在 UI 线程 / 消息泵线程）
-     */
     @Composable
     fun Item(
         text: String,
+        icon: Painter? = null,
         enabled: Boolean = true,
+        mnemonic: Char? = null,
+        shortcut: KeyShortcut? = null,
         onClick: () -> Unit,
     ) {
-        val parent = LocalMenuCollector.current
-        val latestOnClick by rememberUpdatedState(onClick)
-        val slot = remember {
-            MenuSlot(
-                NativeMenuNode.Item(
-                    text = text,
-                    enabled = enabled,
-                    onClick = { latestOnClick() },
-                ),
-            )
-        }
-        slot.node = NativeMenuNode.Item(
+        // icon：原生 HMENU 无廉价位图项，忽略（API 对齐 Desktop）。
+        @Suppress("UNUSED_PARAMETER")
+        val ignoredIcon = icon
+        itemNode(text, enabled, mnemonic, shortcut, checked = null, onClick = onClick)
+    }
+
+    @Composable
+    fun CheckboxItem(
+        text: String,
+        checked: Boolean,
+        icon: Painter? = null,
+        enabled: Boolean = true,
+        mnemonic: Char? = null,
+        shortcut: KeyShortcut? = null,
+        onCheckedChange: (Boolean) -> Unit,
+    ) {
+        @Suppress("UNUSED_PARAMETER")
+        val ignoredIcon = icon
+        itemNode(
             text = text,
             enabled = enabled,
-            onClick = { latestOnClick() },
+            mnemonic = mnemonic,
+            shortcut = shortcut,
+            checked = checked,
+            onClick = { onCheckedChange(!checked) },
         )
-        parent.ensure(slot)
-        DisposableEffect(parent) {
-            onDispose { parent.remove(slot) }
-        }
+    }
+
+    @Composable
+    fun RadioButtonItem(
+        text: String,
+        selected: Boolean,
+        icon: Painter? = null,
+        enabled: Boolean = true,
+        mnemonic: Char? = null,
+        shortcut: KeyShortcut? = null,
+        onClick: () -> Unit,
+    ) {
+        @Suppress("UNUSED_PARAMETER")
+        val ignoredIcon = icon
+        itemNode(
+            text = text,
+            enabled = enabled,
+            mnemonic = mnemonic,
+            shortcut = shortcut,
+            checked = selected,
+            onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun itemNode(
+    text: String,
+    enabled: Boolean,
+    mnemonic: Char?,
+    shortcut: KeyShortcut?,
+    checked: Boolean?,
+    onClick: () -> Unit,
+) {
+    val parent = LocalMenuCollector.current
+    val latestOnClick by rememberUpdatedState(onClick)
+    val slot = remember {
+        MenuSlot(
+            NativeMenuNode.Item(
+                text = text,
+                enabled = enabled,
+                mnemonic = mnemonic,
+                shortcut = shortcut,
+                checked = checked,
+                onClick = { latestOnClick() },
+            ),
+        )
+    }
+    slot.node = NativeMenuNode.Item(
+        text = text,
+        enabled = enabled,
+        mnemonic = mnemonic,
+        shortcut = shortcut,
+        checked = checked,
+        onClick = { latestOnClick() },
+    )
+    parent.ensure(slot)
+    DisposableEffect(parent) {
+        onDispose { parent.remove(slot) }
     }
 }
 
@@ -196,6 +292,7 @@ class MenuScope internal constructor() {
 private fun menuNode(
     text: String,
     enabled: Boolean,
+    mnemonic: Char?,
     content: @Composable MenuScope.() -> Unit,
 ) {
     val parent = LocalMenuCollector.current
@@ -204,15 +301,46 @@ private fun menuNode(
         MenuScope().content()
     }
     val slot = remember {
-        MenuSlot(NativeMenuNode.Menu(text = text, enabled = enabled, children = emptyList()))
+        MenuSlot(
+            NativeMenuNode.Menu(
+                text = text,
+                enabled = enabled,
+                mnemonic = mnemonic,
+                children = emptyList(),
+            ),
+        )
     }
     slot.node = NativeMenuNode.Menu(
         text = text,
         enabled = enabled,
+        mnemonic = mnemonic,
         children = children.toList(),
     )
     parent.ensure(slot)
     DisposableEffect(parent) {
         onDispose { parent.remove(slot) }
+    }
+}
+
+/** 把 mnemonic / shortcut 编进原生菜单显示串（`&F` + `\tCtrl+S`）。 */
+fun formatNativeMenuLabel(
+    text: String,
+    mnemonic: Char?,
+    shortcut: KeyShortcut?,
+): String {
+    val withMnemonic = if (mnemonic != null) {
+        val idx = text.indexOf(mnemonic, ignoreCase = true)
+        if (idx >= 0) {
+            text.substring(0, idx) + "&" + text.substring(idx)
+        } else {
+            "&$mnemonic $text"
+        }
+    } else {
+        text
+    }
+    return if (shortcut != null) {
+        "$withMnemonic\t${shortcut.toMenuAcceleratorLabel()}"
+    } else {
+        withMnemonic
     }
 }

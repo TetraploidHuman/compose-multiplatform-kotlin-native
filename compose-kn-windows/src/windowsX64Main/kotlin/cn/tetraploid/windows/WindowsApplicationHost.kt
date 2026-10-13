@@ -156,8 +156,8 @@ object WindowsApplicationHost {
     fun refreshDialogModality() {
         val hasDialog = sessions.any { it.isDialogWindow }
         for (session in sessions) {
-            val enabled = !hasDialog || session.isDialogWindow
-            session.setEnabled(enabled)
+            session.modalityAllowsInput = !hasDialog || session.isDialogWindow
+            session.applyEffectiveEnabled()
         }
     }
 

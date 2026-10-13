@@ -15,6 +15,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.isSpecified
 import kotlinx.coroutines.awaitCancellation
 
@@ -27,18 +29,6 @@ import kotlinx.coroutines.awaitCancellation
  *
  * 软模态：创建参数带 `isDialog=true`，宿主在有对话框时禁用其它窗输入
  *（Win32 `EnableWindow`；Linux 首版跳过非对话框窗的 pointer 事件）。
- *
- * ```
- * fun main() = application {
- *     var open by remember { mutableStateOf(false) }
- *     Window(onCloseRequest = ::exitApplication) {
- *         Button(onClick = { open = true }) { Text("Open") }
- *     }
- *     if (open) {
- *         DialogWindow(onCloseRequest = { open = false }) { … }
- *     }
- * }
- * ```
  */
 @Composable
 fun DialogWindow(
@@ -46,11 +36,53 @@ fun DialogWindow(
     state: DialogState = rememberDialogState(),
     visible: Boolean = true,
     title: String = "Untitled",
+    icon: Painter? = null,
     undecorated: Boolean = false,
+    transparent: Boolean = false,
     resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
     alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable DialogWindowScope.() -> Unit,
 ) {
+    DialogWindow(
+        onCloseRequest = onCloseRequest,
+        state = state,
+        visible = visible,
+        title = title,
+        icon = icon,
+        decoration = windowDecorationFromFlag(undecorated),
+        transparent = transparent,
+        resizable = resizable,
+        enabled = enabled,
+        focusable = focusable,
+        alwaysOnTop = alwaysOnTop,
+        onPreviewKeyEvent = onPreviewKeyEvent,
+        onKeyEvent = onKeyEvent,
+        content = content,
+    )
+}
+
+@Composable
+fun DialogWindow(
+    onCloseRequest: () -> Unit,
+    state: DialogState = rememberDialogState(),
+    visible: Boolean = true,
+    title: String = "Untitled",
+    icon: Painter? = null,
+    decoration: WindowDecoration,
+    transparent: Boolean = false,
+    resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
+    alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+    content: @Composable DialogWindowScope.() -> Unit,
+) {
+    val undecorated = decoration.isUndecorated
     val backend = remember { ComposeNativeWindowBackendRegistry.requireBackend() }
     val handle = remember {
         backend.createWindow(
@@ -61,6 +93,9 @@ fun DialogWindow(
                 undecorated = undecorated,
                 resizable = resizable,
                 alwaysOnTop = alwaysOnTop,
+                enabled = enabled,
+                focusable = focusable,
+                transparent = transparent,
                 isDialog = true,
                 onCloseRequest = onCloseRequest,
             ),
@@ -75,6 +110,8 @@ fun DialogWindow(
 
     val latestContent = rememberUpdatedState(content)
     val latestOnClose = rememberUpdatedState(onCloseRequest)
+    val latestPreview = rememberUpdatedState(onPreviewKeyEvent)
+    val latestKey = rememberUpdatedState(onKeyEvent)
     val currentState = rememberUpdatedState(state)
 
     val appliedState = remember {
@@ -105,6 +142,14 @@ fun DialogWindow(
         handle.setTitle(title)
         handle.setResizable(resizable)
         handle.setAlwaysOnTop(alwaysOnTop)
+        handle.setEnabled(enabled)
+        handle.setFocusable(focusable)
+        handle.setTransparent(transparent)
+        handle.setIcon(icon)
+        handle.setWindowKeyEventHandlers(
+            onPreviewKeyEvent = { latestPreview.value(it) },
+            onKeyEvent = { latestKey.value(it) },
+        )
         handle.setOnCloseRequest { latestOnClose.value() }
 
         if (state.size != appliedState.size &&

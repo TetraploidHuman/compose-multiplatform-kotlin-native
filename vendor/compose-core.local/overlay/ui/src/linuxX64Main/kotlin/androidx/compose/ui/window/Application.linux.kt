@@ -18,7 +18,10 @@ import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.GlobalSnapshotManager
@@ -147,6 +150,96 @@ interface ApplicationScope {
      * Close all windows created inside the application and cancel launched effects.
      */
     fun exitApplication()
+}
+
+/** Receiver scope for [singleWindowApplication]（同时是 [ApplicationScope] + [FrameWindowScope]）。 */
+@Stable
+interface SingleWindowApplicationScope : ApplicationScope, FrameWindowScope
+
+@Composable
+internal fun SingleWindowApplicationScope(
+    applicationScope: ApplicationScope,
+    windowScope: FrameWindowScope,
+): SingleWindowApplicationScope {
+    return remember(applicationScope, windowScope) {
+        object : SingleWindowApplicationScope,
+            ApplicationScope by applicationScope,
+            FrameWindowScope by windowScope {}
+    }
+}
+
+/**
+ * 单窗应用入口（对齐 Desktop）。等价于 `application { Window(onCloseRequest=::exitApplication) {…} }`。
+ */
+fun singleWindowApplication(
+    state: WindowState = WindowState(),
+    visible: Boolean = true,
+    title: String = "Untitled",
+    icon: Painter? = null,
+    undecorated: Boolean = false,
+    transparent: Boolean = false,
+    resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
+    alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+    exitProcessOnExit: Boolean = true,
+    content: @Composable SingleWindowApplicationScope.() -> Unit,
+) = singleWindowApplication(
+    state = state,
+    visible = visible,
+    title = title,
+    icon = icon,
+    decoration = windowDecorationFromFlag(undecorated),
+    transparent = transparent,
+    resizable = resizable,
+    enabled = enabled,
+    focusable = focusable,
+    alwaysOnTop = alwaysOnTop,
+    onPreviewKeyEvent = onPreviewKeyEvent,
+    onKeyEvent = onKeyEvent,
+    exitProcessOnExit = exitProcessOnExit,
+    content = content,
+)
+
+/** [singleWindowApplication] with explicit [WindowDecoration]. */
+fun singleWindowApplication(
+    state: WindowState = WindowState(),
+    visible: Boolean = true,
+    title: String = "Untitled",
+    icon: Painter? = null,
+    decoration: WindowDecoration,
+    transparent: Boolean = false,
+    resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
+    alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+    exitProcessOnExit: Boolean = true,
+    content: @Composable SingleWindowApplicationScope.() -> Unit,
+) = application(exitProcessOnExit = exitProcessOnExit) {
+    Window(
+        onCloseRequest = ::exitApplication,
+        state = state,
+        visible = visible,
+        title = title,
+        icon = icon,
+        decoration = decoration,
+        transparent = transparent,
+        resizable = resizable,
+        enabled = enabled,
+        focusable = focusable,
+        alwaysOnTop = alwaysOnTop,
+        onPreviewKeyEvent = onPreviewKeyEvent,
+        onKeyEvent = onKeyEvent,
+        content = {
+            with(SingleWindowApplicationScope(this@application, this@Window)) {
+                content()
+            }
+        },
+    )
 }
 
 /** 应用层默认 density（无显示器查询时 1.0；各 Window 内会按 DPI 覆盖）。 */

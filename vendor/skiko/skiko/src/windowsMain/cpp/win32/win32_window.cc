@@ -2668,11 +2668,12 @@ extern "C" void composekn_win32_menu_destroy(void* hmenu) {
 }
 
 extern "C" bool composekn_win32_menu_append_string(
-    void* parent, uint32_t id, const char* utf8, bool enabled
+    void* parent, uint32_t id, const char* utf8, bool enabled, bool checked
 ) {
     if (parent == nullptr) return false;
     const std::wstring wide = utf8ToWideMenu(utf8);
     UINT flags = MF_STRING | (enabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED));
+    if (checked) flags |= MF_CHECKED;
     return AppendMenuW(reinterpret_cast<HMENU>(parent), flags, id, wide.c_str()) != FALSE;
 }
 

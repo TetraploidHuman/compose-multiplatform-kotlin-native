@@ -17,10 +17,14 @@ import org.jetbrains.skiko.initWindowsMainThread
 import org.jetbrains.skiko.currentNanoTime
 import org.jetbrains.skiko.setMainUIDispatcherWakeUpHandler
 import org.jetbrains.skiko.setWindowsImeCaretProvider
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.matches
 import androidx.compose.ui.window.FileDialogFilter
 import androidx.compose.ui.window.NativeMenuBarModel
 import androidx.compose.ui.window.NativeMenuNode
 import androidx.compose.ui.window.buildFileDialogFilterUtf8
+import androidx.compose.ui.window.formatNativeMenuLabel
+import androidx.compose.ui.window.shortcutActions
 import androidx.compose.ui.window.structureKey
 import cn.tetraploid.windows.internal.MOD_ALT
 import cn.tetraploid.windows.internal.MOD_CTRL
@@ -151,9 +155,50 @@ class WindowsComposeWindow(
             }
         }
 
-    /** 启用/禁用 HWND 输入（软模态）。 */
+    /**
+     * 用户侧 Window(enabled)；与 Dialog 软模态共同决定 [applyEffectiveEnabled]。
+     */
+    internal var userEnabled: Boolean = true
+
+    /** Desktop `focusable`；Win32 暂记账（无廉价 WS 切换路径）。 */
+    internal var focusable: Boolean = true
+
+    /** Desktop `transparent`；当前路径诚实记账。 */
+    internal var transparent: Boolean = false
+
+    /** 窗级键盘钩子。 */
+    internal var onPreviewKeyEvent: (KeyEvent) -> Boolean = { false }
+    internal var onKeyEvent: (KeyEvent) -> Boolean = { false }
+
+    /** 软模态是否允许本窗输入（Host 写入）。 */
+    internal var modalityAllowsInput: Boolean = true
+
+    /** 启用/禁用 HWND 输入（软模态 + 用户 enabled）。 */
     fun setEnabled(enabled: Boolean) {
         win32Window?.setEnabled(enabled)
+    }
+
+    fun setUserEnabled(enabled: Boolean) {
+        userEnabled = enabled
+        applyEffectiveEnabled()
+    }
+
+    fun applyEffectiveEnabled() {
+        setEnabled(userEnabled && modalityAllowsInput)
+    }
+
+    /**
+     * 尝试消费菜单 shortcut（KeyDown）；命中则调 onClick。
+     */
+    fun tryMenuShortcut(event: KeyEvent): Boolean {
+        val model = pendingMenuBar ?: return false
+        for ((shortcut, action) in model.shortcutActions()) {
+            if (shortcut.matches(event)) {
+                action()
+                return true
+            }
+        }
+        return false
     }
 
     /** 是否已挂到 [WindowsApplicationHost]（共享泵）；与独占 [run] 互斥。 */
@@ -519,12 +564,19 @@ class WindowsComposeWindow(
                     is NativeMenuNode.Separator -> menu.appendSeparator()
                     is NativeMenuNode.Item -> {
                         val id = nextId++
-                        menu.appendString(id, node.text, node.enabled)
+                        val label = formatNativeMenuLabel(node.text, node.mnemonic, node.shortcut)
+                        menu.appendString(
+                            id = id,
+                            text = label,
+                            enabled = node.enabled,
+                            checked = node.checked == true,
+                        )
                         menuClickMap[id] = node.onClick
                     }
                     is NativeMenuNode.Menu -> {
                         val child = buildPopup(node.children)
-                        menu.appendPopup(node.text, child, node.enabled)
+                        val label = formatNativeMenuLabel(node.text, node.mnemonic, null)
+                        menu.appendPopup(label, child, node.enabled)
                     }
                 }
             }
@@ -533,7 +585,8 @@ class WindowsComposeWindow(
         val bar = Win32Menu.createBar()
         for (top in model.menus) {
             val child = buildPopup(top.children)
-            bar.appendPopup(top.text, child, top.enabled)
+            val label = formatNativeMenuLabel(top.text, top.mnemonic, null)
+            bar.appendPopup(label, child, top.enabled)
         }
         win.setMenu(bar)
         menuStructureKey = key

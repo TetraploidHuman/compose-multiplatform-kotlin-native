@@ -278,7 +278,8 @@ bool composekn_win32_touch_enabled(ComposeKNWin32Window* window);
 /** popup=false → CreateMenu（菜单栏根）；true → CreatePopupMenu（子菜单）。 */
 void* composekn_win32_menu_create(bool popup);
 void composekn_win32_menu_destroy(void* hmenu);
-bool composekn_win32_menu_append_string(void* parent, uint32_t id, const char* utf8, bool enabled);
+bool composekn_win32_menu_append_string(
+    void* parent, uint32_t id, const char* utf8, bool enabled, bool checked);
 bool composekn_win32_menu_append_separator(void* parent);
 bool composekn_win32_menu_append_popup(void* parent, const char* utf8, void* child, bool enabled);
 /** SetMenu + DrawMenuBar；hmenu=null 清除。接管所有权（替换时销毁旧菜单）。 */

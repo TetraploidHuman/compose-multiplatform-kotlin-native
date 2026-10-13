@@ -3,6 +3,8 @@
 package cn.tetraploid.linux
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
@@ -67,6 +69,9 @@ private object LinuxComposeNativeBackend : ComposeNativeWindowBackend {
         val handle = LinuxNativeWindowHandle(app)
         handle.setResizable(params.resizable)
         handle.setAlwaysOnTop(params.alwaysOnTop)
+        handle.setEnabled(params.enabled)
+        handle.setFocusable(params.focusable)
+        handle.setTransparent(params.transparent)
         handle.setOnCloseRequest(params.onCloseRequest)
         if (params.isDialog) {
             app.composeWindow.isDialogWindow = true
@@ -119,9 +124,10 @@ class LinuxNativeWindowHandle(
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
     companion object {
-        /** Absolute / always-on-top 限制只打一次日志，避免 SideEffect 刷屏。 */
+        /** Absolute / always-on-top / transparent 限制只打一次日志，避免 SideEffect 刷屏。 */
         private var absolutePositionLogged = false
         private var alwaysOnTopLogged = false
+        private var transparentLogged = false
     }
 
     override fun asPlatformWindow(): Any? = app.composeWindow
@@ -145,6 +151,39 @@ class LinuxNativeWindowHandle(
                     "(requested=$alwaysOnTop; flag stored only)",
             )
         }
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        app.composeWindow.userEnabled = enabled
+    }
+
+    override fun setFocusable(focusable: Boolean) {
+        app.composeWindow.focusable = focusable
+    }
+
+    override fun setTransparent(transparent: Boolean) {
+        app.composeWindow.transparent = transparent
+        if (transparent && !transparentLogged) {
+            transparentLogged = true
+            println(
+                "composekn: Window(transparent=true) is not yet wired on Wayland " +
+                    "(flag stored; compositor transparency TBD)",
+            )
+        }
+    }
+
+    override fun setIcon(icon: Painter?) {
+        // Wayland 无标准 per-toplevel 图标协议；桌面图标走 .desktop / app_id。
+        @Suppress("UNUSED_PARAMETER")
+        val ignored = icon
+    }
+
+    override fun setWindowKeyEventHandlers(
+        onPreviewKeyEvent: (KeyEvent) -> Boolean,
+        onKeyEvent: (KeyEvent) -> Boolean,
+    ) {
+        app.composeWindow.onPreviewKeyEvent = onPreviewKeyEvent
+        app.composeWindow.onKeyEvent = onKeyEvent
     }
 
     override fun applyPlacement(placement: WindowPlacement, isMinimized: Boolean) {

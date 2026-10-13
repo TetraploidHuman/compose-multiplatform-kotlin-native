@@ -15,6 +15,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.isSpecified
 import kotlinx.coroutines.awaitCancellation
 
@@ -25,20 +27,8 @@ import kotlinx.coroutines.awaitCancellation
  * 系统关窗（WM_CLOSE）**不会**销毁 HWND，只调用 [onCloseRequest]
  *（对齐 AWT DO_NOTHING_ON_CLOSE）。真正销毁发生在离开 composition 时。
  *
- * ```
- * fun main() = application {
- *     Window(onCloseRequest = ::exitApplication) { }
- * }
- * ```
- *
- * 注意：原生窗的 Compose 内容跑在**独立** [androidx.compose.ui.platform.FrameRecomposer] 上，
- * 不是 application [Recomposer] 的子 composition。因此必须在这里挂一个
- * [LaunchedEffect] 保活 application 层，否则 `recomposer.close(); join()` 会立刻返回、
- * 共享泵退出、进程闪退（v0.5.21 真机复现）。
- *
- * [WindowState] 与原生几何双向同步（对齐 Desktop SwingWindow 的 appliedState）：
- * - composition → native：仅当 state 与已应用值不同时才 apply（避免拖动回写后再次把窗拽回去）
- * - native → composition：geometry listener 写回 state，并更新 appliedState
+ * 签名对齐 Desktop（`icon` / `transparent` / `enabled` / `focusable` /
+ * `onPreviewKeyEvent` / `onKeyEvent` / [WindowDecoration]）。
  */
 @Composable
 fun Window(
@@ -46,11 +36,56 @@ fun Window(
     state: WindowState = rememberWindowState(),
     visible: Boolean = true,
     title: String = "Untitled",
+    icon: Painter? = null,
     undecorated: Boolean = false,
+    transparent: Boolean = false,
     resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
     alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable FrameWindowScope.() -> Unit,
 ) {
+    Window(
+        onCloseRequest = onCloseRequest,
+        state = state,
+        visible = visible,
+        title = title,
+        icon = icon,
+        decoration = windowDecorationFromFlag(undecorated),
+        transparent = transparent,
+        resizable = resizable,
+        enabled = enabled,
+        focusable = focusable,
+        alwaysOnTop = alwaysOnTop,
+        onPreviewKeyEvent = onPreviewKeyEvent,
+        onKeyEvent = onKeyEvent,
+        content = content,
+    )
+}
+
+/**
+ * [Window] with explicit [WindowDecoration]（对齐 Desktop 1.12）。
+ */
+@Composable
+fun Window(
+    onCloseRequest: () -> Unit,
+    state: WindowState = rememberWindowState(),
+    visible: Boolean = true,
+    title: String = "Untitled",
+    icon: Painter? = null,
+    decoration: WindowDecoration,
+    transparent: Boolean = false,
+    resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
+    alwaysOnTop: Boolean = false,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+    content: @Composable FrameWindowScope.() -> Unit,
+) {
+    val undecorated = decoration.isUndecorated
     val backend = remember { ComposeNativeWindowBackendRegistry.requireBackend() }
     val handle = remember {
         backend.createWindow(
@@ -63,6 +98,9 @@ fun Window(
                 undecorated = undecorated,
                 resizable = resizable,
                 alwaysOnTop = alwaysOnTop,
+                enabled = enabled,
+                focusable = focusable,
+                transparent = transparent,
                 onCloseRequest = onCloseRequest,
             ),
         )
@@ -76,9 +114,10 @@ fun Window(
 
     val latestContent = rememberUpdatedState(content)
     val latestOnClose = rememberUpdatedState(onCloseRequest)
+    val latestPreview = rememberUpdatedState(onPreviewKeyEvent)
+    val latestKey = rememberUpdatedState(onKeyEvent)
     val currentState = rememberUpdatedState(state)
 
-    // 已应用到原生窗的状态；避免 state↔native 互相打架（用户拖动改大小时）
     val appliedState = remember {
         object {
             var size = state.size
@@ -88,7 +127,6 @@ fun Window(
         }
     }
 
-    // 保活 application Recomposer：本窗在 composition 里的整段寿命。
     LaunchedEffect(handle) {
         awaitCancellation()
     }
@@ -110,11 +148,18 @@ fun Window(
         }
     }
 
-    // 属性同步（不要每帧 setContent —— 那会重置场景）
     SideEffect {
         handle.setTitle(title)
         handle.setResizable(resizable)
         handle.setAlwaysOnTop(alwaysOnTop)
+        handle.setEnabled(enabled)
+        handle.setFocusable(focusable)
+        handle.setTransparent(transparent)
+        handle.setIcon(icon)
+        handle.setWindowKeyEventHandlers(
+            onPreviewKeyEvent = { latestPreview.value(it) },
+            onKeyEvent = { latestKey.value(it) },
+        )
         handle.setOnCloseRequest { latestOnClose.value() }
 
         if (state.placement != appliedState.placement ||

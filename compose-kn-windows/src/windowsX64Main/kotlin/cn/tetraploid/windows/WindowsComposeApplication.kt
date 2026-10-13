@@ -380,7 +380,16 @@ class WindowsComposeApplication(
     private fun handleEvent(event: WindowsEvent) {
         when (event) {
             is WindowsEvent.KeyEvent -> {
-                scene.dispatchWindowsKeyEvent(event, inputState)
+                scene.dispatchWindowsKeyEvent(
+                    event,
+                    inputState,
+                    onPreviewKeyEvent = window.onPreviewKeyEvent,
+                    onKeyEvent = { keyEvent ->
+                        if (window.onKeyEvent(keyEvent)) true
+                        else if (event.isKeyDown) window.tryMenuShortcut(keyEvent)
+                        else false
+                    },
+                )
             }
             is WindowsEvent.MouseMoveEvent -> {
                 inputState.updateModifiers(

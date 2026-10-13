@@ -1,6 +1,8 @@
 package androidx.compose.ui.window
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
@@ -17,6 +19,39 @@ interface ComposeNativeWindowHandle {
     fun setTitle(title: String)
     fun setResizable(resizable: Boolean)
     fun setAlwaysOnTop(alwaysOnTop: Boolean)
+
+    /**
+     * 启用/禁用用户输入（对齐 Desktop `enabled`）。
+     * 与 Dialog 软模态共同决定有效开关；默认实现 no-op。
+     */
+    fun setEnabled(enabled: Boolean) {}
+
+    /**
+     * 是否可获得焦点（对齐 Desktop `focusable`）。宿主无协议时诚实记账。
+     */
+    fun setFocusable(focusable: Boolean) {}
+
+    /**
+     * 透明客户区（对齐 Desktop `transparent`；通常需 undecorated）。
+     * 当前宿主可能诚实 no-op + 一次日志。
+     */
+    fun setTransparent(transparent: Boolean) {}
+
+    /**
+     * 窗口/任务栏图标（Painter 光栅化后由实现决定是否应用到原生）。
+     * 无原生桥时 no-op。
+     */
+    fun setIcon(icon: Painter?) {}
+
+    /**
+     * 窗级键盘钩子（对齐 Desktop ComposeSceneMediator）：
+     * preview → scene.sendKeyEvent → onKey；任一返回 true 即消费。
+     */
+    fun setWindowKeyEventHandlers(
+        onPreviewKeyEvent: (KeyEvent) -> Boolean,
+        onKeyEvent: (KeyEvent) -> Boolean,
+    ) {}
+
     fun applyPlacement(placement: WindowPlacement, isMinimized: Boolean)
     fun applySize(size: DpSize)
     fun applyPosition(position: WindowPosition)
@@ -69,6 +104,9 @@ data class ComposeNativeWindowCreateParams(
     val undecorated: Boolean = false,
     val resizable: Boolean = true,
     val alwaysOnTop: Boolean = false,
+    val enabled: Boolean = true,
+    val focusable: Boolean = true,
+    val transparent: Boolean = false,
     /**
      * true = [DialogWindow]：宿主可对非对话框窗做软模态（禁用输入）。
      */

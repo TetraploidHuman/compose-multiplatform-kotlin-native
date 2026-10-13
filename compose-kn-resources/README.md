@@ -5,7 +5,7 @@ Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，消费心智对齐�
 - `import org.jetbrains.compose.resources.Font`（推荐，勿再写 Kotlin 包 `cn.tetraploid.resources`）
 - `Res.font.*` / `Font(Res.font.xxx)`
 - `Res.string.*` / `stringResource(...)`
-- `Res.drawable.*` / `loadDrawableBytes(...)`
+- `Res.drawable.*` / `loadDrawableBytes(...)` / `painterResource(...)`（位图）
 
 > 官方 `components-resources` **没有** linuxX64/mingwX64。`cn.tetraploid` settings 插件会把该坐标顶到本模块。
 
@@ -45,7 +45,10 @@ import com.example.app.generated.resources.Res
 Font(Res.font.noto_sans_regular)
 stringResource(Res.string.app_name)
 loadDrawableBytes(Res.drawable.logo)
+painterResource(Res.drawable.logo) // png/jpeg/webp/bmp…
 ```
+
+仍缺：locale / plurals / XML vector（见根 [`CAPABILITIES.md`](../CAPABILITIES.md)）。
 
 ## 坐标
 

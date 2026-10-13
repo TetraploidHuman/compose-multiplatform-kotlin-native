@@ -9,6 +9,8 @@
  */
 package org.jetbrains.compose.resources
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +23,7 @@ import cn.tetraploid.resources.drawableResource as composeKnDrawableResource
 import cn.tetraploid.resources.fontFamilyOf as composeKnFontFamilyOf
 import cn.tetraploid.resources.fontResource as composeKnFontResource
 import cn.tetraploid.resources.loadDrawableBytes as composeKnLoadDrawableBytes
+import cn.tetraploid.resources.painterResource as composeKnPainterResource
 import cn.tetraploid.resources.stringResource as composeKnStringResourceFactory
 
 typealias FontResource = ComposeKnFontResource
@@ -52,6 +55,11 @@ fun drawableResource(
 
 fun loadDrawableBytes(resource: DrawableResource): ByteArray? =
     composeKnLoadDrawableBytes(resource)
+
+/** 对齐官方 `painterResource(DrawableResource)`（位图；无 XML vector）。 */
+@Composable
+fun painterResource(resource: DrawableResource): Painter =
+    composeKnPainterResource(resource)
 
 fun Font(
     resource: FontResource,
