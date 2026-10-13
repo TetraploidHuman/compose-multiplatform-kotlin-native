@@ -1,8 +1,9 @@
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.kotlin.compose)
-    id("cn.tetraploid.host")
-    id("cn.tetraploid.resources")
+    // Maven 消费：host + resources；kotlin-gradle-plugin 已在 classpath
+    id("cn.tetraploid.app")
+    kotlin("multiplatform")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.0"
+    id("org.jetbrains.compose") version "1.11.1"
 }
 
 val lumicodeRoot = file("../../../LumiCodeNext/composeApp")
@@ -10,9 +11,7 @@ val lumicodeCommon = file("$lumicodeRoot/src/commonMain/kotlin")
 val lumicodeFonts = file("$lumicodeRoot/src/commonMain/composeResources/font")
 
 composeKnResources {
-    // 官方 compose.resources 同义：packageOfResClass("…")
     packageOfResClass("com.lumicode.editor.resources")
-    // Prefer LumiCodeNext fonts when present; also allow local composeResources/font.
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }
 
@@ -29,7 +28,6 @@ kotlin {
         binaries {
             executable {
                 entryPoint = "main.main"
-                // Cross-link Skia prebuilts (build-windows.sh sets these props).
                 val mingwLibs = (project.findProperty("skiko.mingw.libs") as? String)
                 if (!mingwLibs.isNullOrBlank()) {
                     linkerOpts.addAll(
@@ -50,30 +48,21 @@ kotlin {
         val commonMain by getting {
             kotlin.srcDir(lumicodeCommon)
             dependencies {
-                implementation(libs.compose.runtime)
-                implementation(libs.compose.foundation)
-                implementation(libs.compose.material3)
-                implementation(libs.compose.ui)
-                implementation(libs.coroutines.core)
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(compose.ui)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
-                implementation(project(":compose-kn-resources"))
             }
         }
 
         val linuxX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
-            dependencies {
-                // compose-kn-linux 由 cn.tetraploid.host 注入
-                implementation(project(":compose-kn-resources"))
-            }
         }
 
         val mingwX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
-            dependencies {
-                // compose-kn-windows 由 cn.tetraploid.host 注入
-                implementation(project(":compose-kn-resources"))
-            }
         }
     }
 }

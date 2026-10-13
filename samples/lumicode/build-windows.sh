@@ -49,16 +49,16 @@ __asm__(
 }
 EOF
 
-cd "$REPO"
+cd "$HERE"
 export https_proxy="${https_proxy:-http://172.20.128.142:7897}"
 export HTTPS_PROXY="${HTTPS_PROXY:-$https_proxy}"
 
-info "链接 :samples:lumicode mingwX64"
-./gradlew :samples:lumicode:linkReleaseExecutableMingwX64 --no-daemon \
+info "链接 lumicode mingwX64（Maven 消费 cn.tetraploid）"
+"$REPO/gradlew" linkReleaseExecutableMingwX64 --no-daemon \
     -Pskiko.skia.mingw.dir="$SKIA_OUT" \
     -Pskiko.mingw.libs="$LIBS"
 
-EXE_DIR="$REPO/samples/lumicode/build/bin/mingwX64/releaseExecutable"
+EXE_DIR="$HERE/build/bin/mingwX64/releaseExecutable"
 rm -f "$EXE_DIR/icudtl.dat"
 ls -lh "$EXE_DIR"/lumicode.exe
 info "产物: $EXE_DIR/lumicode.exe"

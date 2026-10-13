@@ -55,15 +55,12 @@ include(":compose-kn-tests")
 include(":samples:wayland-demo")
 include(":samples:link-smoke")
 include(":samples:skiko-smoke")
-include(":samples:lumicode")
+// samples/lumicode 是独立 Maven 消费工程（自有 settings），不 include 进本 composite。
 
 // Windows-only modules. Their KGP target `windowsX64()` (see compose-kn-windows/build.gradle.kts)
 // is an unresolved reference off-Windows (the Kotlin/Native Windows target is `mingwX64()`),
 // which breaks full-project configuration on Linux/macOS hosts. These targets cannot be built
 // on a Windows host anyway, so only include them when building on Windows. (Pre-existing bug;
 // guard added 2026-07 to unblock the linuxX64 pipeline — fix the target name on a Windows host.)
-// NOTE: compose-kn-windows now uses mingwX64() and can configure on Linux for cross-link;
-// still gate windows-demo, but always include compose-kn-windows so :samples:lumicode can
-// declare mingwX64 deps. If configure fails off-Windows, wrap in isWindowsHost again.
 val isWindowsHost = System.getProperty("os.name", "").lowercase().contains("windows")
 include(":samples:windows-demo")

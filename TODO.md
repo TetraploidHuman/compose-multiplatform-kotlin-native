@@ -16,6 +16,7 @@
 - [x] `compose.resources` 对齐 + [`CAPABILITIES.md`](CAPABILITIES.md) + [`CONSUMING.md`](CONSUMING.md)
 - [x] 消费冒烟（0.5.67 基线）
 - [x] **发版 0.5.68**：`cn.tetraploid` 坐标重打并上传 [composekn-maven-0.5.68.zip](https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/tag/v0.5.68)；consumer-smoke OK
+- [x] **真消费**：`samples/lumicode` 改为独立 Maven 工程（`cn.tetraploid` / 0.5.68），接 LumiCodeNext `commonMain`
 
 ## 待做
 
