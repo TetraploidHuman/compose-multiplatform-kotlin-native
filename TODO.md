@@ -15,9 +15,10 @@
 - [x] `runLinuxX64` / `runMingwX64` + [`MIGRATING.md`](MIGRATING.md)
 - [x] `compose.resources` 对齐 + [`CAPABILITIES.md`](CAPABILITIES.md) + [`CONSUMING.md`](CONSUMING.md)
 - [x] 消费冒烟（0.5.67 基线）
+- [x] **发版 0.5.68**：`cn.tetraploid` 坐标重打并上传 [composekn-maven-0.5.68.zip](https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/tag/v0.5.68)；consumer-smoke OK
 
 ## 待做
 
-- [ ] **发版**：重打并上传 `composekn-maven-0.5.68.zip`（`cn.tetraploid` 坐标），再跑 `./scripts/smoke-composekn-consumer.sh`
+（无）
 
 入口文档见 [README.md](README.md)。
