@@ -8,19 +8,19 @@ import org.gradle.api.Project
  *
  * ```
  * plugins {
- *   id("com.composekn.app")
+ *   id("com.tetraploid.app")
  *   kotlin("multiplatform") // no version — provided via plugin classpath
  *   id("org.jetbrains.compose")
  * }
  * ```
  *
- * settings 侧配合 `id("com.composekn")`（或 `com.composekn.settings`）。
+ * settings 侧配合 `id("com.tetraploid")`（或 `com.tetraploid.settings`）。
  * 本仓库内开发时自动 `project()` 依赖宿主；外部 Maven 消费则走坐标。
  */
 class ComposeKnAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.pluginManager.apply("com.composekn.host")
-        project.pluginManager.apply("com.composekn.resources")
+        project.pluginManager.apply("com.tetraploid.host")
+        project.pluginManager.apply("com.tetraploid.resources")
 
         val inComposeKnRepo =
             project.rootProject.findProject(":compose-kn-linux") != null

@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    id("com.composekn.windows-native-linker")
-    id("com.composekn.publish")
+    id("com.tetraploid.windows-native-linker")
+    id("com.tetraploid.publish")
 }
 
 kotlin {

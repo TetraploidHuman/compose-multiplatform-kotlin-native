@@ -25,7 +25,7 @@ val usePublishedSkiko =
     settings.startParameter.projectProperties["composekn.usePublishedSkiko"] == "true"
 
 if (composeStandalone) {
-    // 解析已发布的 com.composekn:skiko（上一 job / 本机 maven-repo）
+    // 解析已发布的 com.tetraploid:skiko（上一 job / 本机 maven-repo）
     dependencyResolutionManagement.repositories.apply {
         maven {
             name = "ComposeKnLocal"

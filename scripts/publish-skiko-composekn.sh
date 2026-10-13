@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 把 ComposeKN 用的 Skiko 发成 com.composekn:skiko:<composekn.version>。
+# 把 ComposeKN 用的 Skiko 发成 com.tetraploid:skiko:<composekn.version>。
 #
 # 必须在 nix-shell（shell.nix）内运行，保证 x86_64-w64-mingw32-g++ 在 PATH：
 #   nix-shell ./shell.nix -I nixpkgs=$NIXPKGS_URL --run ./scripts/publish-skiko-composekn.sh
@@ -59,7 +59,7 @@ __asm__(
 EOF
 fi
 
-info "Publishing com.composekn:skiko:$CKN_VER (linuxX64+mingwX64; skip *KotlinMetadata)"
+info "Publishing com.tetraploid:skiko:$CKN_VER (linuxX64+mingwX64; skip *KotlinMetadata)"
 
 # afterEvaluate 再盖 groupId：skiko 自己的 publishing.kt 会把 group 设回 org.jetbrains.skiko
 INIT="$(mktemp)"
@@ -89,12 +89,12 @@ gradle.projectsLoaded {
             }
         }
         p.afterEvaluate {
-            p.group = "com.composekn"
+            p.group = "com.tetraploid"
             p.version = "$CKN_VER"
             def publishing = p.extensions.findByType(org.gradle.api.publish.PublishingExtension)
             if (publishing != null) {
                 publishing.publications.withType(org.gradle.api.publish.maven.MavenPublication).configureEach { mp ->
-                    mp.groupId = "com.composekn"
+                    mp.groupId = "com.tetraploid"
                     mp.version = "$CKN_VER"
                 }
             }
@@ -125,17 +125,17 @@ cd "$REPO/vendor/skiko/skiko"
 info "Local maven-repo after skiko publish:"
 find "$REPO/build/maven-repo" -type f \( -iname '*skiko*' -o -path '*/jetbrains/skiko/*' \) 2>/dev/null | sort | head -80 || true
 
-[ -d "$REPO/build/maven-repo/com/composekn/skiko-linuxx64/$CKN_VER" ] \
-  || die "missing com/composekn/skiko-linuxx64/$CKN_VER (groupId override failed?)"
-[ -d "$REPO/build/maven-repo/com/composekn/skiko-mingwx64/$CKN_VER" ] \
-  || die "missing com/composekn/skiko-mingwx64/$CKN_VER (groupId override failed?)"
+[ -d "$REPO/build/maven-repo/com/tetraploid/skiko-linuxx64/$CKN_VER" ] \
+  || die "missing com/tetraploid/skiko-linuxx64/$CKN_VER (groupId override failed?)"
+[ -d "$REPO/build/maven-repo/com/tetraploid/skiko-mingwx64/$CKN_VER" ] \
+  || die "missing com/tetraploid/skiko-mingwx64/$CKN_VER (groupId override failed?)"
 
 # Guard: linux klib must embed ELF libskia, not MinGW/COFF (regression check).
 COMPOSEKN_REPO="$REPO" COMPOSEKN_VERSION="$CKN_VER" python3 - <<'PY'
 import zipfile, subprocess, tempfile, os, sys
 repo = os.environ["COMPOSEKN_REPO"]
 ver = os.environ["COMPOSEKN_VERSION"]
-k = f"{repo}/build/maven-repo/com/composekn/skiko-linuxx64/{ver}/skiko-linuxx64-{ver}.klib"
+k = f"{repo}/build/maven-repo/com/tetraploid/skiko-linuxx64/{ver}/skiko-linuxx64-{ver}.klib"
 td = tempfile.mkdtemp()
 with zipfile.ZipFile(k) as z:
     z.extract("default/targets/linux_x64/included/libskia.a", td)
@@ -152,11 +152,11 @@ if head != b"\x7fELF":
 print(f"OK skiko-linuxx64 libskia.a is ELF ({os.path.getsize(a)} bytes)")
 PY
 
-info "Synthesize com.composekn:skiko root"
+info "Synthesize com.tetraploid:skiko root"
 chmod +x "$REPO/scripts/synthesize-kmp-root-modules.sh"
 "$REPO/scripts/synthesize-kmp-root-modules.sh" "$REPO/build/maven-repo"
 
-ROOT="$REPO/build/maven-repo/com/composekn/skiko/$CKN_VER"
+ROOT="$REPO/build/maven-repo/com/tetraploid/skiko/$CKN_VER"
 [ -f "$ROOT/skiko-$CKN_VER.module" ] \
   || die "no synthesized $ROOT/skiko-$CKN_VER.module"
 
@@ -164,11 +164,11 @@ if [ "$LOCAL_ONLY" != 1 ]; then
   info "Upload synthesized skiko root → GitHub Packages"
   chmod +x "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh"
   "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" "$ROOT"
-  if [ -f "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml" ]; then
+  if [ -f "$REPO/build/maven-repo/com/tetraploid/skiko/maven-metadata.xml" ]; then
     "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" \
-      "$REPO/build/maven-repo/com/composekn/skiko/maven-metadata.xml"
+      "$REPO/build/maven-repo/com/tetraploid/skiko/maven-metadata.xml"
   fi
 fi
 
 info "done"
-find "$REPO/build/maven-repo/com/composekn" -iname '*skiko*' -name '*.klib' 2>/dev/null | sort || true
+find "$REPO/build/maven-repo/com/tetraploid" -iname '*skiko*' -name '*.klib' 2>/dev/null | sort || true

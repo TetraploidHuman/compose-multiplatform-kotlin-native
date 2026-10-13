@@ -9,7 +9,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.withType
 
 /**
- * 给 compose-kn-* 挂 maven-publish（`com.composekn:<module>:<composekn.version>`）。
+ * 给 compose-kn-* 挂 maven-publish（`com.tetraploid:<module>:<composekn.version>`）。
  *
  * 仓库：
  * - 本地 `build/maven-repo`
@@ -24,8 +24,8 @@ import org.gradle.kotlin.dsl.withType
 class ComposeKnPublishPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("maven-publish")
-        val version = project.findProperty("composekn.version")?.toString() ?: "0.5.67"
-        project.group = project.findProperty("composekn.group")?.toString() ?: "com.composekn"
+        val version = project.findProperty("composekn.version")?.toString() ?: "0.5.68"
+        project.group = project.findProperty("composekn.group")?.toString() ?: "com.tetraploid"
         project.version = version
 
         if (project.findProperty("composekn.publish.skipMetadata")?.toString() == "true") {
@@ -104,7 +104,7 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                         name.set(project.name)
                         description.set(
                             project.findProperty("composekn.pom.description")?.toString()
-                                ?: "ComposeKN: Compose Multiplatform on Kotlin/Native (linuxX64/mingwX64)",
+                                ?: "compose-multiplatform-kotlin-native: Compose Multiplatform on Kotlin/Native (linuxX64/mingwX64)",
                         )
                         url.set("https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native")
                         licenses {
@@ -115,8 +115,8 @@ class ComposeKnPublishPlugin : Plugin<Project> {
                         }
                         developers {
                             developer {
-                                id.set("composekn")
-                                name.set("ComposeKN contributors")
+                                id.set("tetraploid")
+                                name.set("TetraploidHuman")
                             }
                         }
                         scm {

@@ -39,14 +39,14 @@ info "Publish composekn-catalog @ $CKN_VER"
   "${TASKS_CATALOG[@]}"
 
 # 插件 marker：统一入口 + 旧 settings
-MARKER="$REPO/build/maven-repo/com/composekn/com.composekn.gradle.plugin/$CKN_VER"
-[ -d "$MARKER" ] || die "missing com.composekn plugin marker at $MARKER"
-MARKER_APP="$REPO/build/maven-repo/com/composekn/app/com.composekn.app.gradle.plugin/$CKN_VER"
-[ -d "$MARKER_APP" ] || die "missing com.composekn.app plugin marker at $MARKER_APP"
-MARKER_SETTINGS="$REPO/build/maven-repo/com/composekn/settings/com.composekn.settings.gradle.plugin/$CKN_VER"
+MARKER="$REPO/build/maven-repo/com/tetraploid/com.tetraploid.gradle.plugin/$CKN_VER"
+[ -d "$MARKER" ] || die "missing com.tetraploid plugin marker at $MARKER"
+MARKER_APP="$REPO/build/maven-repo/com/tetraploid/app/com.tetraploid.app.gradle.plugin/$CKN_VER"
+[ -d "$MARKER_APP" ] || die "missing com.tetraploid.app plugin marker at $MARKER_APP"
+MARKER_SETTINGS="$REPO/build/maven-repo/com/tetraploid/settings/com.tetraploid.settings.gradle.plugin/$CKN_VER"
 [ -d "$MARKER_SETTINGS" ] || die "missing settings plugin marker at $MARKER_SETTINGS"
 
-CATALOG_DIR="$REPO/build/maven-repo/com/composekn/composekn-catalog/$CKN_VER"
+CATALOG_DIR="$REPO/build/maven-repo/com/tetraploid/composekn-catalog/$CKN_VER"
 [ -d "$CATALOG_DIR" ] || die "missing catalog at $CATALOG_DIR"
 
 info "done — plugins + catalog $CKN_VER"

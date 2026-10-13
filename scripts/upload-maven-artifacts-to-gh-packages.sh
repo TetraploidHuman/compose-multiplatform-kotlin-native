@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 把本地 maven-repo 下某个文件或目录 curl PUT 到 GitHub Packages。
 #
-#   ./scripts/upload-maven-artifacts-to-gh-packages.sh build/maven-repo/com/composekn/skiko/0.5.65
-#   ./scripts/upload-maven-artifacts-to-gh-packages.sh build/maven-repo/com/composekn/skiko/maven-metadata.xml
+#   ./scripts/upload-maven-artifacts-to-gh-packages.sh build/maven-repo/com/tetraploid/skiko/0.5.65
+#   ./scripts/upload-maven-artifacts-to-gh-packages.sh build/maven-repo/com/tetraploid/skiko/maven-metadata.xml
 #
 # 路径须位于 build/maven-repo/ 下。需要 GITHUB_TOKEN；409 = 已存在（OK）。
 set -euo pipefail

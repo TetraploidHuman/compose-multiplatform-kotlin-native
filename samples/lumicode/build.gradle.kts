@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    id("com.composekn.host")
-    id("com.composekn.resources")
+    id("com.tetraploid.host")
+    id("com.tetraploid.resources")
 }
 
 val lumicodeRoot = file("../../../LumiCodeNext/composeApp")
@@ -63,7 +63,7 @@ kotlin {
         val linuxX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
             dependencies {
-                // compose-kn-linux 由 com.composekn.host 注入
+                // compose-kn-linux 由 com.tetraploid.host 注入
                 implementation(project(":compose-kn-resources"))
             }
         }
@@ -71,7 +71,7 @@ kotlin {
         val mingwX64Main by getting {
             kotlin.srcDir("src/knShared/kotlin")
             dependencies {
-                // compose-kn-windows 由 com.composekn.host 注入
+                // compose-kn-windows 由 com.tetraploid.host 注入
                 implementation(project(":compose-kn-resources"))
             }
         }
@@ -81,7 +81,7 @@ kotlin {
 tasks.register("verifyLumicodeSources") {
     doLast {
         check(lumicodeCommon.isDirectory) {
-            "LumiCode commonMain not found at $lumicodeCommon — clone/checkout LumiCodeNext next to ComposeKN"
+            "LumiCode commonMain not found at $lumicodeCommon — clone/checkout LumiCodeNext next to compose-multiplatform-kotlin-native"
         }
         check(lumicodeFonts.isDirectory) {
             "LumiCode fonts not found at $lumicodeFonts"

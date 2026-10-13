@@ -1,10 +1,10 @@
-# ComposeKN TODO
+# compose-multiplatform-kotlin-native TODO
 
-## 已完成（近期，v0.5.67）
+## 已完成（近期，v0.5.68）
 
-- [x] **统一插件 + 单版本 BOM**：`com.composekn` + `com.composekn.app`；BOM 约束宿主/Skiko/UI；消费方主要锁 `composekn.version`
+- [x] **统一插件 + 单版本 BOM**：`com.tetraploid` + `com.tetraploid.app`；BOM 约束宿主/Skiko/UI；消费方主要锁 `composekn.version`
 - [x] **稳定 CDN 分发**：Release `composekn-maven-*.zip` → `~/.composekn/m2/<ver>`（脚本 + settings 自动拉取）；Packages 改为 opt-in；Central 发布钩子已预留
-- [x] **发版**：`v0.5.67` Release zip 已上传（`composekn-maven-0.5.67.zip`）
+- [x] **发版**：`v0.5.68` Release zip 已上传（`composekn-maven-0.5.68.zip`）
 - [x] **消费冒烟**：干净 maven zip → `consumer-smoke` compile/link/`--compile-only`/`runLinuxX64` task（修：KGP classpath、GMM marker、mingw skia 勿进 linux klib、`run-linux-native` 传参）
 
 ## 待做
@@ -19,4 +19,4 @@
 
 - [x] `compose.resources` 心智对齐：生成/compat 走 `org.jetbrains.compose.resources`；`packageOfResClass` 别名；样本改官方 import
 - [x] 公开能力矩阵：[`CAPABILITIES.md`](CAPABILITIES.md)
-- [x] 版本对照表：[`CONSUMING.md`](CONSUMING.md)（官方 CMP ↔ ComposeKN）
+- [x] 版本对照表：[`CONSUMING.md`](CONSUMING.md)（官方 CMP ↔ 本产品）

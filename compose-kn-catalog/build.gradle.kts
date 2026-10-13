@@ -1,11 +1,11 @@
 plugins {
     `version-catalog`
     `maven-publish`
-    id("com.composekn.publish")
+    id("com.tetraploid.publish")
 }
 
-group = "com.composekn"
-version = providers.gradleProperty("composekn.version").orElse("0.5.67").get()
+group = "com.tetraploid"
+version = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
 
 catalog {
     versionCatalog {

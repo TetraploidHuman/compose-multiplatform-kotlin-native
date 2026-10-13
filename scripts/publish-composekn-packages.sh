@@ -67,12 +67,12 @@ upload_roots() {
   local CKN_VER
   CKN_VER="$(grep '^composekn.version=' gradle.properties | cut -d= -f2)"
   for m in compose-kn-linux compose-kn-windows compose-kn-resources; do
-    local d="$REPO/build/maven-repo/com/composekn/$m/$CKN_VER"
+    local d="$REPO/build/maven-repo/com/tetraploid/$m/$CKN_VER"
     if [ -d "$d" ]; then
-      info "Upload synthesized root com.composekn:$m:$CKN_VER"
+      info "Upload synthesized root com.tetraploid:$m:$CKN_VER"
       "$up" "$d"
-      if [ -f "$REPO/build/maven-repo/com/composekn/$m/maven-metadata.xml" ]; then
-        "$up" "$REPO/build/maven-repo/com/composekn/$m/maven-metadata.xml"
+      if [ -f "$REPO/build/maven-repo/com/tetraploid/$m/maven-metadata.xml" ]; then
+        "$up" "$REPO/build/maven-repo/com/tetraploid/$m/maven-metadata.xml"
       fi
     fi
   done
@@ -156,7 +156,7 @@ EOF
       :compose-kn-resources:publishLinuxX64PublicationToGitHubPackagesRepository \
       :compose-kn-linux:publishLinuxX64PublicationToGitHubPackagesRepository \
       || die "GitHub Packages linux upload failed"
-    if [ -d "$REPO/build/maven-repo/com/composekn/compose-kn-windows-mingwx64" ]; then
+    if [ -d "$REPO/build/maven-repo/com/tetraploid/compose-kn-windows-mingwx64" ]; then
       if [ -n "${PREBUILT:-}" ] && [ -d "$PREBUILT/libs" ]; then
         if nix_run \
             "./gradlew --no-daemon -Pcomposekn.publish.skipMetadata=true \
@@ -179,13 +179,13 @@ EOF
   fi
 
   if [ "$DO_SKIKO" = 1 ]; then
-    info "Publish com.composekn:skiko"
+    info "Publish com.tetraploid:skiko"
     chmod +x "$REPO/scripts/publish-skiko-composekn.sh"
     "$REPO/scripts/publish-skiko-composekn.sh" || die "skiko publish failed"
   fi
 
   if [ "$DO_UI" = 1 ]; then
-    info "Publish com.composekn.compose:* (platform + synthesized roots)"
+    info "Publish com.tetraploid.compose:* (platform + synthesized roots)"
     chmod +x "$REPO/scripts/publish-compose-ui-composekn.sh"
     # 无 token 时仅本地：临时绕过脚本里的 GITHUB_TOKEN 检查
     if [ -z "${GITHUB_TOKEN:-}" ]; then
@@ -207,15 +207,15 @@ if [ "$DO_RELEASE" = 1 ]; then
   TAG="v${CKN_VER}"
   ZIP="$REPO/build/composekn-maven-${CKN_VER}.zip"
   # upload-artifact@v4 可能多包一层 maven-repo/；摊平后再检查
-  if [ ! -d "$REPO/build/maven-repo/com/composekn" ] \
-      && [ -d "$REPO/build/maven-repo/maven-repo/com/composekn" ]; then
+  if [ ! -d "$REPO/build/maven-repo/com/tetraploid" ] \
+      && [ -d "$REPO/build/maven-repo/maven-repo/com/tetraploid" ]; then
     info "Flatten nested build/maven-repo/maven-repo → build/maven-repo"
     shopt -s dotglob
     mv "$REPO/build/maven-repo/maven-repo"/* "$REPO/build/maven-repo/"
     rmdir "$REPO/build/maven-repo/maven-repo" 2>/dev/null || rm -rf "$REPO/build/maven-repo/maven-repo"
     shopt -u dotglob
   fi
-  [ -d "$REPO/build/maven-repo/com/composekn" ] || die "build/maven-repo empty — publish first"
+  [ -d "$REPO/build/maven-repo/com/tetraploid" ] || die "build/maven-repo empty — publish first"
   KLIB_N="$(find "$REPO/build/maven-repo" -name '*.klib' 2>/dev/null | wc -l | tr -d ' ')"
   info "maven-repo klibs: $KLIB_N"
   [ "$KLIB_N" -gt 0 ] || die "no .klib under build/maven-repo — artifact merge failed?"
@@ -247,8 +247,8 @@ fi
 
 info "Local repo: $REPO/build/maven-repo"
 echo "--- klibs ---"
-find build/maven-repo/com/composekn -name '*.klib' 2>/dev/null | sort || true
+find build/maven-repo/com/tetraploid -name '*.klib' 2>/dev/null | sort || true
 echo "--- root modules ---"
 for m in compose-kn-linux compose-kn-windows compose-kn-resources compose-kn-bom skiko; do
-  ls -la "build/maven-repo/com/composekn/$m/"*/ 2>/dev/null | head -15 || true
+  ls -la "build/maven-repo/com/tetraploid/$m/"*/ 2>/dev/null | head -15 || true
 done

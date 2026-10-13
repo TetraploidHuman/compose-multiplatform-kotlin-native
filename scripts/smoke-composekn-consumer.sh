@@ -4,7 +4,7 @@
 #
 #   ./scripts/smoke-composekn-consumer.sh                # 干净目录拉 Release 再测
 #   ./scripts/smoke-composekn-consumer.sh ~/composekn-m2  # 已有 maven-repo
-#   COMPOSEKN_VERSION=0.5.67 ./scripts/smoke-composekn-consumer.sh
+#   COMPOSEKN_VERSION=0.5.68 ./scripts/smoke-composekn-consumer.sh
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VER="${COMPOSEKN_VERSION:-$(grep '^composekn.version=' "$REPO/gradle.properties" | cut -d= -f2)}"
@@ -20,7 +20,7 @@ if [ -z "$M2" ]; then
   mkdir -p "$M2"
   COMPOSEKN_VERSION="$VER" "$REPO/scripts/fetch-composekn-maven.sh" "$M2"
 fi
-[ -d "$M2/com/composekn" ] || die "not a maven-repo: $M2 (need com/composekn/…)"
+[ -d "$M2/com/tetraploid" ] || die "not a maven-repo: $M2 (need com/tetraploid/…)"
 
 chmod +x "$REPO/scripts/assert-composekn-maven-repo.sh"
 "$REPO/scripts/assert-composekn-maven-repo.sh" "$M2"
@@ -53,6 +53,6 @@ fi
 
 info "Verify runLinuxX64 task is registered"
 "${GRADLE[@]}" tasks --group composekn | grep -q 'runLinuxX64' \
-  || die "runLinuxX64 task not registered by com.composekn.app"
+  || die "runLinuxX64 task not registered by com.tetraploid.app"
 
 info "consumer-smoke OK (fetch + assert + compile + link + --compile-only + runLinuxX64 task)"

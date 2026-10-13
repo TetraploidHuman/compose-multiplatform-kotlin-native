@@ -1,16 +1,16 @@
-# 消费 ComposeKN
+# 消费 compose-multiplatform-kotlin-native
 
-目标：**一个版本号 + `com.composekn` + `com.composekn.app`**，尽量不再 clone / includeBuild。
+目标：**一个版本号 + `com.tetraploid` + `com.tetraploid.app`**，尽量不再 clone / includeBuild。
 
 只需锁 **`composekn.version`**；UI 自动为 `1.12.1-ckn.<ver>`。
 
-### 版本对照（官方 CMP ↔ ComposeKN）
+### 版本对照（官方 CMP ↔ 本产品）
 
-| 角色 | 官方 / 上游 | ComposeKN 0.5.67 |
-|------|-------------|------------------|
-| 产品版本 | — | **0.5.67**（宿主 / Skiko / 插件 / BOM） |
+| 角色 | 官方 / 上游 | 0.5.68 |
+|------|-------------|--------|
+| 产品版本 | — | **0.5.68**（宿主 / Skiko / 插件 / BOM） |
 | Kotlin | 2.4.0（与本仓库对齐） | **2.4.0** |
-| Compose UI 源码基线 | Multiplatform **1.12.1** | 发布坐标 **`1.12.1-ckn.0.5.67`** |
+| Compose UI 源码基线 | Multiplatform **1.12.1** | 发布坐标 **`1.12.1-ckn.0.5.68`** |
 | Compose Gradle 插件 / `compose_deps` | 1.11.1 | 同左（仅未顶掉的 runtime 等） |
 | `compose.resources` | `org.jetbrains.compose.resources` + `components-resources` | **同包名**；K/N 桌面由 `compose-kn-resources` 提供（settings 自动顶替） |
 
@@ -39,7 +39,7 @@
 ### 1. `gradle.properties`
 
 ```properties
-composekn.version=0.5.67
+composekn.version=0.5.68
 ```
 
 ### 2. `settings.gradle.kts`
@@ -55,29 +55,29 @@ pluginManagement {
     }
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id.startsWith("com.composekn")) useVersion(ver)
+            if (requested.id.id.startsWith("com.tetraploid")) useVersion(ver)
         }
     }
 }
 
 plugins {
-    id("com.composekn") // = settings：坐标替换 + Release 缓存
+    id("com.tetraploid") // = settings：坐标替换 + Release 缓存
 }
 ```
 
 首次若缓存为空，先跑一次：
 
 ```bash
-./scripts/fetch-composekn-maven.sh   # → ~/.composekn/m2/0.5.67
+./scripts/fetch-composekn-maven.sh   # → ~/.composekn/m2/0.5.68
 ```
 
-（之后 `com.composekn` 也会尝试自动补全同一目录，供依赖解析使用。）
+（之后 `com.tetraploid` 也会尝试自动补全同一目录，供依赖解析使用。）
 
 ### 3. 模块
 
 ```kotlin
 plugins {
-    id("com.composekn.app") // = host + resources；会带上 kotlin-gradle-plugin
+    id("com.tetraploid.app") // = host + resources；会带上 kotlin-gradle-plugin
     kotlin("multiplatform") // 不要写 version（已由 app 插件 classpath 提供 2.4.0）
     id("org.jetbrains.compose") version "1.11.1"
     id("org.jetbrains.kotlin.plugin.compose") version "2.4.0"
@@ -104,11 +104,11 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation(platform("com.composekn:compose-kn-bom:0.5.67"))
+    implementation(platform("com.tetraploid:compose-kn-bom:0.5.68"))
 }
 ```
 
-旧 ID 仍可用：`com.composekn.settings` / `host` / `resources`。
+旧 ID 仍可用：`com.tetraploid.settings` / `host` / `resources`。
 
 ---
 
@@ -123,14 +123,14 @@ dependencies {
 
 | 坐标 | 内容 |
 |------|------|
-| `com.composekn:compose-kn-bom` | 约束 linux / windows / resources / skiko / UI |
-| `com.composekn:compose-kn-linux` | Wayland 宿主 |
-| `com.composekn:compose-kn-windows` | Win32 宿主 |
-| `com.composekn:compose-kn-resources` | Res.font / string / drawable |
-| `com.composekn:skiko` | KN Skiko |
-| `com.composekn:composekn-catalog` | version catalog |
-| `com.composekn` / `com.composekn.app` | 推荐插件入口 |
-| `com.composekn.compose:ui` 等 | UI **1.12.1-ckn.*** |
+| `com.tetraploid:compose-kn-bom` | 约束 linux / windows / resources / skiko / UI |
+| `com.tetraploid:compose-kn-linux` | Wayland 宿主 |
+| `com.tetraploid:compose-kn-windows` | Win32 宿主 |
+| `com.tetraploid:compose-kn-resources` | Res.font / string / drawable |
+| `com.tetraploid:skiko` | KN Skiko |
+| `com.tetraploid:composekn-catalog` | version catalog |
+| `com.tetraploid` / `com.tetraploid.app` | 推荐插件入口 |
+| `com.tetraploid.compose:ui` 等 | UI **1.12.1-ckn.*** |
 
 ---
 

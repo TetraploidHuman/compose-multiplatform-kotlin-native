@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 发布 com.composekn.compose:*（linuxX64 + mingwX64），依赖已发布的 com.composekn:skiko。
+# 发布 com.tetraploid.compose:*（linuxX64 + mingwX64），依赖已发布的 com.tetraploid:skiko。
 # 平台 publication 之后合成根坐标并（有真 token 时）上传到 GitHub Packages。
 #
 #   GITHUB_TOKEN=… ./scripts/publish-compose-ui-composekn.sh
@@ -44,7 +44,7 @@ for m in "${MODULES[@]}"; do
   fi
 done
 
-info "Publish com.composekn.compose:* @$UI_VER (platform; use published skiko)"
+info "Publish com.tetraploid.compose:* @$UI_VER (platform; use published skiko)"
 cd "$REPO"
 ./gradlew -p vendor/compose-core \
   --init-script "$INIT" \
@@ -57,12 +57,12 @@ cd "$REPO"
   -Pcomposekn.publish.skipMetadata=true \
   "${TASKS[@]}"
 
-info "Synthesize com.composekn.compose:* roots"
+info "Synthesize com.tetraploid.compose:* roots"
 chmod +x "$REPO/scripts/synthesize-kmp-root-modules.sh"
 "$REPO/scripts/synthesize-kmp-root-modules.sh" "$REPO/build/maven-repo"
 
 for m in "${MODULES[@]}"; do
-  root="$REPO/build/maven-repo/com/composekn/compose/$m/$UI_VER"
+  root="$REPO/build/maven-repo/com/tetraploid/compose/$m/$UI_VER"
   [ -f "$root/$m-$UI_VER.module" ] \
     || die "missing synthesized $root/$m-$UI_VER.module"
 done
@@ -72,13 +72,13 @@ if [ "$LOCAL_ONLY" != 1 ]; then
   chmod +x "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh"
   for m in "${MODULES[@]}"; do
     "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" \
-      "$REPO/build/maven-repo/com/composekn/compose/$m/$UI_VER"
-    if [ -f "$REPO/build/maven-repo/com/composekn/compose/$m/maven-metadata.xml" ]; then
+      "$REPO/build/maven-repo/com/tetraploid/compose/$m/$UI_VER"
+    if [ -f "$REPO/build/maven-repo/com/tetraploid/compose/$m/maven-metadata.xml" ]; then
       "$REPO/scripts/upload-maven-artifacts-to-gh-packages.sh" \
-        "$REPO/build/maven-repo/com/composekn/compose/$m/maven-metadata.xml"
+        "$REPO/build/maven-repo/com/tetraploid/compose/$m/maven-metadata.xml"
     fi
   done
 fi
 
 info "done"
-find "$REPO/build/maven-repo/com/composekn/compose" -name '*.klib' 2>/dev/null | sort | head -40 || true
+find "$REPO/build/maven-repo/com/tetraploid/compose" -name '*.klib' 2>/dev/null | sort | head -40 || true

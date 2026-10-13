@@ -25,7 +25,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ComposeKN"
+rootProject.name = "compose-multiplatform-kotlin-native"
 
 includeBuild("vendor/skiko/skiko") {
     dependencySubstitution {

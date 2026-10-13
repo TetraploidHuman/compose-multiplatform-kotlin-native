@@ -22,10 +22,10 @@ object ComposeKnMavenCache {
         File(System.getProperty("user.home"), ".composekn/m2/$version")
 
     fun isPopulated(dir: File): Boolean =
-        File(dir, "com/composekn").isDirectory &&
+        File(dir, "com/tetraploid").isDirectory &&
             (
                 File(dir, ".composekn-complete").isFile ||
-                    File(dir, "com/composekn/composekn-build-logic").isDirectory
+                    File(dir, "com/tetraploid/composekn-build-logic").isDirectory
                 )
 
     /**
@@ -58,7 +58,7 @@ object ComposeKnMavenCache {
             zipFile.delete()
             File(staging, ".composekn-complete").writeText(version)
             if (!isPopulated(staging)) {
-                log("ComposeKN: unzipped but com/composekn missing under $staging")
+                log("ComposeKN: unzipped but com/tetraploid missing under $staging")
                 staging.deleteRecursively()
                 null
             } else {

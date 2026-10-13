@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    id("com.composekn.linux-native-linker")
+    id("com.tetraploid.linux-native-linker")
 }
 
 kotlin {

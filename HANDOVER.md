@@ -5,7 +5,7 @@
 >
 > **当前平台宿主基线：v0.5.66**（GitHub Packages + settings 顶 UI；
 > host/register 含 `init*MainThread`；BOM/host 见 `CONSUMING.md`）。
-> **compose-core UI：`1.12.1`** → 发布坐标 `com.composekn.compose:*:1.12.1-ckn.0.5.66`。
+> **compose-core UI：`1.12.1`** → 发布坐标 `com.tetraploid.compose:*:1.12.1-ckn.0.5.66`。
 > **本轮已补**：消费闭环 + Release zip 只打包 + settings 本地优先/skip Packages +
 > UI/skiko/resources 按 target 顶平台 + maven-repo 断言 + consumer-smoke。
 
@@ -4066,7 +4066,7 @@ Linux 发出侧 DnD：`start_drag` 立即合成 UP（API 不阻塞，同 beginMo
 
 1. **`compose-kn-resources`**：`Font(Res.font.*)` / `Font(bytes)` / `FontFromFile` →
    Skia `LoadedFont` / `makeFromData`（非「只能系统字体」）。
-2. **Gradle 插件 `com.composekn.resources`**：扫 `composeResources/font/` +
+2. **Gradle 插件 `com.tetraploid.resources`**：扫 `composeResources/font/` +
    `extraFontDirs` → 生成 `Res.font.<name>`；link 后 copy 到 exe 旁
    `composeResources/font/`。
 3. **样本**：wayland-demo / windows-demo 画廊「Custom fonts」；

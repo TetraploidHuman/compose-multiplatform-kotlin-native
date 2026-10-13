@@ -7,18 +7,18 @@ import java.io.File
 import java.net.URI
 
 /**
- * 消费者 settings 插件（也注册为 `com.composekn`）：
+ * 消费者 settings 插件（也注册为 `com.tetraploid`）：
  * - 解析/缓存 Release Maven zip（稳定 CDN，默认 `~/.composekn/m2/<ver>`）
  * - 可选 GitHub Packages（需显式打开）
- * - 官方 Compose/Skiko/resources → ComposeKN 坐标；linuxX64/mingwX64 顶到平台 artifact
+ * - 官方 Compose/Skiko/resources → `com.tetraploid` / `com.tetraploid.compose`；linuxX64/mingwX64 顶到平台 artifact
  *
  * 用户通常只需：
  * ```
  * // gradle.properties
- * composekn.version=0.5.67
+ * composekn.version=0.5.68
  *
  * // settings.gradle.kts
- * plugins { id("com.composekn") version "0.5.67" }
+ * plugins { id("com.tetraploid") version "0.5.68" }
  * ```
  * （`pluginManagement` 需能解析到插件 JAR：缓存目录、本机 publish 或 Packages。）
  */
@@ -168,16 +168,16 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
 
     private fun skikoCoordinate(platform: String?, ver: String): String =
         when (platform) {
-            "linuxx64" -> "com.composekn:skiko-linuxx64:$ver"
-            "mingwx64" -> "com.composekn:skiko-mingwx64:$ver"
-            else -> "com.composekn:skiko:$ver"
+            "linuxx64" -> "com.tetraploid:skiko-linuxx64:$ver"
+            "mingwx64" -> "com.tetraploid:skiko-mingwx64:$ver"
+            else -> "com.tetraploid:skiko:$ver"
         }
 
     private fun resourcesCoordinate(platform: String?, ver: String): String =
         when (platform) {
-            "linuxx64" -> "com.composekn:compose-kn-resources-linuxx64:$ver"
-            "mingwx64" -> "com.composekn:compose-kn-resources-mingwx64:$ver"
-            else -> "com.composekn:compose-kn-resources:$ver"
+            "linuxx64" -> "com.tetraploid:compose-kn-resources-linuxx64:$ver"
+            "mingwx64" -> "com.tetraploid:compose-kn-resources-mingwx64:$ver"
+            else -> "com.tetraploid:compose-kn-resources:$ver"
         }
 
     private fun applyUiSubstitutions(
@@ -187,9 +187,9 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
     ) {
         fun coord(artifact: String): String =
             if (platform != null) {
-                "com.composekn.compose:$artifact-$platform:$uiVer"
+                "com.tetraploid.compose:$artifact-$platform:$uiVer"
             } else {
-                "com.composekn.compose:$artifact:$uiVer"
+                "com.tetraploid.compose:$artifact:$uiVer"
             }
 
         val uiModules = listOf(
@@ -223,6 +223,6 @@ class ComposeKnSettingsPlugin : Plugin<Settings> {
     }
 
     companion object {
-        const val DEFAULT_VERSION = "0.5.67"
+        const val DEFAULT_VERSION = "0.5.68"
     }
 }

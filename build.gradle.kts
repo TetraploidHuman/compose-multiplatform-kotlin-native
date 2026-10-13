@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.jetbrains.compose) apply false
-    id("com.composekn.konan-link-workaround")
+    id("com.tetraploid.konan-link-workaround")
 }
 
 tasks.register("linkLinuxX64Stable") {

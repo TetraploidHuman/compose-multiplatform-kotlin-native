@@ -85,7 +85,7 @@ class ComposeKnResourcesPlugin : Plugin<Project> {
                 if (inRepo) {
                     implementation(project.project(":compose-kn-resources"))
                 } else {
-                    implementation("com.composekn:compose-kn-resources:$ver")
+                    implementation("com.tetraploid:compose-kn-resources:$ver")
                 }
             }
         }

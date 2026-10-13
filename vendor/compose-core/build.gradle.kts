@@ -13,11 +13,11 @@ plugins {
 
 /**
  * 发布到 ComposeKN 坐标（默认关；`-Pcomposekn.publish.composeUi=true` 打开）：
- *   group = com.composekn.compose
+ *   group = com.tetraploid.compose
  *   version = 1.12.1-ckn.<composekn.version>
  *   artifactId = 子工程名（ui / foundation / material3 / …）
  *
- * 消费者用 settings 插件 `com.composekn.settings` 把
+ * 消费者用 settings 插件 `com.tetraploid.settings` 把
  * `org.jetbrains.compose.*` 顶成这些坐标，无需 includeBuild。
  */
 val publishComposeUi =
@@ -53,10 +53,10 @@ if (usePublishedSkiko) {
                 when {
                     confName.contains("linuxX64", ignoreCase = true) ||
                         confName.contains("linuxx64", ignoreCase = true) ->
-                        "com.composekn:skiko-linuxx64:$skikoVer"
+                        "com.tetraploid:skiko-linuxx64:$skikoVer"
                     confName.contains("mingwX64", ignoreCase = true) ||
                         confName.contains("mingwx64", ignoreCase = true) ->
-                        "com.composekn:skiko-mingwx64:$skikoVer"
+                        "com.tetraploid:skiko-mingwx64:$skikoVer"
                     else -> null
                 }
             if (target != null) {
@@ -101,7 +101,7 @@ subprojects {
 
         if (publishComposeUi) {
             pluginManager.apply("maven-publish")
-            group = "com.composekn.compose"
+            group = "com.tetraploid.compose"
             version = composeUiVer.get()
             extensions.configure<PublishingExtension> {
                 repositories {
@@ -127,7 +127,7 @@ subprojects {
                 }
             }
             logger.lifecycle(
-                "ComposeKN: will publish ${project.path} as com.composekn.compose:${project.name}:$version",
+                "ComposeKN: will publish ${project.path} as com.tetraploid.compose:${project.name}:$version",
             )
         }
     }

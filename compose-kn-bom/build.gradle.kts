@@ -1,10 +1,10 @@
 plugins {
     `java-platform`
-    id("com.composekn.publish")
+    id("com.tetraploid.publish")
 }
 
-group = "com.composekn"
-version = providers.gradleProperty("composekn.version").getOrElse("0.5.67")
+group = "com.tetraploid"
+version = providers.gradleProperty("composekn.version").getOrElse("0.5.68")
 
 val uiBase = providers.gradleProperty("composekn.compose.ui").orElse("1.12.1").get()
 val uiVersion = providers.gradleProperty("composekn.compose.ui.version")
@@ -14,11 +14,11 @@ val uiVersion = providers.gradleProperty("composekn.compose.ui.version")
 dependencies {
     constraints {
         // 宿主 / 资源 / Skiko：与 composekn.version 同号
-        api("com.composekn:compose-kn-linux:$version")
-        api("com.composekn:compose-kn-windows:$version")
-        api("com.composekn:compose-kn-resources:$version")
-        api("com.composekn:skiko:$version")
-        api("com.composekn:composekn-catalog:$version")
+        api("com.tetraploid:compose-kn-linux:$version")
+        api("com.tetraploid:compose-kn-windows:$version")
+        api("com.tetraploid:compose-kn-resources:$version")
+        api("com.tetraploid:skiko:$version")
+        api("com.tetraploid:composekn-catalog:$version")
 
         // UI 栈：发布坐标为 1.12.1-ckn.<composekn.version>，消费方只锁 BOM / composekn.version
         listOf(
@@ -29,7 +29,7 @@ dependencies {
             "material-ripple", "material3",
             "lifecycle-viewmodel-compose",
         ).forEach { artifact ->
-            api("com.composekn.compose:$artifact:$uiVersion")
+            api("com.tetraploid.compose:$artifact:$uiVersion")
         }
     }
 }

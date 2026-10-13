@@ -19,7 +19,7 @@ import java.io.File
  *
  * Linux / Windows 生成源分目录，避免双 target 时互相污染编译。
  *
- * 用法：`id("com.composekn.host")`
+ * 用法：`id("com.tetraploid.host")`
  */
 class ComposeKnHostPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -49,8 +49,8 @@ class ComposeKnHostPlugin : Plugin<Project> {
             return
         }
 
-        if (hasLinux) project.pluginManager.apply("com.composekn.linux-native-linker")
-        if (hasMingw) project.pluginManager.apply("com.composekn.windows-native-linker")
+        if (hasLinux) project.pluginManager.apply("com.tetraploid.linux-native-linker")
+        if (hasMingw) project.pluginManager.apply("com.tetraploid.windows-native-linker")
 
         val linuxGen = project.layout.buildDirectory.dir("generated/composekn/host/linux")
         val windowsGen = project.layout.buildDirectory.dir("generated/composekn/host/windows")
@@ -111,7 +111,7 @@ class ComposeKnHostPlugin : Plugin<Project> {
                         |
                         |import $registerImport
                         |
-                        |/** 由 com.composekn.host 生成：先登记后端，再进入用户 entryPoint。 */
+                        |/** 由 com.tetraploid.host 生成：先登记后端，再进入用户 entryPoint。 */
                         |fun $funName(args: Array<String> = emptyArray()) {
                         |    $registerCall
                         |    $userFq(args)
@@ -141,7 +141,7 @@ class ComposeKnHostPlugin : Plugin<Project> {
                     ) {
                         implementation(project.project(projectPath))
                     } else {
-                        implementation("com.composekn:$mavenArtifact:${ext.composeknVersion.get()}")
+                        implementation("com.tetraploid:$mavenArtifact:${ext.composeknVersion.get()}")
                     }
                 }
             }
@@ -275,12 +275,12 @@ class ComposeKnHostPlugin : Plugin<Project> {
         }
 
     companion object {
-        const val DEFAULT_VERSION = "0.5.67"
+        const val DEFAULT_VERSION = "0.5.68"
     }
 }
 
 abstract class ComposeKnHostExtension {
-    /** true：本仓库内用 project()；false：走 Maven `com.composekn:compose-kn-*` */
+    /** true：本仓库内用 project()；false：走 Maven `com.tetraploid:compose-kn-*` */
     abstract val useProjectDependencies: Property<Boolean>
     abstract val composeknVersion: Property<String>
     /** true：把 executable entryPoint 包一层自动 register（推荐） */
