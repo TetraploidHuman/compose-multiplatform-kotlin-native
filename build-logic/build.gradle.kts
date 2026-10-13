@@ -23,40 +23,40 @@ gradlePlugin {
     plugins {
         create("konanLinkWorkaround") {
             id = "com.tetraploid.konan-link-workaround"
-            implementationClass = "com.composekn.gradle.KonanLinkWorkaroundPlugin"
+            implementationClass = "com.tetraploid.gradle.KonanLinkWorkaroundPlugin"
         }
         create("linuxNativeLinker") {
             id = "com.tetraploid.linux-native-linker"
-            implementationClass = "com.composekn.gradle.LinuxNativeLinkerPlugin"
+            implementationClass = "com.tetraploid.gradle.LinuxNativeLinkerPlugin"
         }
         create("windowsNativeLinker") {
             id = "com.tetraploid.windows-native-linker"
-            implementationClass = "com.composekn.gradle.WindowsNativeLinkerPlugin"
+            implementationClass = "com.tetraploid.gradle.WindowsNativeLinkerPlugin"
         }
         create("composeKnResources") {
             id = "com.tetraploid.resources"
-            implementationClass = "com.composekn.gradle.ComposeKnResourcesPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnResourcesPlugin"
         }
         create("composeKnHost") {
             id = "com.tetraploid.host"
-            implementationClass = "com.composekn.gradle.ComposeKnHostPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnHostPlugin"
         }
         create("composeKnApp") {
             id = "com.tetraploid.app"
-            implementationClass = "com.composekn.gradle.ComposeKnAppPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnAppPlugin"
         }
         create("composeKnPublish") {
             id = "com.tetraploid.publish"
-            implementationClass = "com.composekn.gradle.ComposeKnPublishPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnPublishPlugin"
         }
         create("composeKnSettings") {
             id = "com.tetraploid.settings"
-            implementationClass = "com.composekn.gradle.ComposeKnSettingsPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnSettingsPlugin"
         }
         // 统一入口：与 settings 同一实现（坐标替换 + Release 缓存）
         create("composeKn") {
             id = "com.tetraploid"
-            implementationClass = "com.composekn.gradle.ComposeKnSettingsPlugin"
+            implementationClass = "com.tetraploid.gradle.ComposeKnSettingsPlugin"
         }
     }
 }

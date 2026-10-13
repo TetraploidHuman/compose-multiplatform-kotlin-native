@@ -12,16 +12,16 @@ package org.jetbrains.compose.resources
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.composekn.resources.DrawableResource as ComposeKnDrawableResource
-import com.composekn.resources.Font as ComposeKnFont
-import com.composekn.resources.FontFromFile as ComposeKnFontFromFile
-import com.composekn.resources.FontResource as ComposeKnFontResource
-import com.composekn.resources.StringResource as ComposeKnStringResource
-import com.composekn.resources.drawableResource as composeKnDrawableResource
-import com.composekn.resources.fontFamilyOf as composeKnFontFamilyOf
-import com.composekn.resources.fontResource as composeKnFontResource
-import com.composekn.resources.loadDrawableBytes as composeKnLoadDrawableBytes
-import com.composekn.resources.stringResource as composeKnStringResourceFactory
+import com.tetraploid.resources.DrawableResource as ComposeKnDrawableResource
+import com.tetraploid.resources.Font as ComposeKnFont
+import com.tetraploid.resources.FontFromFile as ComposeKnFontFromFile
+import com.tetraploid.resources.FontResource as ComposeKnFontResource
+import com.tetraploid.resources.StringResource as ComposeKnStringResource
+import com.tetraploid.resources.drawableResource as composeKnDrawableResource
+import com.tetraploid.resources.fontFamilyOf as composeKnFontFamilyOf
+import com.tetraploid.resources.fontResource as composeKnFontResource
+import com.tetraploid.resources.loadDrawableBytes as composeKnLoadDrawableBytes
+import com.tetraploid.resources.stringResource as composeKnStringResourceFactory
 
 typealias FontResource = ComposeKnFontResource
 typealias StringResource = ComposeKnStringResource

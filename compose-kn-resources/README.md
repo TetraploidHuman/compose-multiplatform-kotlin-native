@@ -2,7 +2,7 @@
 
 Kotlin/Native（**linuxX64** / **mingwX64**）资源子集，消费心智对齐官方 `compose.resources`：
 
-- `import org.jetbrains.compose.resources.Font`（推荐，勿再写 Kotlin 包 `com.composekn.resources`）
+- `import org.jetbrains.compose.resources.Font`（推荐，勿再写 Kotlin 包 `com.tetraploid.resources`）
 - `Res.font.*` / `Font(Res.font.xxx)`
 - `Res.string.*` / `stringResource(...)`
 - `Res.drawable.*` / `loadDrawableBytes(...)`

@@ -89,29 +89,29 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
-import com.composekn.windows.MouseButton
-import com.composekn.windows.TaskbarProgressState
-import com.composekn.windows.TouchPhase
-import com.composekn.windows.WindowsApplicationHost
-import com.composekn.windows.WindowsComposeApplication
-import com.composekn.windows.WindowsComposeWindow
-import com.composekn.windows.WindowsEvent
-import com.composekn.windows.WindowsInputState
-import com.composekn.windows.WindowsNativeWindowHandle
-import com.composekn.windows.charToCodePoint
-import com.composekn.windows.createKeyEvent
-import com.composekn.windows.duplicateVkEntries
-import com.composekn.windows.internal.GET_WHEEL_DELTA_WPARAM
-import com.composekn.windows.internal.GET_X_LPARAM
-import com.composekn.windows.internal.Win32Modifier
-import com.composekn.windows.internal.winlog
-import com.composekn.windows.test.FrameSnapshot
-import com.composekn.windows.test.OffscreenDriver
-import com.composekn.windows.test.TestColors
-import com.composekn.windows.test.renderOffscreen
-import com.composekn.windows.test.snapshotSolidColor
-import com.composekn.windows.vkPairCount
-import com.composekn.windows.windowsVirtualKeyToComposeKey
+import com.tetraploid.windows.MouseButton
+import com.tetraploid.windows.TaskbarProgressState
+import com.tetraploid.windows.TouchPhase
+import com.tetraploid.windows.WindowsApplicationHost
+import com.tetraploid.windows.WindowsComposeApplication
+import com.tetraploid.windows.WindowsComposeWindow
+import com.tetraploid.windows.WindowsEvent
+import com.tetraploid.windows.WindowsInputState
+import com.tetraploid.windows.WindowsNativeWindowHandle
+import com.tetraploid.windows.charToCodePoint
+import com.tetraploid.windows.createKeyEvent
+import com.tetraploid.windows.duplicateVkEntries
+import com.tetraploid.windows.internal.GET_WHEEL_DELTA_WPARAM
+import com.tetraploid.windows.internal.GET_X_LPARAM
+import com.tetraploid.windows.internal.Win32Modifier
+import com.tetraploid.windows.internal.winlog
+import com.tetraploid.windows.test.FrameSnapshot
+import com.tetraploid.windows.test.OffscreenDriver
+import com.tetraploid.windows.test.TestColors
+import com.tetraploid.windows.test.renderOffscreen
+import com.tetraploid.windows.test.snapshotSolidColor
+import com.tetraploid.windows.vkPairCount
+import com.tetraploid.windows.windowsVirtualKeyToComposeKey
 import org.jetbrains.skiko.initWindowsMainThread
 import kotlin.concurrent.Volatile
 import kotlin.math.abs
@@ -3180,7 +3180,7 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
  */
 private fun runConcurrentWindowTests(report: SelfTestReport) {
     report.section("window-multi 并发 A+B")
-    com.composekn.windows.registerComposeKnWindowsBackend()
+    com.tetraploid.windows.registerComposeKnWindowsBackend()
     initWindowsMainThread()
 
     val appA = WindowsComposeApplication(
@@ -3265,7 +3265,7 @@ private fun runConcurrentWindowTests(report: SelfTestReport) {
  */
 private fun runApplicationApiSelfTest(report: SelfTestReport) {
     report.section("application{} 声明式入口保活 + 双窗 GL + WindowState 同步 + DialogWindow")
-    com.composekn.windows.registerComposeKnWindowsBackend()
+    com.tetraploid.windows.registerComposeKnWindowsBackend()
 
     var frames = 0
     var framesSecond = 0
@@ -3880,7 +3880,7 @@ private fun postRealKey(
  */
 private fun twoFingerGesture(
     app: WindowsComposeApplication,
-    driver: com.composekn.windows.test.OffscreenDriver,
+    driver: com.tetraploid.windows.test.OffscreenDriver,
     density: Float,
     start1: Pair<Float, Float>,
     end1: Pair<Float, Float>,

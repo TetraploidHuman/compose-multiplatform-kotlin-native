@@ -41,10 +41,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.TimeSource
-import com.composekn.windows.WindowsComposeWindow
-import com.composekn.windows.WindowsNativeWindowHandle
-import com.composekn.windows.internal.winlog
-import com.composekn.windows.registerComposeKnWindowsBackend
+import com.tetraploid.windows.WindowsComposeWindow
+import com.tetraploid.windows.WindowsNativeWindowHandle
+import com.tetraploid.windows.internal.winlog
+import com.tetraploid.windows.registerComposeKnWindowsBackend
 import org.jetbrains.skiko.win32ProcessorCount
 import kotlin.system.exitProcess
 import platform.posix.getenv

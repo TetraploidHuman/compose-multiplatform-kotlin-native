@@ -85,7 +85,7 @@ private const val SKIA_ONLY_TEST = false
 fun main(args: Array<String>) {
     // initLinuxMainThread + registerBackend：由 com.tetraploid.host entry wrapper /
     // registerComposeKnLinuxBackend() 负责（幂等）。自检路径无 wrapper 时补登记：
-    com.composekn.linux.registerComposeKnLinuxBackend()
+    com.tetraploid.linux.registerComposeKnLinuxBackend()
     if (SKIA_ONLY_TEST) {
         return
     }
