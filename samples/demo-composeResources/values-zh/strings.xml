@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_title">ComposeKN 演示</string>
+    <string name="demo_greeting">来自 compose.resources 的中文文案（values-zh）</string>
+    <string name="demo_locale_hint">覆盖方式：COMPOSEKN_LOCALE=zh 或 resourceLocaleOverride</string>
+    <plurals name="items">
+        <item quantity="one">%d 项</item>
+        <item quantity="other">%d 项</item>
+    </plurals>
+</resources>

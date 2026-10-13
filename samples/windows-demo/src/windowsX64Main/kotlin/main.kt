@@ -1,20 +1,28 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(
+    kotlinx.cinterop.ExperimentalForeignApi::class,
+    androidx.compose.ui.ExperimentalComposeUiApi::class,
+)
 
 package main
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
-import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowDecoration
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.isTraySupported
 import androidx.compose.ui.window.rememberDialogState
@@ -22,7 +30,6 @@ import androidx.compose.ui.window.rememberNotification
 import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -34,8 +41,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import main.resources.Res
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -82,10 +97,19 @@ fun main(args: Array<String>) {
     application {
         val probe = remember { GalleryProbe() }
         var openSecond by remember { mutableStateOf(false) }
+        var secondVisible by remember { mutableStateOf(true) }
         var openDialog by remember { mutableStateOf(false) }
         var openCsdMove by remember { mutableStateOf(false) }
+        var openTransparent by remember { mutableStateOf(false) }
+        var openFocusableOff by remember { mutableStateOf(false) }
+        var showStatusBar by remember { mutableStateOf(true) }
+        var themeChoice by remember { mutableStateOf("A") }
+        var trayQuiet by remember { mutableStateOf(false) }
+        var trayMode by remember { mutableStateOf("info") }
         val mainState = rememberWindowState(size = DpSize(1100.dp, 760.dp))
         val trayState = rememberTrayState()
+        // 托盘/窗图标用位图（与 wayland-demo 一致）；向量 XML 在画廊 Resources 区展示。
+        val windowIcon = painterResource(Res.drawable.demo_logo)
         val trayNotifyInfo = rememberNotification(
             title = "ComposeKN",
             message = "托盘通知（Info）——右键图标也可发",
@@ -102,7 +126,7 @@ fun main(args: Array<String>) {
         // 系统托盘：Shell_NotifyIcon；双击 = onAction，右键 = 菜单。
         if (isTraySupported) {
             Tray(
-                icon = ColorPainter(Color(0xFF1B6AC9)),
+                icon = windowIcon,
                 state = trayState,
                 tooltip = "ComposeKN Windows Demo",
                 onAction = {
@@ -112,11 +136,25 @@ fun main(args: Array<String>) {
             ) {
                 Item("通知 · Info") {
                     probe.trayAction = "notify-info"
-                    trayState.sendNotification(trayNotifyInfo)
+                    if (!trayQuiet) trayState.sendNotification(trayNotifyInfo)
                 }
                 Item("通知 · Warning") {
                     probe.trayAction = "notify-warn"
-                    trayState.sendNotification(trayNotifyWarn)
+                    if (!trayQuiet) trayState.sendNotification(trayNotifyWarn)
+                }
+                CheckboxItem("安静（不发通知）", checked = trayQuiet) {
+                    trayQuiet = it
+                    probe.trayAction = "quiet=$it"
+                }
+                Separator()
+                RadioButtonItem("模式 · Info", selected = trayMode == "info") {
+                    trayMode = "info"
+                    probe.trayAction = "mode-info"
+                }
+                RadioButtonItem("模式 · Quiet", selected = trayMode == "quiet") {
+                    trayMode = "quiet"
+                    trayQuiet = true
+                    probe.trayAction = "mode-quiet"
                 }
                 Separator()
                 Item("退出") {
@@ -130,10 +168,31 @@ fun main(args: Array<String>) {
             onCloseRequest = ::exitApplication,
             state = mainState,
             title = "ComposeKN Windows Demo",
+            icon = windowIcon,
+            onPreviewKeyEvent = { event ->
+                if (event.type == KeyEventType.KeyDown &&
+                    event.isCtrlPressed &&
+                    event.key == Key.S
+                ) {
+                    probe.menuAction = "View/Save (preview)"
+                    winlog("preview: Ctrl+S")
+                    true
+                } else {
+                    false
+                }
+            },
         ) {
             // 原生 Win32 HMENU（标题栏下方）；点选写到 probe.menuAction。
             MenuBar {
                 Menu("文件(&F)") {
+                    Item(
+                        "保存",
+                        shortcut = KeyShortcut(Key.S, ctrl = true),
+                    ) { probe.menuAction = "File/Save" }
+                    Item(
+                        "Win+S 探针",
+                        shortcut = KeyShortcut(Key.S, meta = true),
+                    ) { probe.menuAction = "File/Win+S" }
                     Item("新建") { probe.menuAction = "File/New" }
                     Item("打开…") { probe.menuAction = "File/Open" }
                     Separator()
@@ -150,6 +209,25 @@ fun main(args: Array<String>) {
                     Item("剪切") { probe.menuAction = "Edit/Cut" }
                     Item("复制") { probe.menuAction = "Edit/Copy" }
                     Item("粘贴") { probe.menuAction = "Edit/Paste" }
+                }
+                Menu("视图(&V)") {
+                    CheckboxItem(
+                        "状态栏",
+                        checked = showStatusBar,
+                        mnemonic = 'S',
+                    ) {
+                        showStatusBar = it
+                        probe.menuAction = "View/Status=$it"
+                    }
+                    Separator()
+                    RadioButtonItem("主题 A", selected = themeChoice == "A", mnemonic = 'A') {
+                        themeChoice = "A"
+                        probe.menuAction = "View/Theme A"
+                    }
+                    RadioButtonItem("主题 B", selected = themeChoice == "B", mnemonic = 'B') {
+                        themeChoice = "B"
+                        probe.menuAction = "View/Theme B"
+                    }
                 }
             }
 
@@ -249,9 +327,21 @@ fun main(args: Array<String>) {
                     probe = probe,
                     window = win,
                     animate = animate,
-                    onOpenSecondWindow = { openSecond = true },
+                    showStatusBar = showStatusBar,
+                    themeChoice = themeChoice,
+                    onOpenSecondWindow = {
+                        openSecond = true
+                        secondVisible = true
+                    },
+                    onShowSecondWindow = if (openSecond && !secondVisible) {
+                        { secondVisible = true }
+                    } else {
+                        null
+                    },
                     onOpenDialogWindow = { openDialog = true },
                     onOpenCsdMoveWindow = { openCsdMove = true },
+                    onOpenTransparentWindow = { openTransparent = true },
+                    onOpenFocusableOffWindow = { openFocusableOff = true },
                     trayState = trayState,
                     traySupported = isTraySupported,
                 )
@@ -263,8 +353,14 @@ fun main(args: Array<String>) {
                 onCloseRequest = { openSecond = false },
                 state = rememberWindowState(size = DpSize(480.dp, 360.dp)),
                 title = "ComposeKN · 第二扇窗",
+                visible = secondVisible,
+                icon = windowIcon,
             ) {
-                SecondWindowContent(onClose = { openSecond = false })
+                SecondWindowContent(
+                    onClose = { openSecond = false },
+                    visible = secondVisible,
+                    onToggleVisible = { secondVisible = !secondVisible },
+                )
             }
         }
 
@@ -278,14 +374,67 @@ fun main(args: Array<String>) {
             }
         }
 
+        if (openTransparent) {
+            Window(
+                onCloseRequest = { openTransparent = false },
+                state = rememberWindowState(size = DpSize(320.dp, 200.dp)),
+                title = "Transparent",
+                undecorated = true,
+                transparent = true,
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xCC1B6AC9)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("transparent=true", color = Color.White)
+                        Text(
+                            "WS_EX_LAYERED + UpdateLayeredWindow",
+                            color = Color.White.copy(alpha = 0.85f),
+                        )
+                        Button(onClick = { openTransparent = false }) { Text("关闭") }
+                    }
+                }
+            }
+        }
+
+        if (openFocusableOff) {
+            Window(
+                onCloseRequest = { openFocusableOff = false },
+                state = rememberWindowState(size = DpSize(360.dp, 200.dp)),
+                title = "focusable=false",
+                focusable = false,
+            ) {
+                Surface(Modifier.fillMaxSize()) {
+                    Column(
+                        Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("focusable=false", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Win：WS_EX_NOACTIVATE + MA_NOACTIVATE；键盘不进此窗。",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Button(onClick = { openFocusableOff = false }) { Text("关闭") }
+                    }
+                }
+            }
+        }
+
         if (openCsdMove) {
-            // undecorated=true 时宿主会套 WindowsWindowChrome（自绘标题栏 + 最小化/最大化/关闭）。
-            // 内容里再用 WindowDraggableArea 演示「应用自绘拖区」API（不只靠 chrome 标题文字）。
+            // WindowDecoration.Undecorated(resizerThickness) + WindowDraggableArea。
             Window(
                 onCloseRequest = { openCsdMove = false },
                 state = rememberWindowState(size = DpSize(420.dp, 280.dp)),
                 title = "ComposeKN · WindowDraggableArea",
-                undecorated = true,
+                decoration = WindowDecoration.Undecorated(resizerThickness = 20.dp),
             ) {
                 Surface(Modifier.fillMaxSize()) {
                     Column(
@@ -295,7 +444,7 @@ fun main(args: Array<String>) {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            "上方 CSD 标题栏可拖；也可点最小化 / 最大化 / 关闭。",
+                            "CSD + resizerThickness=20.dp；上方标题栏可拖；边框命中区加宽。",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         WindowDraggableArea(

@@ -9,13 +9,9 @@
  */
 package org.jetbrains.compose.resources
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Density
 import cn.tetraploid.compose.resources.DrawableResource as ComposeKnDrawableResource
 import cn.tetraploid.compose.resources.Font as ComposeKnFont
 import cn.tetraploid.compose.resources.FontFromFile as ComposeKnFontFromFile
@@ -24,16 +20,13 @@ import cn.tetraploid.compose.resources.PluralStringResource as ComposeKnPluralSt
 import cn.tetraploid.compose.resources.ResourceLocale as ComposeKnResourceLocale
 import cn.tetraploid.compose.resources.StringResource as ComposeKnStringResource
 import cn.tetraploid.compose.resources.currentResourceLocale as composeKnCurrentResourceLocale
-import cn.tetraploid.compose.resources.decodeToImageVector as composeKnDecodeToImageVector
 import cn.tetraploid.compose.resources.drawableResource as composeKnDrawableResource
 import cn.tetraploid.compose.resources.fontFamilyOf as composeKnFontFamilyOf
 import cn.tetraploid.compose.resources.fontResource as composeKnFontResource
 import cn.tetraploid.compose.resources.loadDrawableBytes as composeKnLoadDrawableBytes
-import cn.tetraploid.compose.resources.painterResource as composeKnPainterResource
 import cn.tetraploid.compose.resources.pluralStringResource as composeKnPluralStringResourceFactory
 import cn.tetraploid.compose.resources.resourceLocaleOverride as composeKnResourceLocaleOverride
 import cn.tetraploid.compose.resources.stringResource as composeKnStringResourceFactory
-import cn.tetraploid.compose.resources.vectorResource as composeKnVectorResource
 
 typealias FontResource = ComposeKnFontResource
 typealias StringResource = ComposeKnStringResource
@@ -87,19 +80,7 @@ fun drawableResource(
 fun loadDrawableBytes(resource: DrawableResource): ByteArray? =
     composeKnLoadDrawableBytes(resource)
 
-/** 对齐官方 `painterResource(DrawableResource)`（位图 + Android VectorDrawable `.xml`）。 */
-@Composable
-fun painterResource(resource: DrawableResource): Painter =
-    composeKnPainterResource(resource)
-
-/** 对齐官方 `vectorResource(DrawableResource)`。 */
-@Composable
-fun vectorResource(resource: DrawableResource): ImageVector =
-    composeKnVectorResource(resource)
-
-/** 把 VectorDrawable XML 字节解析为 [ImageVector]。 */
-fun ByteArray.decodeToImageVector(density: Density): ImageVector =
-    composeKnDecodeToImageVector(density)
+// painterResource / vectorResource / ByteArray.decodeToImageVector → PainterAndVectorCompat.kt
 
 fun Font(
     resource: FontResource,

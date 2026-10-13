@@ -93,6 +93,13 @@ import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.rememberNotification
 import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.ResourceLocale
+import org.jetbrains.compose.resources.currentResourceLocale
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.resourceLocaleOverride
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import cn.tetraploid.windows.TaskbarProgressState
 import cn.tetraploid.windows.WindowsComposeWindow
 import main.resources.Res
@@ -232,12 +239,18 @@ fun ComponentGallery(
      * 所以 `--no-animate` 时把它换成确定态（`progress = { 0.5f }`），做到真正静止。
      */
     animate: Boolean = true,
+    showStatusBar: Boolean = true,
+    themeChoice: String = "A",
     /** 打开第二扇窗（application { if (open2) Window(...) }）。 */
     onOpenSecondWindow: (() -> Unit)? = null,
+    /** 第二扇窗被 visible=false 软隐藏后，从主窗恢复显示。 */
+    onShowSecondWindow: (() -> Unit)? = null,
     /** 打开 DialogWindow（软模态对话框）。 */
     onOpenDialogWindow: (() -> Unit)? = null,
     /** 打开无边框窗，验证 WindowDraggableArea → beginMove。 */
     onOpenCsdMoveWindow: (() -> Unit)? = null,
+    onOpenTransparentWindow: (() -> Unit)? = null,
+    onOpenFocusableOffWindow: (() -> Unit)? = null,
     /** application 层 Tray 的状态（画廊按钮发通知）。 */
     trayState: TrayState? = null,
     traySupported: Boolean = false,
@@ -294,9 +307,14 @@ fun ComponentGallery(
                     animate,
                     innerState,
                     window,
+                    showStatusBar,
+                    themeChoice,
                     onOpenSecondWindow,
+                    onShowSecondWindow,
                     onOpenDialogWindow,
                     onOpenCsdMoveWindow,
+                    onOpenTransparentWindow,
+                    onOpenFocusableOffWindow,
                     trayState,
                     traySupported,
                 )
@@ -341,9 +359,14 @@ private fun LazyListScope.gallerySections(
     animate: Boolean,
     innerState: LazyListState,
     window: WindowsComposeWindow,
+    showStatusBar: Boolean,
+    themeChoice: String,
     onOpenSecondWindow: (() -> Unit)?,
+    onShowSecondWindow: (() -> Unit)?,
     onOpenDialogWindow: (() -> Unit)?,
     onOpenCsdMoveWindow: (() -> Unit)?,
+    onOpenTransparentWindow: (() -> Unit)?,
+    onOpenFocusableOffWindow: (() -> Unit)?,
     trayState: TrayState?,
     traySupported: Boolean,
 ) {
@@ -381,47 +404,60 @@ private fun LazyListScope.gallerySections(
         }
     }
 
-    if (onOpenSecondWindow != null || onOpenDialogWindow != null || onOpenCsdMoveWindow != null) {
+    if (onOpenSecondWindow != null || onOpenDialogWindow != null || onOpenCsdMoveWindow != null ||
+        onOpenTransparentWindow != null || onOpenFocusableOffWindow != null
+    ) {
         section("多窗口 / Multi-window") {
-            if (onOpenSecondWindow != null) {
-                Button(onClick = onOpenSecondWindow) {
-                    Text("打开第二扇窗")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (onOpenSecondWindow != null) {
+                    Button(onClick = onOpenSecondWindow) { Text("打开第二扇窗") }
                 }
-            }
-            if (onOpenDialogWindow != null) {
-                Button(onClick = onOpenDialogWindow) {
-                    Text("打开 DialogWindow")
+                if (onShowSecondWindow != null) {
+                    Button(onClick = onShowSecondWindow) { Text("显示第二扇窗") }
                 }
-            }
-            if (onOpenCsdMoveWindow != null) {
-                Button(onClick = onOpenCsdMoveWindow) {
-                    Text("打开无边框窗（WindowDraggableArea）")
+                if (onOpenDialogWindow != null) {
+                    Button(onClick = onOpenDialogWindow) { Text("打开 DialogWindow") }
+                }
+                if (onOpenCsdMoveWindow != null) {
+                    Button(onClick = onOpenCsdMoveWindow) {
+                        Text("CSD + resizerThickness=20dp")
+                    }
+                }
+                if (onOpenTransparentWindow != null) {
+                    Button(onClick = onOpenTransparentWindow) { Text("透明窗") }
+                }
+                if (onOpenFocusableOffWindow != null) {
+                    Button(onClick = onOpenFocusableOffWindow) { Text("focusable=false") }
                 }
             }
             Text(
-                "Desktop 对齐：application { if (open) Window/DialogWindow(...) }。" +
-                    "关副窗/对话框只拆那一扇；DialogWindow 打开时会软禁用其它窗输入；" +
-                    "关主窗 exitApplication 退整应用。" +
-                    "无边框窗用 WindowDraggableArea → beginMove（HTCAPTION）拖移。",
+                "Desktop 对齐：visible / transparent / focusable / WindowDecoration。" +
+                    "关副窗只拆那一扇；DialogWindow 软模态；关主窗 exitApplication。" +
+                    "CSD 窗用 WindowDraggableArea → beginMove。",
                 style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }
 
     section("菜单栏 / MenuBar") {
         Text(
-            "原生 Win32 HMENU 在**标题栏正下方**（不是本列表里的控件）。" +
-                "请点系统菜单：文件(&F) / 编辑(&E)；最近点选会写到下面。",
+            "原生 Win32 HMENU：文件(&F) / 编辑(&E) / 视图(&V)。" +
+                "含 CheckboxItem、RadioButtonItem、Ctrl+S / Win+S 快捷键；" +
+                "主窗 onPreviewKeyEvent 会抢 Ctrl+S。",
             style = MaterialTheme.typography.bodySmall,
         )
         Text(
-            "最近菜单动作：${probe.menuAction}",
+            "最近菜单动作：${probe.menuAction} · statusBar=$showStatusBar · theme=$themeChoice",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 6.dp),
         )
         Text(
             "「文件 → 退出」会 exitApplication；其它项只更新探针。" +
-                "无边框窗（undecorated）不会显示系统菜单栏。",
+                "无边框窗不会显示系统菜单栏。",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 4.dp),
         )
@@ -494,6 +530,10 @@ private fun LazyListScope.gallerySections(
 
     section("字体 / Custom Fonts") {
         CustomFontsDemoBox()
+    }
+
+    section("资源 / Resources") {
+        ResourcesDemoBox()
     }
 
     section("输入 / Input") {
@@ -1315,6 +1355,50 @@ private fun CustomFontsDemoBox() {
 }
 
 @Composable
+private fun ResourcesDemoBox() {
+    var count by remember { mutableStateOf(1) }
+    var forceZh by remember { mutableStateOf(false) }
+    LaunchedEffect(forceZh) {
+        resourceLocaleOverride = if (forceZh) ResourceLocale("zh", null) else null
+    }
+    val locale = currentResourceLocale()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(Res.string.demo_greeting), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            "${stringResource(Res.string.demo_locale_hint)} · now=$locale",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.demo_logo),
+                contentDescription = "bitmap",
+                modifier = Modifier.size(48.dp),
+            )
+            Image(
+                imageVector = vectorResource(Res.drawable.ic_composekn),
+                contentDescription = "vector",
+                modifier = Modifier.size(48.dp),
+            )
+            Text("bitmap + vector XML", style = MaterialTheme.typography.bodySmall)
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedButton(onClick = { if (count > 0) count-- }) { Text("-") }
+            Text(pluralStringResource(Res.plurals.items, count))
+            OutlinedButton(onClick = { count++ }) { Text("+") }
+            OutlinedButton(onClick = { forceZh = !forceZh }) {
+                Text(if (forceZh) "locale: zh" else "locale: default")
+            }
+        }
+    }
+}
+
+@Composable
 private fun HoverBox(probe: GalleryProbe) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -1389,7 +1473,11 @@ private fun LazyListScope.section(title: String, content: @Composable () -> Unit
  * 第二扇窗内容（验证多窗口共享泵：关主窗走 exitApplication，关本窗只清 open2）。
  */
 @Composable
-fun SecondWindowContent(onClose: () -> Unit) {
+fun SecondWindowContent(
+    onClose: () -> Unit,
+    visible: Boolean = true,
+    onToggleVisible: (() -> Unit)? = null,
+) {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -1398,16 +1486,20 @@ fun SecondWindowContent(onClose: () -> Unit) {
             ) {
                 Text("第二扇窗", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "此窗与主窗共享同一条 PeekMessage 循环（WindowsApplicationHost）。" +
-                        "关闭本窗不应拆掉主窗；关主窗才 exitApplication。",
+                    "visible=$visible — 软隐藏不销毁 HWND；主窗可再点「显示第二扇窗」。",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    "v0.5.39：Painter→HICON + Linux SNI/FileDialog/Fullscreen",
+                    "与主窗共享 PeekMessage 循环；关本窗不拆主窗；关主窗才 exitApplication。",
                     style = MaterialTheme.typography.bodySmall,
                 )
-                Button(onClick = onClose) {
-                    Text("关闭本窗")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onToggleVisible != null) {
+                        Button(onClick = onToggleVisible) {
+                            Text(if (visible) "隐藏 (visible=false)" else "显示")
+                        }
+                    }
+                    Button(onClick = onClose) { Text("关闭本窗") }
                 }
             }
         }

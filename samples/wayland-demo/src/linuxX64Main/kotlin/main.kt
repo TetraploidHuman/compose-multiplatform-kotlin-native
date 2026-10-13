@@ -1,7 +1,11 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(
+    kotlinx.cinterop.ExperimentalForeignApi::class,
+    androidx.compose.ui.ExperimentalComposeUiApi::class,
+)
 
 package main
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.draganddrop.dragAndDropSource
@@ -47,6 +51,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -59,9 +69,11 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.FileDialog
 import androidx.compose.ui.window.FileDialogFilter
 import androidx.compose.ui.window.FileDialogMode
+import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowDecoration
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.isTraySupported
@@ -70,6 +82,13 @@ import androidx.compose.ui.window.rememberNotification
 import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
 import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.ResourceLocale
+import org.jetbrains.compose.resources.currentResourceLocale
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.resourceLocaleOverride
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import main.resources.Res
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
@@ -105,19 +124,40 @@ fun main(args: Array<String>) {
             Notification.Type.Info,
         )
         var openSecond by remember { mutableStateOf(false) }
+        var secondVisible by remember { mutableStateOf(true) }
         var openDialog by remember { mutableStateOf(false) }
         var openFileDialog by remember { mutableStateOf(false) }
+        var openTransparent by remember { mutableStateOf(false) }
+        var openFocusableOff by remember { mutableStateOf(false) }
+        var openCsd by remember { mutableStateOf(false) }
         var fileResult by remember { mutableStateOf("(none)") }
+        var menuAction by remember { mutableStateOf("(none)") }
+        var previewKey by remember { mutableStateOf("(none)") }
+        var showStatusBar by remember { mutableStateOf(true) }
+        var themeChoice by remember { mutableStateOf("A") }
+        var trayQuiet by remember { mutableStateOf(false) }
+        var trayMode by remember { mutableStateOf("info") }
         val mainState = rememberWindowState(size = DpSize(960.dp, 720.dp))
+        // 托盘/窗图标用位图：VectorPainter 离屏光栅在部分路径会崩；向量留给 UI 区展示。
+        val windowIcon = painterResource(Res.drawable.demo_logo)
 
         if (isTraySupported) {
             Tray(
-                icon = ColorPainter(Color(0xFF1B6AC9)),
+                icon = windowIcon,
                 state = trayState,
                 tooltip = "ComposeKN Wayland Demo",
                 onAction = { println("composekn: tray onAction") },
             ) {
-                Item("Notify Info") { trayState.sendNotification(notifyInfo) }
+                Item("Notify Info") {
+                    if (!trayQuiet) trayState.sendNotification(notifyInfo)
+                }
+                CheckboxItem("Quiet (no notify)", checked = trayQuiet) { trayQuiet = it }
+                Separator()
+                RadioButtonItem("Mode · Info", selected = trayMode == "info") { trayMode = "info" }
+                RadioButtonItem("Mode · Quiet", selected = trayMode == "quiet") {
+                    trayMode = "quiet"
+                    trayQuiet = true
+                }
                 Separator()
                 Item("Exit") { exitApplication() }
             }
@@ -127,7 +167,49 @@ fun main(args: Array<String>) {
             onCloseRequest = ::exitApplication,
             state = mainState,
             title = "ComposeKN Wayland Demo",
+            icon = windowIcon,
+            onPreviewKeyEvent = { event ->
+                if (event.type == KeyEventType.KeyDown &&
+                    event.isCtrlPressed &&
+                    event.key == Key.S
+                ) {
+                    previewKey = "Ctrl+S (preview)"
+                    menuAction = "View/Save (preview)"
+                    println("composekn: onPreviewKeyEvent Ctrl+S")
+                    true
+                } else {
+                    false
+                }
+            },
         ) {
+            MenuBar {
+                Menu("View", mnemonic = 'V') {
+                    CheckboxItem(
+                        "Show status",
+                        checked = showStatusBar,
+                        mnemonic = 'S',
+                    ) { showStatusBar = it }
+                    Separator()
+                    RadioButtonItem("Theme A", selected = themeChoice == "A", mnemonic = 'A') {
+                        themeChoice = "A"
+                        menuAction = "View/Theme A"
+                    }
+                    RadioButtonItem("Theme B", selected = themeChoice == "B", mnemonic = 'B') {
+                        themeChoice = "B"
+                        menuAction = "View/Theme B"
+                    }
+                    Separator()
+                    Item(
+                        "Save",
+                        mnemonic = 'v',
+                        shortcut = KeyShortcut(Key.S, ctrl = true),
+                    ) {
+                        menuAction = "View/Save"
+                        println("composekn: menu Save")
+                    }
+                }
+            }
+
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column(
@@ -137,19 +219,38 @@ fun main(args: Array<String>) {
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(
-                            "ComposeKN — Compose on Kotlin/Native + Wayland",
+                            stringResource(Res.string.demo_title),
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
                             "tray=${ComposeKNTray.available()} fileDialog=${ComposeKNFileDialog.available()} " +
-                                "placement=${mainState.placement}",
+                                "placement=${mainState.placement} locale=${currentResourceLocale()} " +
+                                "trayMode=$trayMode",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray,
                         )
+                        if (showStatusBar) {
+                            Text(
+                                "menu=$menuAction · preview=$previewKey · theme=$themeChoice",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF1565C0),
+                            )
+                        }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { openSecond = true }) { Text("第二扇窗") }
+                            Button(onClick = {
+                                openSecond = true
+                                secondVisible = true
+                            }) { Text("第二扇窗") }
+                            if (openSecond && !secondVisible) {
+                                Button(onClick = { secondVisible = true }) {
+                                    Text("显示第二扇窗")
+                                }
+                            }
                             Button(onClick = { openDialog = true }) { Text("DialogWindow") }
+                            Button(onClick = { openTransparent = true }) { Text("透明窗") }
+                            Button(onClick = { openFocusableOff = true }) { Text("focusable=false") }
+                            Button(onClick = { openCsd = true }) { Text("CSD 厚边") }
                             Button(onClick = {
                                 mainState.placement =
                                     if (mainState.placement == WindowPlacement.Fullscreen) {
@@ -175,7 +276,7 @@ fun main(args: Array<String>) {
                             Button(onClick = { openFileDialog = true }) { Text("打开文件…") }
                             if (isTraySupported) {
                                 Button(onClick = {
-                                    trayState.sendNotification(notifyInfo)
+                                    if (!trayQuiet) trayState.sendNotification(notifyInfo)
                                 }) { Text("托盘通知") }
                             }
                         }
@@ -219,6 +320,8 @@ fun main(args: Array<String>) {
                 onCloseRequest = { openSecond = false },
                 state = rememberWindowState(size = DpSize(420.dp, 280.dp)),
                 title = "ComposeKN · 第二扇窗",
+                visible = secondVisible,
+                icon = windowIcon,
             ) {
                 MaterialTheme {
                     Surface(Modifier.fillMaxSize()) {
@@ -228,11 +331,96 @@ fun main(args: Array<String>) {
                         ) {
                             Text("第二扇窗", style = MaterialTheme.typography.titleLarge)
                             Text(
-                                "PlatformDefault → xdg_toplevel_set_parent（相对主窗 transient；" +
-                                    "屏幕坐标仍由 compositor 决定）。",
+                                "visible=$secondVisible — 可软隐藏（跳过输入/绘制），不销毁 surface。",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
-                            Button(onClick = { openSecond = false }) { Text("关闭") }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { secondVisible = !secondVisible }) {
+                                    Text(if (secondVisible) "隐藏 (visible=false)" else "显示")
+                                }
+                                Button(onClick = { openSecond = false }) { Text("关闭") }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (openTransparent) {
+            Window(
+                onCloseRequest = { openTransparent = false },
+                state = rememberWindowState(size = DpSize(320.dp, 200.dp)),
+                title = "Transparent",
+                undecorated = true,
+                transparent = true,
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xCC1B6AC9)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text("transparent=true", color = Color.White)
+                        Text("空 opaque region + clear", color = Color.White.copy(alpha = 0.85f))
+                        Button(onClick = { openTransparent = false }) { Text("关闭") }
+                    }
+                }
+            }
+        }
+
+        if (openFocusableOff) {
+            Window(
+                onCloseRequest = { openFocusableOff = false },
+                state = rememberWindowState(size = DpSize(360.dp, 200.dp)),
+                title = "focusable=false",
+                focusable = false,
+            ) {
+                MaterialTheme {
+                    Surface(Modifier.fillMaxSize()) {
+                        Column(
+                            Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text("focusable=false", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Linux：丢弃 Key/IME（一次日志）。点按钮仍可关窗。",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Button(onClick = { openFocusableOff = false }) { Text("关闭") }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (openCsd) {
+            Window(
+                onCloseRequest = { openCsd = false },
+                state = rememberWindowState(size = DpSize(400.dp, 240.dp)),
+                title = "CSD resizerThickness",
+                decoration = WindowDecoration.Undecorated(resizerThickness = 20.dp),
+            ) {
+                MaterialTheme {
+                    Surface(Modifier.fillMaxSize()) {
+                        Column(
+                            Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                "WindowDecoration.Undecorated(20.dp)",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                "边缘缩放命中区加宽（Linux CSD 记账/接线）。拖边框试缩放。",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Button(onClick = { openCsd = false }) { Text("关闭") }
                         }
                     }
                 }
@@ -496,6 +684,57 @@ private fun ShowcaseSections() {
         }
         Text("Noto Sans — ComposeKN Res.font", fontFamily = sans, color = Color.White)
         Text("JetBrains Mono 0123", fontFamily = mono, color = Color(0xFFB0BEC5))
+    }
+    Section("10 · Resources (drawable / string / plurals / locale)") {
+        ResourcesDemoBox()
+    }
+}
+
+@Composable
+private fun ResourcesDemoBox() {
+    var count by remember { mutableIntStateOf(1) }
+    var forceZh by remember { mutableStateOf(false) }
+    LaunchedEffect(forceZh) {
+        resourceLocaleOverride = if (forceZh) ResourceLocale("zh", null) else null
+    }
+    val locale = currentResourceLocale()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(Res.string.demo_greeting),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            "${stringResource(Res.string.demo_locale_hint)} · now=$locale",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.demo_logo),
+                contentDescription = "bitmap",
+                modifier = Modifier.size(48.dp),
+            )
+            Image(
+                imageVector = vectorResource(Res.drawable.ic_composekn),
+                contentDescription = "vector",
+                modifier = Modifier.size(48.dp),
+            )
+            Text("bitmap + vector XML", style = MaterialTheme.typography.bodySmall)
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = { if (count > 0) count-- }) { Text("-") }
+            Text(pluralStringResource(Res.plurals.items, count))
+            Button(onClick = { count++ }) { Text("+") }
+            Button(onClick = { forceZh = !forceZh }) {
+                Text(if (forceZh) "locale: zh" else "locale: default")
+            }
+        }
     }
 }
 

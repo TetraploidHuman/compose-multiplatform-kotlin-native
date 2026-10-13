@@ -6,9 +6,11 @@ plugins {
 }
 
 val lumicodeFonts = file("../../../LumiCodeNext/composeApp/src/commonMain/composeResources/font")
+val sharedComposeResources = rootProject.layout.projectDirectory.dir("samples/demo-composeResources")
 
 composeKnResources {
     packageOfResClass("main.resources")
+    resourcesDir.set(sharedComposeResources)
     extraFontDirs.add(lumicodeFonts.absolutePath)
 }
 
