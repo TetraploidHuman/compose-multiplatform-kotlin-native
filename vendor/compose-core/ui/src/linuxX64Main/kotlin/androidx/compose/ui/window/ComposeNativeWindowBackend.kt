@@ -39,7 +39,9 @@ interface ComposeNativeWindowHandle {
     fun setEnabled(enabled: Boolean) {}
 
     /**
-     * 是否可获得焦点（对齐 Desktop `focusable`）。宿主无协议时诚实记账。
+     * 是否可获得焦点（对齐 Desktop `focusable`）。
+     * Win32：WS_EX_NOACTIVATE + WM_MOUSEACTIVATE=MA_NOACTIVATE；
+     * Wayland：无协议挡 compositor 焦点，宿主丢弃 Key/IME。
      */
     fun setFocusable(focusable: Boolean) {}
 

@@ -25,7 +25,7 @@
 
 ### P0 — commonMain 共享编译 / 迁移摩擦最大
 
-- [x] **`Window` / `DialogWindow` 缺参对齐**：`icon` / `transparent` / `enabled` / `focusable` / `onPreviewKeyEvent` / `onKeyEvent`（签名齐；icon/transparent/focusable 宿主多为记账，enabled 已接线）
+- [x] **`Window` / `DialogWindow` 缺参对齐**：`icon` / `transparent` / `enabled` / `focusable` / `onPreviewKeyEvent` / `onKeyEvent`（签名齐；Win 宿主已接线；Linux icon 记账、focusable 丢 Key/IME）
 - [x] **`singleWindowApplication`** + `SingleWindowApplicationScope`
 - [x] **`painterResource`**（位图）；locale / plurals 仍缺 → 见下
 
@@ -42,7 +42,7 @@
 - [x] Tray Checkbox/Radio 勾选态（文本前缀 `✓`；无原生 checkmark API）
 - [x] `Window(icon=…)` → Win `WM_SETICON`（16+32 BGRA）；Linux 无便携协议（记账 + 一次日志）
 - [x] `Window(transparent=true)` 真透明客户区（Win：WS_EX_LAYERED+UpdateLayeredWindow/软件路径；Linux：空 opaque region + clear TRANSPARENT）
-- [ ] `Window(focusable=…)` 原生焦点策略
+- [x] `Window(focusable=…)` 原生焦点策略（Win：WS_EX_NOACTIVATE+MA_NOACTIVATE；Linux：丢 Key/IME + 一次日志）
 - [ ] Linux MenuBar 可见实现（或文档明确仅 Win）
 - [ ] `compose.resources` locale / plurals / XML vector
 - [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）

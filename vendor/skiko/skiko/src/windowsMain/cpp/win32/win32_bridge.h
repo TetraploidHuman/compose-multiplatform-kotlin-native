@@ -464,6 +464,13 @@ void composekn_win32_set_always_on_top(ComposeKNWin32Window* window, bool on_top
 void composekn_win32_set_transparent(ComposeKNWin32Window* window, bool transparent);
 bool composekn_win32_is_transparent(ComposeKNWin32Window* window);
 
+/**
+ * Desktop `Window(focusable)`：false → WS_EX_NOACTIVATE + WM_MOUSEACTIVATE=MA_NOACTIVATE。
+ * 对齐 AWT `setFocusableWindowState(false)`：点击不抢前台，指针事件仍可达。
+ */
+void composekn_win32_set_focusable(ComposeKNWin32Window* window, bool focusable);
+bool composekn_win32_is_focusable(ComposeKNWin32Window* window);
+
 /** 启用/禁用窗口输入（软模态对话框：EnableWindow）。 */
 void composekn_win32_set_enabled(ComposeKNWin32Window* window, bool enabled);
 bool composekn_win32_is_enabled(ComposeKNWin32Window* window);

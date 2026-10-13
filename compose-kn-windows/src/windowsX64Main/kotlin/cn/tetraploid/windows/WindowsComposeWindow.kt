@@ -162,8 +162,20 @@ class WindowsComposeWindow(
      */
     internal var userEnabled: Boolean = true
 
-    /** Desktop `focusable`；Win32 暂记账（无廉价 WS 切换路径）。 */
+    /**
+     * Desktop `focusable`：Win32 `WS_EX_NOACTIVATE` + `WM_MOUSEACTIVATE=MA_NOACTIVATE`。
+     */
     internal var focusable: Boolean = true
+        private set
+
+    fun setFocusable(enabled: Boolean) {
+        if (focusable == enabled) {
+            win32Window?.setFocusable(enabled)
+            return
+        }
+        focusable = enabled
+        win32Window?.setFocusable(enabled)
+    }
 
     /**
      * Desktop `transparent`：Win32 走 `WS_EX_LAYERED` + `UpdateLayeredWindow`。
@@ -578,6 +590,9 @@ class WindowsComposeWindow(
         if (transparent) {
             layer.renderApi = GraphicsApi.SOFTWARE_FAST
             win.setTransparent(true)
+        }
+        if (!focusable) {
+            win.setFocusable(false)
         }
         layer.attachTo(win)
         return win

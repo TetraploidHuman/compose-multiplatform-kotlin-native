@@ -160,7 +160,7 @@ class WindowsNativeWindowHandle(
     }
 
     override fun setFocusable(focusable: Boolean) {
-        app.window.focusable = focusable
+        app.window.setFocusable(focusable)
     }
 
     override fun setTransparent(transparent: Boolean) {

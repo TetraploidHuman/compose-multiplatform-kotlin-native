@@ -215,6 +215,11 @@ struct ComposeKNWin32Window {
      * 需软件 present 路径（CPU raster）；通常配合 undecorated。
      */
     bool transparent = false;
+    /**
+     * Desktop `Window(focusable)`：false → WS_EX_NOACTIVATE + WM_MOUSEACTIVATE=MA_NOACTIVATE
+     *（对齐 AWT `setFocusableWindowState(false)`；点击不抢前台焦点，指针仍可点）。
+     */
+    bool focusable = true;
     /** CSD 边缘缩放带宽（逻辑 dp @96dpi）；对齐 WindowDecoration.resizerThickness。 */
     int edgeMarginDp = kEdgeMarginBaseDefault;
     /** WM_SETICON 持有的图标（destroy 时 DestroyIcon）。 */
@@ -1291,7 +1296,19 @@ static LRESULT CALLBACK composeknWndProc(HWND hwnd, UINT message, WPARAM wParam,
             pushEvent(window, e);
             break;
         }
+        case WM_MOUSEACTIVATE: {
+            // 不可聚焦窗：不抢激活，但仍把鼠标交给客户区（对齐 AWT MA_NOACTIVATE）。
+            if (window != nullptr && !window->focusable) {
+                return MA_NOACTIVATE;
+            }
+            break;
+        }
         case WM_SETFOCUS: {
+            // 极端路径（程序化 SetFocus / 活动窗跟踪）仍可能进来：立刻吐掉焦点。
+            if (window != nullptr && !window->focusable) {
+                SetFocus(nullptr);
+                return 0;
+            }
             ComposeKNWin32Event e{};
             e.type = COMPOSEKN_WIN32_EVENT_FOCUS;
             e.a = 1;
@@ -2912,6 +2929,10 @@ extern "C" int32_t composekn_win32_pixel_geometry(void) {
 
 extern "C" void composekn_win32_show(ComposeKNWin32Window* window, int cmd) {
     if (window == nullptr || window->hwnd == nullptr) return;
+    // 不可聚焦：SW_SHOW → SW_SHOWNOACTIVATE，避免显示时抢前台。
+    if (cmd == SW_SHOW && !window->focusable) {
+        cmd = SW_SHOWNOACTIVATE;
+    }
     ShowWindow(window->hwnd, cmd);
     // SW_HIDE(=0) 不要 Invalidate：Hide 本身会同步派 WM_SIZE（触发 fireRenderTick），
     // 再 Invalidate 容易在关窗路径上嵌套进 render（SingleComposeSceneRenderingScope
@@ -3001,6 +3022,33 @@ extern "C" void composekn_win32_set_transparent(ComposeKNWin32Window* window, bo
 
 extern "C" bool composekn_win32_is_transparent(ComposeKNWin32Window* window) {
     return window != nullptr && window->transparent;
+}
+
+extern "C" void composekn_win32_set_focusable(ComposeKNWin32Window* window, bool focusable) {
+    if (window == nullptr || window->hwnd == nullptr) return;
+    if (window->focusable == focusable) return;
+    window->focusable = focusable;
+    const LONG_PTR ex = GetWindowLongPtrW(window->hwnd, GWL_EXSTYLE);
+    const LONG_PTR next = focusable
+        ? (ex & ~static_cast<LONG_PTR>(WS_EX_NOACTIVATE))
+        : (ex | WS_EX_NOACTIVATE);
+    if (next != ex) {
+        SetWindowLongPtrW(window->hwnd, GWL_EXSTYLE, next);
+        SetWindowPos(
+            window->hwnd, nullptr, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED
+        );
+    }
+    if (!focusable && GetFocus() == window->hwnd) {
+        SetFocus(nullptr);
+    }
+    composeknLog("window: focusable=%d (WS_EX_NOACTIVATE=%s)",
+                 focusable ? 1 : 0,
+                 focusable ? "off" : "on");
+}
+
+extern "C" bool composekn_win32_is_focusable(ComposeKNWin32Window* window) {
+    return window != nullptr && window->focusable;
 }
 
 extern "C" void composekn_win32_set_enabled(ComposeKNWin32Window* window, bool enabled) {

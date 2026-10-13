@@ -124,9 +124,10 @@ class LinuxNativeWindowHandle(
     private var geometryListener: ((WindowGeometrySnapshot) -> Unit)? = null
 
     companion object {
-        /** Absolute / always-on-top / icon 限制只打一次日志，避免 SideEffect 刷屏。 */
+        /** Absolute / always-on-top / focusable / icon 限制只打一次日志，避免 SideEffect 刷屏。 */
         private var absolutePositionLogged = false
         private var alwaysOnTopLogged = false
+        private var focusableLogged = false
         private var iconLogged = false
     }
 
@@ -162,7 +163,14 @@ class LinuxNativeWindowHandle(
     }
 
     override fun setFocusable(focusable: Boolean) {
-        app.composeWindow.focusable = focusable
+        app.composeWindow.setFocusable(focusable)
+        if (!focusable && !focusableLogged) {
+            focusableLogged = true
+            println(
+                "composekn: Window(focusable=false) cannot block compositor focus on " +
+                    "standard xdg-shell (Key/IME dropped in host; pointer still delivered)",
+            )
+        }
     }
 
     override fun setTransparent(transparent: Boolean) {

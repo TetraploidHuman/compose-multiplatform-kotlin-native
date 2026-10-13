@@ -217,6 +217,12 @@ internal external fun composekn_win32_set_transparent(window: COpaquePointer?, t
 @SymbolName("composekn_win32_is_transparent")
 internal external fun composekn_win32_is_transparent(window: COpaquePointer?): Boolean
 
+@SymbolName("composekn_win32_set_focusable")
+internal external fun composekn_win32_set_focusable(window: COpaquePointer?, focusable: Boolean)
+
+@SymbolName("composekn_win32_is_focusable")
+internal external fun composekn_win32_is_focusable(window: COpaquePointer?): Boolean
+
 @SymbolName("composekn_win32_set_enabled")
 internal external fun composekn_win32_set_enabled(window: COpaquePointer?, enabled: Boolean)
 
@@ -816,6 +822,14 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
         composekn_win32_set_transparent(native, transparent)
 
     val isTransparent: Boolean get() = composekn_win32_is_transparent(native)
+
+    /**
+     * Desktop `Window(focusable)`：`WS_EX_NOACTIVATE` + `WM_MOUSEACTIVATE=MA_NOACTIVATE`。
+     */
+    fun setFocusable(focusable: Boolean) =
+        composekn_win32_set_focusable(native, focusable)
+
+    val isFocusable: Boolean get() = composekn_win32_is_focusable(native)
 
     /** 启用/禁用输入（对话框软模态：`EnableWindow`）。 */
     fun setEnabled(enabled: Boolean) = composekn_win32_set_enabled(native, enabled)

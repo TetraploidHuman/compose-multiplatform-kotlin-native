@@ -150,7 +150,9 @@ class LinuxComposeApplication(
         setContent(withChrome = undecorated, content = content)
 
         composeWindow.window.onImeEvent = { imeEvent ->
-            if (composeWindow.effectivelyInputEnabled) textInputService.handleImeEvent(imeEvent)
+            if (composeWindow.effectivelyInputEnabled && composeWindow.focusable) {
+                textInputService.handleImeEvent(imeEvent)
+            }
         }
         composeWindow.run(onEvent = ::handleEvent)
 
@@ -181,7 +183,9 @@ class LinuxComposeApplication(
             }
         }
         composeWindow.window.onImeEvent = { imeEvent ->
-            if (composeWindow.effectivelyInputEnabled) textInputService.handleImeEvent(imeEvent)
+            if (composeWindow.effectivelyInputEnabled && composeWindow.focusable) {
+                textInputService.handleImeEvent(imeEvent)
+            }
         }
         if (onCloseRequest != null) {
             composeWindow.onCloseRequest = onCloseRequest
@@ -206,6 +210,10 @@ class LinuxComposeApplication(
         }
         // 软模态 ∧ Window(enabled)：非有效窗丢弃 pointer/key/touch
         if (!composeWindow.effectivelyInputEnabled && event.type.isPointerKeyOrTouch()) {
+            return
+        }
+        // focusable=false：无法挡 compositor 焦点，宿主侧丢弃键盘（指针仍可达）。
+        if (!composeWindow.focusable && event.type == WaylandEventType.Key) {
             return
         }
         if (event.type == WaylandEventType.Key) {

@@ -30,6 +30,7 @@ Kotlin/Native **linuxX64** 宿主：Wayland + Graphite/Vulkan（回退 EGL/GLES�
 - [x] 自定义装饰图拖出（`drawDragDecoration` → BGRA icon）
 - [x] 自定义字体：`compose-kn-resources` / `Res.font.*` → LoadedFont（见该模块 README）
 - [x] `Window(transparent=true)`：空 wl opaque region + Skia `clear(TRANSPARENT)`（EGL/Vulkan 已带 ALPHA）
+- [x] `Window(focusable=false)`：标准 xdg-shell 无法挡 compositor 焦点；宿主丢弃 Key/IME（指针仍可达）
 
 ## Requirements
 
@@ -98,6 +99,7 @@ COMPOSEKN_VK_HARDWARE=1 nix-shell ./shell.nix --run './scripts/run-linux-native.
 - **Absolute 屏幕坐标**：标准 xdg-shell 无 API（诚实 no-op）；`Aligned` /
   `PlatformDefault` 已用 `xdg_toplevel_set_parent` 做可移植 transient 提示
 - **always-on-top**：无标准协议（记账 + 一次日志）；layer-shell / 厂商扩展另议
+- **focusable=false**：无法禁止 compositor 给键盘焦点；仅宿主侧丢弃 Key/IME
 - 无 SNI watcher 的会话：Tray 菜单不可用，通知仍可走 `notify-send`
 - weston headless 对 maximized geometry 较严（CI selftest 在 RELAX 下跳过 maximize）
 - 位图剪贴板跨应用：本机 offer/receive 走 `image/bmp`；外部 PNG-only 源可能读不到

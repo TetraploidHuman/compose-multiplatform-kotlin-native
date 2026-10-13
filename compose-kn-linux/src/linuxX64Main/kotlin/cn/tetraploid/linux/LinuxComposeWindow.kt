@@ -63,8 +63,16 @@ class LinuxComposeWindow(
      */
     internal var userVisible: Boolean = true
 
-    /** Desktop `focusable`；标准 xdg-shell 无协议，仅记账。 */
+    /**
+     * Desktop `focusable`。标准 xdg-shell 无法禁止 compositor 给焦点；
+     * 宿主侧在 false 时丢弃 Key/IME（指针仍可达），并打一次日志。
+     */
     internal var focusable: Boolean = true
+        private set
+
+    fun setFocusable(enabled: Boolean) {
+        focusable = enabled
+    }
 
     /**
      * Desktop `transparent`：空 wl opaque region + Skia clear(TRANSPARENT)。
