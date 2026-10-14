@@ -81,6 +81,8 @@ import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberNotification
 import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.singleWindowApplication
+import androidx.compose.ui.window.shortcutActions
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.ResourceLocale
 import org.jetbrains.compose.resources.currentResourceLocale
@@ -90,6 +92,7 @@ import org.jetbrains.compose.resources.resourceLocaleOverride
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import main.resources.Res
+import cn.tetraploid.linux.LinuxNativeWindowHandle
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 import kotlinx.coroutines.delay
@@ -455,7 +458,8 @@ fun main(args: Array<String>) {
 }
 
 /**
- * 无交互自检：断言 tray/filedialog available、短暂挂 application 后正常退出。
+ * 无交互自检：tray/filedialog available、双窗/Dialog、剪贴板，以及
+ * MenuBar shortcut / resources / beginMove / visible / singleWindowApplication。
  * 用法：`--selftest` 或 `COMPOSEKN_SELFTEST=1`
  */
 private fun runLinuxSelfTest() {
@@ -463,25 +467,74 @@ private fun runLinuxSelfTest() {
     val trayOk = ComposeKNTray.available()
     val fdOk = ComposeKNFileDialog.available()
     println("SELFTEST: tray.available=$trayOk filedialog.available=$fdOk")
-    // portal / SNI 在无桌面会话时可能 false；有 wayland 会话时期望至少能连 display。
+
+    // singleWindowApplication 先冒烟（二次 application{} 在部分路径上难干净收尾）
+    var singleFrames = 0
+    var singleOk = false
+    try {
+        singleWindowApplication(
+            exitProcessOnExit = false,
+            title = "ComposeKN singleWindowApplication smoke",
+            state = androidx.compose.ui.window.WindowState(size = DpSize(400.dp, 300.dp)),
+        ) {
+            LaunchedEffect(Unit) {
+                delay(300)
+                singleFrames = 1
+                singleOk = true
+                exitApplication()
+            }
+            Text("singleWindowApplication")
+        }
+    } catch (t: Throwable) {
+        println("SELFTEST: singleWindowApplication FAIL ${t.message}")
+        singleOk = false
+    }
+    println("SELFTEST: singleWindowApplication ok=$singleOk frames=$singleFrames")
+
     var frames = 0
     var failed = false
     var dualOk = false
     var dialogOk = false
     var clipboardOk = false
+    var menuShortcutOk = false
+    var resourcesOk = false
+    var beginMoveOk = false
+    var visibleOk = false
     application(exitProcessOnExit = false) {
         val state = rememberWindowState(size = DpSize(640.dp, 400.dp))
         var openSecond by remember { mutableStateOf(false) }
         var openDialog by remember { mutableStateOf(false) }
+        var menuHit by remember { mutableStateOf(false) }
         Window(
             onCloseRequest = ::exitApplication,
             state = state,
             title = "ComposeKN Linux SelfTest",
         ) {
+            MenuBar {
+                Menu("文件") {
+                    Item(
+                        "保存探针",
+                        shortcut = KeyShortcut(Key.S, ctrl = true),
+                    ) { menuHit = true }
+                }
+            }
+            val demoTitle = stringResource(Res.string.demo_title)
+            val plural = pluralStringResource(Res.plurals.items, 2)
+            val logo = painterResource(Res.drawable.demo_logo)
+            val vector = vectorResource(Res.drawable.ic_composekn)
             LaunchedEffect(Unit) {
                 try {
                     delay(400)
-                    // Rich clipboard roundtrip (local cache; no compositor required)
+                    resourcesOk = demoTitle.isNotEmpty() &&
+                        plural.isNotEmpty() &&
+                        logo.intrinsicSize.width > 0f &&
+                        vector.viewportWidth > 0f
+                    println(
+                        "SELFTEST: resources titleLen=${demoTitle.length} " +
+                            "plural=$plural logoW=${logo.intrinsicSize.width} " +
+                            "vectorVp=${vector.viewportWidth} ok=$resourcesOk",
+                    )
+
                     WaylandClipboard.setRich(
                         text = "composekn-selftest",
                         html = "<b>tetraploid</b>",
@@ -499,7 +552,42 @@ private fun runLinuxSelfTest() {
                         "SELFTEST: clipboard text=${gotText != null} html=${gotHtml != null} " +
                             "files=${gotFiles.size} ok=$clipboardOk",
                     )
-                    // weston headless 对 maximized geometry 很严；CI/RELAX 只测双窗。
+
+                    val handle = window as? LinuxNativeWindowHandle
+                    val composeWin = handle?.composeWindow
+                    if (composeWin != null) {
+                        try {
+                            handle.beginMove()
+                            beginMoveOk = true
+                        } catch (t: Throwable) {
+                            beginMoveOk = false
+                            println("SELFTEST: beginMove threw ${t.message}")
+                        }
+                        delay(50)
+                        val actions = composeWin.menuBarModel?.shortcutActions().orEmpty()
+                        val save = actions.firstOrNull { (s, _) ->
+                            s.key == Key.S && s.ctrl && !s.alt && !s.shift && !s.meta
+                        }
+                        if (save != null) {
+                            save.second.invoke()
+                            menuShortcutOk = menuHit
+                        }
+                        println(
+                            "SELFTEST: menuShortcut registered=${save != null} " +
+                                "hit=$menuHit ok=$menuShortcutOk",
+                        )
+
+                        // visible：直接测宿主 setVisible（Window(visible) SideEffect 同源）
+                        handle.setVisible(false)
+                        val hidden = !composeWin.isUserVisible
+                        handle.setVisible(true)
+                        visibleOk = hidden && composeWin.isUserVisible
+                        println(
+                            "SELFTEST: visible hide+show ok=$visibleOk " +
+                                "isUserVisible=${composeWin.isUserVisible}",
+                        )
+                    }
+
                     if (selftestExtrasRequired()) {
                         state.placement = WindowPlacement.Maximized
                         delay(200)
@@ -510,7 +598,6 @@ private fun runLinuxSelfTest() {
                     delay(400)
                     openSecond = false
                     delay(200)
-                    // DialogWindow：Aligned(Center) → set_parent
                     openDialog = true
                     delay(400)
                     openDialog = false
@@ -522,6 +609,7 @@ private fun runLinuxSelfTest() {
                 } catch (t: Throwable) {
                     failed = true
                     println("SELFTEST: FAIL ${t.message}")
+                    t.printStackTrace()
                 } finally {
                     exitApplication()
                 }
@@ -547,7 +635,9 @@ private fun runLinuxSelfTest() {
             }
         }
     }
-    val passCore = !failed && frames > 0 && dualOk && dialogOk && clipboardOk
+
+    val passCore = !failed && frames > 0 && dualOk && dialogOk && clipboardOk &&
+        menuShortcutOk && resourcesOk && beginMoveOk && visibleOk && singleOk
     val extrasRequired = selftestExtrasRequired()
     val extrasOk = !extrasRequired || (trayOk && fdOk)
     if (!extrasRequired && !(trayOk && fdOk)) {
@@ -556,7 +646,9 @@ private fun runLinuxSelfTest() {
     val pass = passCore && extrasOk
     println(
         "SELFTEST: ${if (pass) "PASS" else "FAIL"} " +
-            "tray=$trayOk filedialog=$fdOk dual=$dualOk dialog=$dialogOk clipboard=$clipboardOk",
+            "tray=$trayOk filedialog=$fdOk dual=$dualOk dialog=$dialogOk clipboard=$clipboardOk " +
+            "menu=$menuShortcutOk resources=$resourcesOk beginMove=$beginMoveOk " +
+            "visible=$visibleOk single=$singleOk",
     )
     exitProcess(if (pass) 0 else 1)
 }

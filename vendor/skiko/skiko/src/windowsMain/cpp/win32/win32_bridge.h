@@ -557,6 +557,8 @@ void composekn_win32_taskbar_progress_state(
 
 /** ShowWindow wrapper: cmd 0=SW_HIDE 3=SW_MAXIMIZE 6=SW_MINIMIZE 9=SW_RESTORE 5=SW_SHOW */
 void composekn_win32_show(ComposeKNWin32Window* window, int cmd);
+/** IsWindowVisible — Desktop `Window(visible=false)` 软隐藏后应为 false。 */
+bool composekn_win32_is_visible(ComposeKNWin32Window* window);
 bool composekn_win32_is_maximized(ComposeKNWin32Window* window);
 bool composekn_win32_is_minimized(ComposeKNWin32Window* window);
 void composekn_win32_request_close(ComposeKNWin32Window* window);

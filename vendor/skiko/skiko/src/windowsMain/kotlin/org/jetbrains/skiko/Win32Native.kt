@@ -296,6 +296,9 @@ internal external fun composekn_win32_taskbar_progress_state(
 @SymbolName("composekn_win32_show")
 internal external fun composekn_win32_show(window: COpaquePointer?, cmd: Int)
 
+@SymbolName("composekn_win32_is_visible")
+internal external fun composekn_win32_is_visible(window: COpaquePointer?): Boolean
+
 @SymbolName("composekn_win32_is_maximized")
 internal external fun composekn_win32_is_maximized(window: COpaquePointer?): Boolean
 
@@ -779,6 +782,9 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
     fun show() = composekn_win32_show(native, SW_WINDOWS_SHOW)
     /** 立刻隐藏（关窗拆 GL/OLE 前调用，避免用户感知到 teardown 卡顿）。 */
     fun hide() = composekn_win32_show(native, SW_WINDOWS_HIDE)
+
+    /** Desktop `Window(visible)` → ShowWindow；读 [IsWindowVisible]。 */
+    val isVisible: Boolean get() = composekn_win32_is_visible(native)
 
     fun requestClose() = composekn_win32_request_close(native)
     fun setTitle(title: String) = title.useCString { composekn_win32_set_title(native, it) }

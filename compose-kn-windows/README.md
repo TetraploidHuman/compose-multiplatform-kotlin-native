@@ -70,9 +70,9 @@ COMPOSEKN_SELFTEST=window   # 或 all / logic
 
 ## Known gaps
 
-- 自定义装饰图拖出未做（拖移已对齐 `WindowDraggableArea`；beginMove / DoDragDrop /
-  FileDialog 结束后合成 UP，避免 `primaryPressed` 卡住）
 - Wine 下退出期偶发 AV（真机关窗路径已收口）
+- Wine / Xvfb：无真 IME、无真 OLE 模态拖放循环；自检用注入钩子与合成 `IDataObject`
+- `Window(transparent=true)` 须在 attach 前设置（GPU redrawer 已建则只记账；画廊在建窗时设）
 
 ## License
 

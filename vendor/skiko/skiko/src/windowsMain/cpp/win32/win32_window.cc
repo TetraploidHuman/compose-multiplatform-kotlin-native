@@ -2949,6 +2949,11 @@ extern "C" void composekn_win32_show(ComposeKNWin32Window* window, int cmd) {
     }
 }
 
+extern "C" bool composekn_win32_is_visible(ComposeKNWin32Window* window) {
+    if (window == nullptr || window->hwnd == nullptr) return false;
+    return IsWindowVisible(window->hwnd) != FALSE;
+}
+
 extern "C" bool composekn_win32_is_maximized(ComposeKNWin32Window* window) {
     if (window == nullptr || window->hwnd == nullptr) return false;
     WINDOWPLACEMENT wp;

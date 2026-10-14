@@ -69,6 +69,9 @@ class LinuxComposeWindow(
      */
     internal var userVisible: Boolean = true
 
+    /** 读 [userVisible]（自检 / 诊断用）。 */
+    val isUserVisible: Boolean get() = userVisible
+
     /**
      * Desktop `focusable`。标准 xdg-shell 无法禁止 compositor 给焦点；
      * 宿主侧在 false 时丢弃 Key/IME（指针仍可达），并打一次日志。

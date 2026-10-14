@@ -16,6 +16,8 @@
 
 发新版时改 `gradle.properties` 的 `composekn.version`，并同步本表一行。
 
+从 **JVM Desktop** 迁到 K/N 时，先看 [`MIGRATING.md`](MIGRATING.md) 里的「迁移陷阱」表（`Absolute` / `alwaysOnTop` / `icon` / `focusable` 等签名齐但行为不同）。
+
 ### 仓库怎么拿（按优先级）
 
 1. **Release Maven zip（推荐，稳定 CDN）**  

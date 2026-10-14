@@ -65,9 +65,17 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
+import androidx.compose.ui.window.MenuBar
+import androidx.compose.ui.window.singleWindowApplication
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
+import main.resources.Res
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -3183,6 +3191,8 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
     runDecoratedWindowResizeTests(report)
     runConcurrentWindowTests(report)
     runApplicationApiSelfTest(report)
+    runDesktopParitySelfTest(report)
+    runSingleWindowApplicationSmoke(report)
 }
 
 /**
@@ -3488,6 +3498,232 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
         "live=${WindowsApplicationHost.liveWindowCount}",
     )
     report.check("application-api/no-timeout", !guard.timedOut)
+}
+
+/**
+ * 审计补门禁：transparent / focusable / visible / MenuBar shortcut / compose.resources。
+ * 画廊已手测；此处保证 CI/Wine 不会静默回退。
+ */
+private fun runDesktopParitySelfTest(report: SelfTestReport) {
+    report.section("desktop-parity transparent/focusable/visible/MenuBar/resources")
+    cn.tetraploid.windows.registerComposeKnWindowsBackend()
+
+    var resourcesOk = false
+    var menuShortcutOk = false
+    var transparentOk = false
+    var focusableOffOk = false
+    var visibleOk = false
+    var reachedExit = false
+    var exitApp: (() -> Unit)? = null
+    val guard = WindowPhaseGuard()
+    CoroutineScope(Dispatchers.Default).launch {
+        delay(40_000)
+        if (!guard.finished) {
+            guard.timedOut = true
+            exitApp?.invoke()
+        }
+    }
+
+    try {
+        application(exitProcessOnExit = false) {
+            val exit = ::exitApplication
+            exitApp = exit
+            var mainVisible by remember { mutableStateOf(true) }
+            var openTransparent by remember { mutableStateOf(false) }
+            var openFocusableOff by remember { mutableStateOf(false) }
+            var menuHit by remember { mutableStateOf(false) }
+
+            Window(
+                onCloseRequest = exit,
+                state = rememberWindowState(width = 420.dp, height = 320.dp),
+                title = "Selftest-desktop-parity",
+                undecorated = true,
+                visible = mainVisible,
+            ) {
+                MenuBar {
+                    Menu("文件(&F)") {
+                        Item(
+                            "保存探针",
+                            shortcut = KeyShortcut(Key.S, ctrl = true),
+                        ) { menuHit = true }
+                    }
+                }
+                val demoTitle = stringResource(Res.string.demo_title)
+                val plural = pluralStringResource(Res.plurals.items, 2)
+                val logo = painterResource(Res.drawable.demo_logo)
+                val vector = vectorResource(Res.drawable.ic_composekn)
+
+                LaunchedEffect(Unit) {
+                    var waited = 0
+                    while (waited < 12) {
+                        withFrameNanos { waited++ }
+                    }
+                    resourcesOk = demoTitle.isNotEmpty() &&
+                        plural.isNotEmpty() &&
+                        logo.intrinsicSize.width > 0f &&
+                        vector.viewportWidth > 0f
+                    winlog(
+                        "desktop-parity: resources titleLen=${demoTitle.length} " +
+                            "plural=$plural logoW=${logo.intrinsicSize.width} " +
+                            "vectorVp=${vector.viewportWidth} ok=$resourcesOk",
+                    )
+
+                    val main = (window as? WindowsNativeWindowHandle)?.composeWindow
+                    if (main != null) {
+                        // MenuBar → pendingMenuBar shortcut 表 → tryMenuShortcut(Ctrl+S)
+                        val keyEv = createKeyEvent(
+                            vk = 0x53, // VK_S
+                            scanCode = 0x1F,
+                            isKeyDown = true,
+                            isCtrlPressed = true,
+                        )
+                        menuShortcutOk = main.tryMenuShortcut(keyEv) && menuHit
+                        winlog("desktop-parity: menuShortcut ok=$menuShortcutOk hit=$menuHit")
+
+                        mainVisible = false
+                        waited = 0
+                        while (waited < 30) {
+                            withFrameNanos { waited++ }
+                            if (main.nativeWindow?.isVisible == false) break
+                        }
+                        val hidden = main.nativeWindow?.isVisible == false
+                        mainVisible = true
+                        waited = 0
+                        while (waited < 30) {
+                            withFrameNanos { waited++ }
+                            if (main.nativeWindow?.isVisible == true) break
+                        }
+                        visibleOk = hidden && main.nativeWindow?.isVisible == true
+                        winlog("desktop-parity: visible hide+show ok=$visibleOk")
+                    }
+
+                    openTransparent = true
+                    waited = 0
+                    while (waited < 45) {
+                        withFrameNanos { waited++ }
+                        if (transparentOk) break
+                    }
+                    openTransparent = false
+                    waited = 0
+                    while (openTransparent && waited < 20) {
+                        withFrameNanos { waited++ }
+                    }
+
+                    openFocusableOff = true
+                    waited = 0
+                    while (waited < 45) {
+                        withFrameNanos { waited++ }
+                        if (focusableOffOk) break
+                    }
+                    openFocusableOff = false
+
+                    reachedExit = true
+                    exit()
+                }
+                Text("desktop-parity main")
+            }
+
+            if (openTransparent) {
+                Window(
+                    onCloseRequest = { openTransparent = false },
+                    state = rememberWindowState(width = 280.dp, height = 180.dp),
+                    title = "Selftest-transparent",
+                    undecorated = true,
+                    transparent = true,
+                ) {
+                    LaunchedEffect(Unit) {
+                        val native = (window as? WindowsNativeWindowHandle)
+                            ?.composeWindow?.nativeWindow
+                        transparentOk = native?.isTransparent == true
+                        winlog(
+                            "desktop-parity: transparent native=${native?.isTransparent} " +
+                                "ok=$transparentOk",
+                        )
+                    }
+                    Box(Modifier.fillMaxSize().background(Color(0x88000000))) {
+                        Text("transparent", color = Color.White)
+                    }
+                }
+            }
+
+            if (openFocusableOff) {
+                Window(
+                    onCloseRequest = { openFocusableOff = false },
+                    state = rememberWindowState(width = 280.dp, height = 180.dp),
+                    title = "Selftest-focusable-off",
+                    undecorated = true,
+                    focusable = false,
+                ) {
+                    LaunchedEffect(Unit) {
+                        val native = (window as? WindowsNativeWindowHandle)
+                            ?.composeWindow?.nativeWindow
+                        focusableOffOk = native?.isFocusable == false
+                        winlog(
+                            "desktop-parity: focusable native=${native?.isFocusable} " +
+                                "ok=$focusableOffOk",
+                        )
+                    }
+                    Text("focusable=false")
+                }
+            }
+        }
+    } catch (t: Throwable) {
+        report.check(
+            "desktop-parity/no-exception",
+            false,
+            "${t::class.simpleName}: ${t.message}",
+        )
+    }
+    guard.finished = true
+
+    report.check("desktop-parity/resources", resourcesOk, "string/plural/painter/vector 应非空")
+    report.check("desktop-parity/menu-shortcut", menuShortcutOk, "Ctrl+S 应触发 MenuBar Item")
+    report.check("desktop-parity/visible", visibleOk, "visible=false 隐藏后应再显示")
+    report.check(
+        "desktop-parity/transparent",
+        transparentOk,
+        "Window(transparent=true) 应置 WS_EX_LAYERED",
+    )
+    report.check(
+        "desktop-parity/focusable-off",
+        focusableOffOk,
+        "Window(focusable=false) 应置 WS_EX_NOACTIVATE",
+    )
+    report.check("desktop-parity/reached-exit", reachedExit)
+    report.check("desktop-parity/no-timeout", !guard.timedOut)
+}
+
+/** [singleWindowApplication] 冒烟：至少出一帧再 exit。 */
+private fun runSingleWindowApplicationSmoke(report: SelfTestReport) {
+    report.section("singleWindowApplication 冒烟")
+    cn.tetraploid.windows.registerComposeKnWindowsBackend()
+    var frames = 0
+    var ok = false
+    try {
+        singleWindowApplication(
+            exitProcessOnExit = false,
+            title = "Selftest-singleWindowApplication",
+            state = androidx.compose.ui.window.WindowState(size = DpSize(360.dp, 240.dp)),
+            undecorated = true,
+        ) {
+            LaunchedEffect(Unit) {
+                while (frames < 6) {
+                    withFrameNanos { frames++ }
+                }
+                ok = true
+                exitApplication()
+            }
+            Text("singleWindowApplication frames=$frames")
+        }
+    } catch (t: Throwable) {
+        report.check(
+            "single-window-app/no-exception",
+            false,
+            "${t::class.simpleName}: ${t.message}",
+        )
+    }
+    report.check("single-window-app/frames", frames >= 6, "frames=$frames")
+    report.check("single-window-app/exited", ok)
 }
 
 /**

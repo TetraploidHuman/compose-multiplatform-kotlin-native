@@ -56,7 +56,7 @@
 - [ ] Linux **`alwaysOnTop`**：现记账；可选 layer-shell / 厂商扩展
 - [ ] Linux **`WindowPosition.Absolute`**：协议无绝对坐标（基本不可移植）
 - [ ] Linux IME **Delete surrounding**（text-input-v3）
-- [ ] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——先核实测再改文档或代码
+- [x] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——代码已接 `drawDragDecoration`；Known gaps 已改
 
 ### P3 — 明确不做或远期
 
