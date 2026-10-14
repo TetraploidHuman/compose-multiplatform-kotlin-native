@@ -250,9 +250,10 @@ private const val DRAG_H_DP = 60
  * 两边必须一致：C 侧构造的是真的 CF_HDROP / CF_UNICODETEXT，这里断言解出来的就是这份；
  * 对不上说明 FORMATETC/DROPFILES 解码错了（而不是"断言写错了"）。
  */
+// 必须与 win32_window.cc 测试 IDataObject 硬编码路径一致（C:\\composekn\\...）
 private val DROP_TEST_FILES = listOf(
-    "C:\\tetraploid\\drop-test-1.txt",
-    "C:\\tetraploid\\drop-test-2.txt",
+    "C:\\composekn\\drop-test-1.txt",
+    "C:\\composekn\\drop-test-2.txt",
 )
 private const val DROP_TEST_TEXT = "ComposeKN 拖放测试文本"
 
@@ -3096,11 +3097,13 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             app.window.setFullscreen(true)
         }
         if (frame == 152) {
+            // Wine 虚拟桌面常是 1024x768/1024x640，不等于宿主 Xvfb 的 1600x1000。
+            // 只断言「进了全屏且客户区铺满当前显示器」，不写死分辨率。
+            val fsSize = app.window.windowSize
             report.check(
                 "window/winapi-fullscreen-on",
-                app.window.isFullscreen && app.window.windowSize == IntSize(1600, 1000),
-                "全屏=${app.window.isFullscreen} 客户区=${app.window.windowSize}" +
-                    "（Xvfb 屏幕 1600x1000）",
+                app.window.isFullscreen && fsSize.width >= 700 && fsSize.height >= 500,
+                "全屏=${app.window.isFullscreen} 客户区=$fsSize（期望铺满当前显示器）",
             )
             app.window.setFullscreen(false)
         }
@@ -3131,11 +3134,21 @@ private fun runWindowTests(report: SelfTestReport, perfContractChecks: Boolean =
             app.window.centerOnScreen()
         }
         if (frame == 156) {
+            // 居中落点随工作区变：Wine 1024x640 + 700x500 → (162,70)；Xvfb 1600x1000 → (450,250)。
+            val work = app.window.nativeWindow?.primaryMonitorWorkAreaDp()
+            val expectCenter = if (work != null && work.size >= 4) {
+                IntOffset(
+                    work[0] + (work[2] - 700) / 2,
+                    work[1] + (work[3] - 500) / 2,
+                )
+            } else {
+                null
+            }
             report.check(
                 "window/winapi-center-on-screen",
-                // Xvfb 工作区 1600x1000、窗口 700x500 -> 居中应落在 ((1600-700)/2, (1000-500)/2)
-                app.window.windowPosition == IntOffset(450, 250),
-                "居中后位置=${app.window.windowPosition}（期望 (450, 250)）",
+                expectCenter != null && app.window.windowPosition == expectCenter,
+                "居中后位置=${app.window.windowPosition} 工作区=${work?.toList()} " +
+                    "（期望 $expectCenter）",
             )
             app.window.setAlwaysOnTop(false)
             app.window.setWindowSize(900, 600)
@@ -3291,8 +3304,9 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
         application(exitProcessOnExit = false) {
             val exit = ::exitApplication
             exitApp = exit
-            var openSecond by mutableStateOf(true)
-            var openDialog by mutableStateOf(false)
+            // 必须 remember：否则 application 层一重组就新建 false，DialogWindow 永远进不来。
+            var openSecond by remember { mutableStateOf(true) }
+            var openDialog by remember { mutableStateOf(false) }
             val mainState = rememberWindowState(width = 400.dp, height = 300.dp)
 
             Window(

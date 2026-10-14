@@ -127,6 +127,13 @@ fun Window(
         }
     }
 
+    // 在 composition 期读 WindowState，否则只改 state.size 不会触发重组，
+    // SideEffect 永远看不到「state → native」的变更（自检 state-to-native 会红）。
+    val observedSize = state.size
+    val observedPosition = state.position
+    val observedPlacement = state.placement
+    val observedMinimized = state.isMinimized
+
     LaunchedEffect(handle) {
         awaitCancellation()
     }
@@ -164,27 +171,27 @@ fun Window(
         )
         handle.setOnCloseRequest { latestOnClose.value() }
 
-        if (state.placement != appliedState.placement ||
-            state.isMinimized != appliedState.isMinimized
+        if (observedPlacement != appliedState.placement ||
+            observedMinimized != appliedState.isMinimized
         ) {
-            handle.applyPlacement(state.placement, state.isMinimized)
-            appliedState.placement = state.placement
-            appliedState.isMinimized = state.isMinimized
+            handle.applyPlacement(observedPlacement, observedMinimized)
+            appliedState.placement = observedPlacement
+            appliedState.isMinimized = observedMinimized
         }
-        if (state.size != appliedState.size &&
-            state.size.width.isSpecified &&
-            state.size.height.isSpecified
+        if (observedSize != appliedState.size &&
+            observedSize.width.isSpecified &&
+            observedSize.height.isSpecified
         ) {
-            handle.applySize(state.size)
-            appliedState.size = state.size
+            handle.applySize(observedSize)
+            appliedState.size = observedSize
         }
-        if (state.position != appliedState.position) {
-            when (val pos = state.position) {
+        if (observedPosition != appliedState.position) {
+            when (val pos = observedPosition) {
                 is WindowPosition.Absolute -> handle.applyPosition(pos)
                 is WindowPosition.Aligned -> handle.applyPosition(pos)
                 WindowPosition.PlatformDefault -> Unit
             }
-            appliedState.position = state.position
+            appliedState.position = observedPosition
         }
     }
 

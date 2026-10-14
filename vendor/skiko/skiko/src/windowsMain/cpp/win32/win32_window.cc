@@ -2395,8 +2395,15 @@ extern "C" void composekn_win32_synth_left_up_if_released(
 extern "C" void composekn_win32_begin_move(ComposeKNWin32Window* window) {
     if (window == nullptr || window->hwnd == nullptr) return;
     ReleaseCapture();
-    // DefWindowProc(HTCAPTION) runs a nested move loop and consumes the button-up as
-    // WM_NCLBUTTONUP — our WM_LBUTTONUP handler never runs.
+    // DefWindowProc(HTCAPTION) runs a nested move loop until button-up.
+    // Without a pressed LBUTTON (selftest / Wine automation) that loop never
+    // exits and blocks the pump thread — skip and treat as no-op callable.
+    if ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) == 0) {
+        composeknLog("beginMove: no LBUTTON down — skip nested HTCAPTION loop");
+        return;
+    }
+    // Nested loop consumes the button-up as WM_NCLBUTTONUP — our WM_LBUTTONUP
+    // handler never runs, so synth after return.
     SendMessageW(window->hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
     composekn_win32_synth_left_up_if_released(window, "beginMove");
 }

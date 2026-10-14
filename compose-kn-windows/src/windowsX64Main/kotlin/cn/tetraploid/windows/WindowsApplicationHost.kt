@@ -199,9 +199,9 @@ object WindowsApplicationHost {
 
     private fun refreshImeProviders() {
         if (sessions.isEmpty()) {
-            setWindowsImeCaretProvider(null)
-            setWindowsImeTextProvider(null)
-            setWindowsImeReconvertProvider(null)
+            // 不要在这里清空全局 IME 回调：独占泵
+            // （WindowsComposeApplication.installExclusiveImeProviders）也会挂同一套
+            // 全局入口。sessions 为空只表示「没有共享宿主窗」，不代表没有 IME。
             return
         }
         // 全局只有一套 IME provider：按焦点/最近活跃窗转发（见文件头注释）。

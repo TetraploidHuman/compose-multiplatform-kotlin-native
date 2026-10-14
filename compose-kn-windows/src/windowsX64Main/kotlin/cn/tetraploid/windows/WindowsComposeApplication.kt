@@ -262,13 +262,18 @@ class WindowsComposeApplication(
         win32Log("app: scene + content ready, starting window loop")
         try {
             window.run(onEvent = ::handleEvent)
+            win32Log("app: window loop finished normally")
         } catch (t: Throwable) {
             win32Log("app: EXCEPTION from window.run -> ${t::class.simpleName}: ${t.message}")
             throw t
+        } finally {
+            // 对齐 detachFromSharedHost：scene.close → GC → detach/DestroyWindow。
+            // 旧路径在 CloseEvent 里立刻 destroy，会先拆 GL，随后 layer.detach 再
+            // glMakeCurrent —— Wine 上挂死（自检 frame≈254 后无后续日志）。
+            if (!closed) close()
+            drainSkiaCleaners()
+            window.teardownAfterExclusiveRun()
         }
-        win32Log("app: window loop finished normally")
-
-        close()
     }
 
     /**
@@ -459,15 +464,18 @@ class WindowsComposeApplication(
                 window.onGeometryHint?.invoke()
             }
             is WindowsEvent.CloseEvent -> {
-                // DO_NOTHING_ON_CLOSE：系统关窗只到这里。
-                // - 共享宿主 / 声明式 Window：onCloseRequest 已在 drainEventsForHost 调过，不销毁
-                // - 命令式独占 run：销毁 HWND，让 win.pump() 因 quit 退出
-                if (!window.isHostAttached) {
-                    window.destroy()
-                }
+                // DO_NOTHING_ON_CLOSE：系统关窗只到这里，不 DestroyWindow。
+                // - 共享宿主 / 声明式 Window：onCloseRequest 已在 drainEventsForHost 调过
+                // - 命令式独占 run：WindowsComposeWindow.run 置 running=false 退出循环，
+                //   再由 Application.run finally 有序拆 GPU/HWND（勿在此处 destroy）
             }
             is WindowsEvent.FocusEvent -> {
-                WindowsApplicationHost.noteFocus(window, event.hasFocus)
+                // 仅共享宿主路径需要 Host 焦点路由；独占泵的 IME 由
+                // installExclusiveImeProviders 挂全局回调，Host.sessions 为空时
+                // noteFocus→refreshImeProviders 会把它们清成 null。
+                if (window.isHostAttached) {
+                    WindowsApplicationHost.noteFocus(window, event.hasFocus)
+                }
             }
             is WindowsEvent.PaintEvent -> {
                 window.layer.renderImmediately()

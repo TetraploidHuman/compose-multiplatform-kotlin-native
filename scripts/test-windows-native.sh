@@ -239,7 +239,7 @@ if [ -z "$ONLY" ] || [ "$ONLY" = "window" ]; then
     # OLE 拖放：C 侧的 IDropTarget 真的被调到、并且真的从 IDataObject 里解出了负载
     # （文件名只有 CF_HDROP/FORMATETC 解码对了才会出现在日志里）。
     check_log_line "拖放进入（文件）" "drag: ENTER pos=475,392 files=2"
-    check_log_line "拖放放下（文件路径）" "第一个=C:\\tetraploid\\drop-test-1.txt"
+    check_log_line "拖放放下（文件路径）" "第一个=C:\\composekn\\drop-test-1.txt"
     check_log_line "拖放文本" "drag: ENTER pos=475,462 files=0 textLen=28"
     check_log_line "拖放离开" "drag: LEAVE"
     # 富文本剪贴板：C 侧日志必须体现「一次事务写多个格式」（文本 + HTML 同时进去，

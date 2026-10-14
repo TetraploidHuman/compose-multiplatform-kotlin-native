@@ -18,6 +18,8 @@ import org.jetbrains.skiko.initWindowsMainThread
 import org.jetbrains.skiko.currentNanoTime
 import org.jetbrains.skiko.setMainUIDispatcherWakeUpHandler
 import org.jetbrains.skiko.setWindowsImeCaretProvider
+import org.jetbrains.skiko.setWindowsImeReconvertProvider
+import org.jetbrains.skiko.setWindowsImeTextProvider
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.matches
 import androidx.compose.ui.window.FileDialogFilter
@@ -451,7 +453,10 @@ class WindowsComposeWindow(
      * 独占消息循环（单窗口自检 / 遗留路径）。
      *
      * 多窗口请用 [attachToHost] + [WindowsApplicationHost.runSharedPump]。
-     * 系统关窗默认销毁本窗口（若未另设 [onCloseRequest]）。
+     * 系统关窗只退出本循环；GPU / HWND 由 [WindowsComposeApplication.run] 按
+     * 「scene.close → GC → detach → DestroyWindow」顺序拆掉（对齐共享宿主路径）。
+     * 切勿在 CloseEvent 里立刻 [destroy]：会先拆 GL，随后 [layer.detach] 再
+     * `glMakeCurrent` —— Wine 上会挂死。
      */
     fun run(onEvent: (WindowsEvent) -> Unit) {
         win32Log("run: enter (exclusive pump)")
@@ -460,9 +465,9 @@ class WindowsComposeWindow(
         val win = createAndAttachLayer()
         win.show()
 
-        // 命令式默认：关窗 = 销毁，以便本循环退出（自检 requestClose 依赖这条）。
+        // 命令式默认：关窗 = 退出循环（真正的 detach/DestroyWindow 在 Application.run finally）。
         if (onCloseRequest == null) {
-            onCloseRequest = { destroy() }
+            onCloseRequest = { /* exclusive: exit loop; teardown after return */ }
         }
 
         layer.setRenderRequestHandler { win.wake() }
@@ -505,9 +510,13 @@ class WindowsComposeWindow(
                         is WindowsEvent.CloseEvent -> {
                             onCloseRequest?.invoke()
                             onEvent(event)
+                            // 独占：关窗即退出循环；HWND/GL 仍保留给 finally 有序拆。
+                            running = false
                         }
                         is WindowsEvent.FocusEvent -> {
-                            WindowsApplicationHost.noteFocus(this, event.hasFocus)
+                            // 独占泵未 register 到 Host：noteFocus → refreshImeProviders
+                            // 在 sessions 为空时会把 installExclusiveImeProviders 清掉，
+                            // DOCUMENTFEED / QUERYCHARPOSITION 全部变成 0,0 / handled=0。
                             onEvent(event)
                         }
                         else -> onEvent(event)
@@ -556,21 +565,38 @@ class WindowsComposeWindow(
             throw t
         } finally {
             win32Log("run: exiting loop after $frames frames")
-            // 先摘掉回调再拆窗口：它们会 PostMessage（窗口没了就成了野指针）。
+            // 只摘唤醒回调；GPU/HWND 留给 Application.run 按共享宿主顺序拆。
             layer.setRenderRequestHandler(null)
             setMainUIDispatcherWakeUpHandler(null)
-            // IME 光标回调也一样：它是注册在 C 侧的**全局**回调，窗口拆掉之后不能再被调用
-            // （真机上 WM_IME_REQUEST 可能在销毁过程中还剩一条）。
-            // 多窗口共享时由 Host 接管；独占路径仍在此清空。
-            if (!WindowsApplicationHost.isRegistered(this) &&
-                WindowsApplicationHost.liveWindowCount == 0
-            ) {
-                setWindowsImeCaretProvider(null)
-            }
-            layer.detach()
-            win32Window?.close()
-            win32Window = null
+            layer.quiesceRedrawer()
         }
+    }
+
+    /**
+     * 独占泵退出后的资源拆解（GPU 仍可用 → scene 已 close → 再调本方法）。
+     *
+     * 顺序：detach（WGL makeCurrent + Skia dispose + glDestroy）→ DestroyWindow。
+     */
+    fun teardownAfterExclusiveRun() {
+        win32Log("teardownAfterExclusiveRun: begin")
+        if (!WindowsApplicationHost.isRegistered(this) &&
+            WindowsApplicationHost.liveWindowCount == 0
+        ) {
+            setWindowsImeCaretProvider(null)
+            setWindowsImeReconvertProvider(null)
+            setWindowsImeTextProvider(null)
+        }
+        val t0 = currentNanoTime()
+        layer.detach()
+        val t1 = currentNanoTime()
+        win32Window?.hide()
+        win32Window?.close()
+        win32Window = null
+        val t2 = currentNanoTime()
+        win32Log(
+            "teardownAfterExclusiveRun: done gl=${(t1 - t0) / 1_000_000}ms " +
+                "hide+destroy=${(t2 - t1) / 1_000_000}ms",
+        )
     }
 
     /** 创建 Win32 窗口并 attach SkiaLayer（[run] / [attachToHost] 共用）。 */

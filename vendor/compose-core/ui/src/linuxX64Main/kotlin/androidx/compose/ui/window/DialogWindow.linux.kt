@@ -121,6 +121,9 @@ fun DialogWindow(
         }
     }
 
+    val observedSize = state.size
+    val observedPosition = state.position
+
     LaunchedEffect(handle) {
         awaitCancellation()
     }
@@ -154,20 +157,20 @@ fun DialogWindow(
         )
         handle.setOnCloseRequest { latestOnClose.value() }
 
-        if (state.size != appliedState.size &&
-            state.size.width.isSpecified &&
-            state.size.height.isSpecified
+        if (observedSize != appliedState.size &&
+            observedSize.width.isSpecified &&
+            observedSize.height.isSpecified
         ) {
-            handle.applySize(state.size)
-            appliedState.size = state.size
+            handle.applySize(observedSize)
+            appliedState.size = observedSize
         }
-        if (state.position != appliedState.position) {
-            when (val pos = state.position) {
+        if (observedPosition != appliedState.position) {
+            when (val pos = observedPosition) {
                 is WindowPosition.Absolute -> handle.applyPosition(pos)
                 is WindowPosition.Aligned -> handle.applyPosition(pos)
                 WindowPosition.PlatformDefault -> Unit
             }
-            appliedState.position = state.position
+            appliedState.position = observedPosition
         }
     }
 
