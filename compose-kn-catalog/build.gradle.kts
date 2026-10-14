@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "cn.tetraploid"
-version = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
+version = providers.gradleProperty("composekn.version").orElse("0.5.69").get()
 
 catalog {
     versionCatalog {

@@ -4,7 +4,7 @@ pluginManagement {
         .orNull
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.68").get()
+    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.69").get()
     val cacheMaven = java.io.File(
         System.getProperty("user.home"),
         ".composekn/m2/$cknVer",

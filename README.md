@@ -29,7 +29,7 @@
 
 ```properties
 # gradle.properties
-composekn.version=0.5.68
+composekn.version=0.5.69
 ```
 
 ```kotlin
