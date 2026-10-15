@@ -1,8 +1,8 @@
 [versions]
-composekn = "0.5.70"
+composekn = "0.5.71"
 kotlin = "2.4.0"
 compose-ui = "1.12.1"
-compose-ui-published = "1.12.1-ckn.0.5.70"
+compose-ui-published = "1.12.1-ckn.0.5.71"
 compose-maven-deps = "1.11.1"
 coroutines = "1.10.2"
 

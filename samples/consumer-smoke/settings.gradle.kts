@@ -4,7 +4,7 @@ pluginManagement {
         .orNull
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.70").get()
+    val cknVer = providers.gradleProperty("composekn.version").orElse("0.5.71").get()
     // 与 settings 插件默认缓存一致；首次需已 fetch 或指向 local，才能解析插件 JAR
     val cacheMaven = java.io.File(
         System.getProperty("user.home"),

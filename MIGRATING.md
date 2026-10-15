@@ -2,14 +2,14 @@
 
 把 **linuxX64 / mingwX64** 桌面宿主接到已有 CMP 工程，同时保留官方 `jvm("desktop")` / Android / iOS。
 
-基线：**0.5.70**（详见 `CONSUMING.md`）。
+基线：**0.5.71**（详见 `CONSUMING.md`）。
 
 ## 最小 diff
 
 ### 1. `gradle.properties`
 
 ```properties
-composekn.version=0.5.70
+composekn.version=0.5.71
 ```
 
 ### 2. `settings.gradle.kts`
