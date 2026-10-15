@@ -18,6 +18,7 @@ package androidx.compose.ui.draganddrop
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.painter.Painter
 
 /**
  * 拖放传输的数据（**发起侧**：应用自己往外拖）。
@@ -95,3 +96,60 @@ actual class DragAndDropEvent internal constructor(
  */
 internal actual val DragAndDropEvent.positionInRoot: Offset
     get() = position
+
+/**
+ * Transfer actions supported by a drag-and-drop session (Desktop parity; no AWT).
+ *
+ * ComposeKN hosts currently expose success/failure only on the source side; this type is for
+ * API-compatible drop-target code that inspects [DragAndDropEvent.dragData].
+ */
+@ExperimentalComposeUiApi
+class DragAndDropTransferAction private constructor(private val name: String) {
+    override fun toString(): String = name
+
+    companion object {
+        val Copy = DragAndDropTransferAction("Copy")
+        val Move = DragAndDropTransferAction("Move")
+        val Link = DragAndDropTransferAction("Link")
+    }
+}
+
+/**
+ * Data dragged/dropped onto a component from outside the application.
+ */
+@ExperimentalComposeUiApi
+interface DragData {
+    interface FilesList : DragData {
+        fun readFiles(): List<String>
+    }
+
+    interface Image : DragData {
+        fun readImage(): Painter
+    }
+
+    interface Text : DragData {
+        val bestMimeType: String
+        fun readText(): String
+    }
+}
+
+/**
+ * Returns the [DragData] associated with this [DragAndDropEvent].
+ *
+ * Prefers file lists, then text. Image drops are not exposed by ComposeKN hosts yet
+ * (returns an empty [DragData] marker).
+ */
+@ExperimentalComposeUiApi
+fun DragAndDropEvent.dragData(): DragData = when {
+    files.isNotEmpty() -> object : DragData.FilesList {
+        override fun readFiles(): List<String> = files
+    }
+    text != null -> object : DragData.Text {
+        override val bestMimeType: String = "text/plain"
+        override fun readText(): String = text!!
+    }
+    else -> EmptyDragData
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+private object EmptyDragData : DragData

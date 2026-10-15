@@ -41,6 +41,18 @@ fun rememberWindowState(
     WindowStateImpl(placement, isMinimized, position, DpSize(width, height))
 }
 
+@Suppress("DEPRECATION")
+@Composable
+@Deprecated("Use rememberWindowState which accepts DpSize")
+fun rememberWindowState(
+    placement: WindowPlacement = WindowPlacement.Floating,
+    isMinimized: Boolean = false,
+    position: WindowPosition = WindowPosition.PlatformDefault,
+    size: WindowSize,
+): WindowState = rememberSaveable(saver = WindowStateImpl.Saver(position)) {
+    WindowStateImpl(placement, isMinimized, position, DpSize(size.width, size.height))
+}
+
 /**
  * Hoisted window attributes (size / position / placement).
  */
@@ -58,6 +70,17 @@ fun WindowState(
     width: Dp = 800.dp,
     height: Dp = 600.dp,
 ): WindowState = WindowStateImpl(placement, isMinimized, position, DpSize(width, height))
+
+@Deprecated("Use WindowState which accepts DpSize")
+@Suppress("DEPRECATION")
+fun WindowState(
+    placement: WindowPlacement = WindowPlacement.Floating,
+    isMinimized: Boolean = false,
+    position: WindowPosition = WindowPosition.PlatformDefault,
+    size: WindowSize,
+): WindowState = WindowStateImpl(
+    placement, isMinimized, position, DpSize(size.width, size.height),
+)
 
 /**
  * A state object that can be hoisted to control and observe window attributes.

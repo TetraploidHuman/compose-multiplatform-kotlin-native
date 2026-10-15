@@ -63,6 +63,11 @@
 - [x] **`modifier.pointerMoveFilter`**（弃用 API，薄封装）
 - [x] **`LocalLocalization` / `PlatformLocalization`** + desktop l10n 表
 - [x] **`modifier.mouseScrollFilter`**（弃用；无 AWT，Line-only）
+- [x] **`MenuComposable`** + MenuBar/Tray 目标注解
+- [x] **`WindowSize`** + deprecated Window/DialogState 重载
+- [x] **`Dialog(...)`** → `DialogWindow`（无 Swing）
+- [x] **`DragData` / `DragAndDropTransferAction` / `dragData()`**（files/text；无 image）
+- [x] **`currentSystemTheme` + `ProvideSystemTheme` / `pollSystemTheme`**（Win 注册表；Linux portal/gsettings）
 
 ### P2 — 平台行为诚实缺口（文档已知）
 
@@ -70,7 +75,8 @@
 - [ ] Linux **`WindowPosition.Absolute`**：协议无绝对坐标（基本不可移植）
 - [ ] Linux IME **Delete surrounding**（text-input-v3）
 - [x] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——代码已接 `drawDragDecoration`；Known gaps 已改
-- [ ] Desktop `ui.res` classpath / SVG — 走 `compose.resources`（可选：Skia SVGDOM）
+- [x] Desktop `ui.res` classpath — **不做**（无 ClassLoader；用 `compose.resources`）
+- [ ] SVG — 可选 Skia SVGDOM / `compose.resources`
 
 ### P3 — 明确不做或远期
 

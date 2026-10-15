@@ -337,6 +337,12 @@ void composekn_linux_tray_notify(
 void composekn_linux_tray_dispatch(void);
 void composekn_linux_tray_destroy(void);
 
+/**
+ * 系统主题：0 = Light，1 = Dark，2 = Unknown
+ *（portal Settings color-scheme，回退 gsettings）。
+ */
+int32_t composekn_linux_system_theme(void);
+
 #ifdef __cplusplus
 }
 #endif

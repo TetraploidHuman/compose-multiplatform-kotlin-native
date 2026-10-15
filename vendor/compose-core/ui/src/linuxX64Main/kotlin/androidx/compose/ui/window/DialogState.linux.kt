@@ -38,6 +38,16 @@ fun rememberDialogState(
     DialogStateImpl(position, DpSize(width, height))
 }
 
+@Suppress("DEPRECATION")
+@Composable
+@Deprecated("Use rememberDialogState which accepts DpSize")
+fun rememberDialogState(
+    position: WindowPosition = WindowPosition(Alignment.Center),
+    size: WindowSize,
+): DialogState = rememberSaveable(saver = DialogStateImpl.Saver(position)) {
+    DialogStateImpl(position, DpSize(size.width, size.height))
+}
+
 fun DialogState(
     position: WindowPosition = WindowPosition(Alignment.Center),
     size: DpSize = DpSize(400.dp, 300.dp),
@@ -48,6 +58,13 @@ fun DialogState(
     width: Dp = 400.dp,
     height: Dp = 300.dp,
 ): DialogState = DialogStateImpl(position, DpSize(width, height))
+
+@Deprecated("Use DialogState which accepts DpSize")
+@Suppress("DEPRECATION")
+fun DialogState(
+    position: WindowPosition = WindowPosition(Alignment.Center),
+    size: WindowSize,
+): DialogState = DialogStateImpl(position, DpSize(size.width, size.height))
 
 /**
  * Hoisted dialog attributes (size / position). Aligns with Desktop [DialogState].

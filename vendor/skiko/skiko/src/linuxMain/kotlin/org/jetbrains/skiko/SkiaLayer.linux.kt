@@ -160,7 +160,7 @@ actual open class SkiaLayer {
     }
 }
 
-actual val currentSystemTheme: SystemTheme = SystemTheme.UNKNOWN
+// currentSystemTheme → SystemTheme.linux.kt
 
 /**
  * `COMPOSEKN_RENDER_API=vulkan|vk|graphite|gl|opengl|gles`：强制指定后端。

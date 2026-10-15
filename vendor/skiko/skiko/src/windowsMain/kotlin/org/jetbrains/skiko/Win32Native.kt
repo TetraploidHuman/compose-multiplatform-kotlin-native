@@ -1792,3 +1792,8 @@ private fun StringBytesDecoding(bytes: ByteArray): String {
     val range = if (end >= 0) bytes.copyOf(end) else bytes
     return range.decodeToString()
 }
+
+/** 0 = Light，1 = Dark，2 = Unknown（HKCU AppsUseLightTheme）。 */
+@SymbolName("composekn_win32_system_theme")
+internal external fun composekn_win32_system_theme(): Int
+

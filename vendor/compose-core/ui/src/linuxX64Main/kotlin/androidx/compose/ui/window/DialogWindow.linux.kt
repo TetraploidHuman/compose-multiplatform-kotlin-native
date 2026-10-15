@@ -220,7 +220,9 @@ fun DialogWindow(
 
     DisposableEffect(handle) {
         handle.setContent {
-            latestContent.value.invoke(scope)
+            androidx.compose.ui.ProvideSystemTheme {
+                latestContent.value.invoke(scope)
+            }
         }
         onDispose {
             handle.dispose()

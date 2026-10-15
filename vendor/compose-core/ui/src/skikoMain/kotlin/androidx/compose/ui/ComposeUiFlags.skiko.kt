@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(kotlin.experimental.ExperimentalNativeApi::class)
+
 package androidx.compose.ui
 
 import kotlin.jvm.JvmField
@@ -34,6 +36,15 @@ internal object SkikoComposeUiFlags {
     @Suppress("MutableBareField")
     @JvmField
     var areWindowInsetsRulersEnabled: Boolean = true
+
+    /**
+     * Whether [ProvideSystemTheme] polls [org.jetbrains.skiko.currentSystemTheme].
+     * Default: off on Linux (matches Desktop), on elsewhere.
+     */
+    @Suppress("MutableBareField")
+    @JvmField
+    var pollSystemTheme: Boolean =
+        kotlin.native.Platform.osFamily != kotlin.native.OsFamily.LINUX
 }
 
 /**
@@ -77,3 +88,10 @@ var ComposeUiFlags.isDialogAnimationEnabled by SkikoComposeUiFlags::isDialogAnim
  */
 @ExperimentalComposeUiApi
 var ComposeUiFlags.areWindowInsetsRulersEnabled by SkikoComposeUiFlags::areWindowInsetsRulersEnabled
+
+/**
+ * Whether the system theme should be polled so `isSystemInDarkTheme` tracks OS changes.
+ * Set before creating Compose UI. Temporary flag (Desktop parity).
+ */
+@ExperimentalComposeUiApi
+var ComposeUiFlags.pollSystemTheme by SkikoComposeUiFlags::pollSystemTheme

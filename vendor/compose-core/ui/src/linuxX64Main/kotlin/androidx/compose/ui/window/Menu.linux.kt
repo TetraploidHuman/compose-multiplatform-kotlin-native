@@ -142,7 +142,7 @@ internal val LocalMenuCollector =
  * Win 无边框（`undecorated = true`）不挂系统 HMENU；Linux 仍画 Compose 条。
  */
 @Composable
-fun FrameWindowScope.MenuBar(content: @Composable MenuBarScope.() -> Unit) {
+fun FrameWindowScope.MenuBar(content: @Composable @MenuComposable MenuBarScope.() -> Unit) {
     val roots = remember { MenuCollector() }
     CompositionLocalProvider(LocalMenuCollector provides roots) {
         MenuBarScope().content()
@@ -158,11 +158,12 @@ fun FrameWindowScope.MenuBar(content: @Composable MenuBarScope.() -> Unit) {
 /** [FrameWindowScope.MenuBar] 的 receiver：往菜单栏追加顶层 [Menu]。 */
 class MenuBarScope internal constructor() {
     @Composable
+    @MenuComposable
     fun Menu(
         text: String,
         enabled: Boolean = true,
         mnemonic: Char? = null,
-        content: @Composable MenuScope.() -> Unit,
+        content: @Composable @MenuComposable MenuScope.() -> Unit,
     ) {
         menuNode(text, enabled, mnemonic, content)
     }
@@ -171,16 +172,18 @@ class MenuBarScope internal constructor() {
 /** 单个弹出菜单 / 子菜单的 receiver。 */
 class MenuScope internal constructor() {
     @Composable
+    @MenuComposable
     fun Menu(
         text: String,
         enabled: Boolean = true,
         mnemonic: Char? = null,
-        content: @Composable MenuScope.() -> Unit,
+        content: @Composable @MenuComposable MenuScope.() -> Unit,
     ) {
         menuNode(text, enabled, mnemonic, content)
     }
 
     @Composable
+    @MenuComposable
     fun Separator() {
         val parent = LocalMenuCollector.current
         val slot = remember { MenuSlot(NativeMenuNode.Separator) }
@@ -192,6 +195,7 @@ class MenuScope internal constructor() {
     }
 
     @Composable
+    @MenuComposable
     fun Item(
         text: String,
         icon: Painter? = null,
@@ -207,6 +211,7 @@ class MenuScope internal constructor() {
     }
 
     @Composable
+    @MenuComposable
     fun CheckboxItem(
         text: String,
         checked: Boolean,
@@ -229,6 +234,7 @@ class MenuScope internal constructor() {
     }
 
     @Composable
+    @MenuComposable
     fun RadioButtonItem(
         text: String,
         selected: Boolean,
@@ -293,7 +299,7 @@ private fun menuNode(
     text: String,
     enabled: Boolean,
     mnemonic: Char?,
-    content: @Composable MenuScope.() -> Unit,
+    content: @Composable @MenuComposable MenuScope.() -> Unit,
 ) {
     val parent = LocalMenuCollector.current
     val children = remember { MenuCollector() }

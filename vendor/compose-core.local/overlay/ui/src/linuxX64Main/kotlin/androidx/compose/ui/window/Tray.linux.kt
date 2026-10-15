@@ -47,7 +47,7 @@ fun ApplicationScope.Tray(
     state: TrayState = rememberTrayState(),
     tooltip: String? = null,
     onAction: () -> Unit = {},
-    menu: @Composable MenuScope.() -> Unit = {},
+    menu: @Composable @MenuComposable MenuScope.() -> Unit = {},
 ) {
     if (!isTraySupported) {
         DisposableEffect(Unit) {

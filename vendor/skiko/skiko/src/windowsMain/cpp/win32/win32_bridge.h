@@ -761,6 +761,11 @@ void composekn_win32_tray_destroy(void);
  */
 bool composekn_win32_tray_set_icon(int32_t w, int32_t h, const uint8_t* bgra);
 
+/**
+ * 系统主题：0 = Light，1 = Dark，2 = Unknown（HKCU AppsUseLightTheme）。
+ */
+int32_t composekn_win32_system_theme(void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

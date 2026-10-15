@@ -15,6 +15,13 @@
 | `pointerMoveFilter` | ✅ | ✅ | 已弃用；薄封装 `onPointerEvent` |
 | `mouseScrollFilter` | ✅ | ✅ | 已弃用；无 AWT，scrollDelta→Line |
 | `LocalLocalization` / `PlatformLocalization` | ✅ | ✅ | 全量 desktop l10n 表；上下文菜单文案 |
+| `MenuComposable` | ✅ | ✅ | 目标注解；MenuBar/Tray/Menu 已标 |
+| `WindowSize`（弃用） | ✅ | ✅ | → `DpSize`；旧 State 重载保留 |
+| `Dialog(...)`（弃用） | ✅ | ✅ | → `DialogWindow`；无 Swing create/dispose |
+| `DragData` / `dragData()` / `DragAndDropTransferAction` | ✅ | ✅ | 无 AWT；files/text 映射；无 image 负载 |
+| `currentSystemTheme` / `isSystemInDarkTheme` | ✅ | ✅ | Win：`AppsUseLightTheme`；Linux：portal/gsettings；`COMPOSEKN_SYSTEM_THEME` 可覆盖 |
+| `ComposeUiFlags.pollSystemTheme` + `ProvideSystemTheme` | ✅ | ✅ | Window/Dialog 自动提供；Linux 默认不轮询（同 Desktop） |
+| Desktop `ui.res` classpath（`painterResource(String)` 等） | ❌ | ❌ | 无 ClassLoader；用 `compose.resources` |
 | `WindowDecoration` | ✅ | ✅ | sealed；Win CSD `resizerThickness`→edgeMargin；`undecorated` 布尔仍兼容 |
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
 | 指针 / 键盘 / 滚轮 | ✅ | ✅ | |
