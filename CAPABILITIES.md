@@ -9,6 +9,10 @@
 | `application` / `Window` | ✅ | ✅ | Desktop 风格 API，`ComposeNativeWindowBackend` |
 | `singleWindowApplication` | ✅ | ✅ | 对齐 Desktop |
 | `Window` 缺参（icon / transparent / enabled / focusable / key / visible） | ⚠️ | ✅ | 签名齐；Win `icon`/`transparent`/`focusable`/`enabled`/key/`visible` 已接线；Linux `transparent` 已接线，`focusable` 丢 Key/IME（无协议挡焦点），icon 记账 |
+| `DialogModalityType` | ⚠️ | ⚠️ | Modeless / DocumentModal / ApplicationModal；无 AWT owner 时 Document≈Application（软模态） |
+| `WindowExceptionHandlerFactory` | ✅ | ✅ | handle 类型为 `ComposeNativeWindowHandle`（非 AWT）；默认 stderr + rethrow |
+| `rememberCursorPositionProvider` 等 | ✅ | ✅ | DesktopPopup 助手（skiko `LocalComposeScene`） |
+| `pointerMoveFilter` | ✅ | ✅ | 已弃用；薄封装 `onPointerEvent` |
 | `WindowDecoration` | ✅ | ✅ | sealed；Win CSD `resizerThickness`→edgeMargin；`undecorated` 布尔仍兼容 |
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
 | 指针 / 键盘 / 滚轮 | ✅ | ✅ | |

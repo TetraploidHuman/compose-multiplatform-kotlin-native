@@ -2,7 +2,7 @@
  * Copyright 2021 The Android Open Source Project
  * Copyright 2026 The ComposeKN Authors (linuxX64 / mingw port)
  *
- * 声明式 DialogWindow：独立原生窗 + 软模态（对齐 Desktop DocumentModal 语义的子集）。
+ * 声明式 DialogWindow：独立原生窗 + 软模态（对齐 Desktop DialogModalityType）。
  */
 
 @file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
@@ -24,11 +24,7 @@ import kotlinx.coroutines.awaitCancellation
  * Composes a platform dialog window. Entering composition creates a native window;
  * leaving composition disposes it.
  *
- * 对齐 Desktop：[DialogWindow] 是**独立顶层窗**（不是场景内 AlertDialog）。
- * 系统关窗只调 [onCloseRequest]；真正销毁在离开 composition 时。
- *
- * 软模态：创建参数带 `isDialog=true`，宿主在有对话框时禁用其它窗输入
- *（Win32 `EnableWindow`；Linux 首版跳过非对话框窗的 pointer 事件）。
+ * Soft modality defaults to [DialogModalityType.DocumentModal] (blocks other windows).
  */
 @Composable
 fun DialogWindow(
@@ -59,6 +55,7 @@ fun DialogWindow(
         enabled = enabled,
         focusable = focusable,
         alwaysOnTop = alwaysOnTop,
+        modalityType = DialogModalityType.DocumentModal,
         onPreviewKeyEvent = onPreviewKeyEvent,
         onKeyEvent = onKeyEvent,
         content = content,
@@ -82,8 +79,52 @@ fun DialogWindow(
     onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable DialogWindowScope.() -> Unit,
 ) {
+    DialogWindow(
+        onCloseRequest = onCloseRequest,
+        state = state,
+        visible = visible,
+        title = title,
+        icon = icon,
+        decoration = decoration,
+        transparent = transparent,
+        resizable = resizable,
+        enabled = enabled,
+        focusable = focusable,
+        alwaysOnTop = alwaysOnTop,
+        modalityType = DialogModalityType.DocumentModal,
+        onPreviewKeyEvent = onPreviewKeyEvent,
+        onKeyEvent = onKeyEvent,
+        content = content,
+    )
+}
+
+/**
+ * [DialogWindow] with explicit [DialogModalityType]（对齐 Desktop 1.12 Experimental API）.
+ *
+ * ComposeKN: [DialogModalityType.Modeless] → no soft-modal; Document/Application →
+ * soft-block other windows (`isDialog=true`).
+ */
+@Composable
+fun DialogWindow(
+    onCloseRequest: () -> Unit,
+    state: DialogState = rememberDialogState(),
+    visible: Boolean = true,
+    title: String = "Untitled",
+    icon: Painter? = null,
+    decoration: WindowDecoration,
+    transparent: Boolean = false,
+    resizable: Boolean = true,
+    enabled: Boolean = true,
+    focusable: Boolean = true,
+    alwaysOnTop: Boolean = false,
+    modalityType: DialogModalityType,
+    onPreviewKeyEvent: (KeyEvent) -> Boolean = { false },
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
+    content: @Composable DialogWindowScope.() -> Unit,
+) {
     val undecorated = decoration.isUndecorated
     val backend = remember { ComposeNativeWindowBackendRegistry.requireBackend() }
+    val isModal = modalityType.blocksOtherWindows()
     val handle = remember {
         backend.createWindow(
             ComposeNativeWindowCreateParams(
@@ -96,7 +137,7 @@ fun DialogWindow(
                 enabled = enabled,
                 focusable = focusable,
                 transparent = transparent,
-                isDialog = true,
+                isDialog = isModal,
                 onCloseRequest = onCloseRequest,
             ),
         )
@@ -113,6 +154,7 @@ fun DialogWindow(
     val latestPreview = rememberUpdatedState(onPreviewKeyEvent)
     val latestKey = rememberUpdatedState(onKeyEvent)
     val currentState = rememberUpdatedState(state)
+    val exceptionHandlerFactory = LocalWindowExceptionHandlerFactory.current
 
     val appliedState = remember {
         object {
@@ -151,6 +193,8 @@ fun DialogWindow(
         handle.setIcon(icon)
         handle.setVisible(visible)
         handle.setResizerThicknessDp(decoration.resizerThickness.value)
+        handle.setDialogModality(isModal)
+        handle.setExceptionHandler(exceptionHandlerFactory.exceptionHandler(handle))
         handle.setWindowKeyEventHandlers(
             onPreviewKeyEvent = { latestPreview.value(it) },
             onKeyEvent = { latestKey.value(it) },

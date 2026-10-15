@@ -52,12 +52,21 @@
 - [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）
 - [x] `WindowDecoration.resizerThickness` → Win CSD `edgeMarginDp`；Linux 记账
 
+### 续对齐（签名 / 非 JVM）
+
+- [x] **`DialogModalityType`** + `DialogWindow(..., modalityType)`（Modeless 不软模态；Document/Application 软阻塞其它窗）
+- [x] **`WindowExceptionHandlerFactory` / `LocalWindowExceptionHandlerFactory`**（`ComposeNativeWindowHandle`；渲染/事件 catch）
+- [x] **DesktopPopup**：`rememberCursorPositionProvider` / `rememberPopupPositionProviderAtPosition` / `rememberComponentRectPositionProvider`
+- [x] **`Modifier.pointerMoveFilter`**（弃用 API，薄封装）
+
 ### P2 — 平台行为诚实缺口（文档已知）
 
 - [ ] Linux **`alwaysOnTop`**：现记账；可选 layer-shell / 厂商扩展
 - [ ] Linux **`WindowPosition.Absolute`**：协议无绝对坐标（基本不可移植）
 - [ ] Linux IME **Delete surrounding**（text-input-v3）
 - [x] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——代码已接 `drawDragDecoration`；Known gaps 已改
+- [ ] `mouseScrollFilter`（弃用且绑 AWT `MouseWheelEvent`）— 用 `PointerEventType.Scroll`
+- [ ] Desktop `ui.res` classpath / SVG — 走 `compose.resources`
 
 ### P3 — 明确不做或远期
 

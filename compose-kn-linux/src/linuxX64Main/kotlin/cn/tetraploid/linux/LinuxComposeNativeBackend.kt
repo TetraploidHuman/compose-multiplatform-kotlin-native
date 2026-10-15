@@ -256,6 +256,14 @@ class LinuxNativeWindowHandle(
         app.composeWindow.onCloseRequest = callback
     }
 
+    override fun setDialogModality(isDialog: Boolean) {
+        app.composeWindow.isDialogWindow = isDialog
+    }
+
+    override fun setExceptionHandler(handler: androidx.compose.ui.window.WindowExceptionHandler?) {
+        app.exceptionHandler = handler
+    }
+
     override fun setMenuBar(model: NativeMenuBarModel?) {
         app.composeWindow.setMenuBar(model)
     }

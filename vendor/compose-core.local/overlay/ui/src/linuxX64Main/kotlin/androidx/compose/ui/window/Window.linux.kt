@@ -117,6 +117,7 @@ fun Window(
     val latestPreview = rememberUpdatedState(onPreviewKeyEvent)
     val latestKey = rememberUpdatedState(onKeyEvent)
     val currentState = rememberUpdatedState(state)
+    val exceptionHandlerFactory = LocalWindowExceptionHandlerFactory.current
 
     val appliedState = remember {
         object {
@@ -165,6 +166,7 @@ fun Window(
         handle.setIcon(icon)
         handle.setVisible(visible)
         handle.setResizerThicknessDp(decoration.resizerThickness.value)
+        handle.setExceptionHandler(exceptionHandlerFactory.exceptionHandler(handle))
         handle.setWindowKeyEventHandlers(
             onPreviewKeyEvent = { latestPreview.value(it) },
             onKeyEvent = { latestKey.value(it) },

@@ -19,6 +19,7 @@ import androidx.compose.ui.scene.ComposeScene
 import androidx.compose.ui.scene.SingleComposeSceneRenderingScope
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.window.WindowExceptionHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.enableSavedStateHandles
 import org.jetbrains.skiko.SkikoDispatchers
@@ -76,6 +77,9 @@ class LinuxComposeApplication(
     private var closed = false
     private var savedStateHandlesEnabled = false
 
+    /** From [androidx.compose.ui.window.LocalWindowExceptionHandlerFactory]. */
+    var exceptionHandler: WindowExceptionHandler? = null
+
     init {
         initLinuxMainThread()
         ensureLinuxComposeBackendRegistered()
@@ -130,11 +134,15 @@ class LinuxComposeApplication(
     }
 
     fun renderFrame(canvas: Canvas, width: Int, height: Int, nanoTime: Long) {
-        val density = Density(composeWindow.layer.contentScale)
-        scene.density = density
-        scene.size = IntSize(width, height)
-        with(sceneRenderingScope) {
-            scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+        try {
+            val density = Density(composeWindow.layer.contentScale)
+            scene.density = density
+            scene.size = IntSize(width, height)
+            with(sceneRenderingScope) {
+                scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+            }
+        } catch (t: Throwable) {
+            exceptionHandler?.onException(t) ?: throw t
         }
     }
 
@@ -220,6 +228,14 @@ class LinuxComposeApplication(
     }
 
     private fun handleEvent(event: WaylandEvent) {
+        try {
+            handleEventUnguarded(event)
+        } catch (t: Throwable) {
+            exceptionHandler?.onException(t) ?: throw t
+        }
+    }
+
+    private fun handleEventUnguarded(event: WaylandEvent) {
         if (event.type == WaylandEventType.Scale) {
             scene.density = Density(event.scale)
             return

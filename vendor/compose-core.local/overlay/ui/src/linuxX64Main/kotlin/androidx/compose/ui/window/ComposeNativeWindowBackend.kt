@@ -67,6 +67,18 @@ interface ComposeNativeWindowHandle {
         onKeyEvent: (KeyEvent) -> Boolean,
     ) {}
 
+    /**
+     * Soft-modal dialog registration (align [DialogModalityType]).
+     * When true, hosts disable input on non-dialog windows while this window exists.
+     */
+    fun setDialogModality(isDialog: Boolean) {}
+
+    /**
+     * Catch exceptions during render / event dispatch ([LocalWindowExceptionHandlerFactory]).
+     * Pass null to clear.
+     */
+    fun setExceptionHandler(handler: WindowExceptionHandler?) {}
+
     fun applyPlacement(placement: WindowPlacement, isMinimized: Boolean)
     fun applySize(size: DpSize)
     fun applyPosition(position: WindowPosition)

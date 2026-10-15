@@ -65,10 +65,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogModalityType
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.FileDialog
 import androidx.compose.ui.window.FileDialogFilter
 import androidx.compose.ui.window.FileDialogMode
+import androidx.compose.ui.window.LocalWindowExceptionHandlerFactory
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Notification
 import androidx.compose.ui.window.Tray
@@ -77,6 +79,7 @@ import androidx.compose.ui.window.WindowDecoration
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.isTraySupported
+import androidx.compose.ui.window.rememberCursorPositionProvider
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberNotification
 import androidx.compose.ui.window.rememberTrayState
@@ -495,6 +498,9 @@ private fun runLinuxSelfTest() {
     var failed = false
     var dualOk = false
     var dialogOk = false
+    var modelessOk = false
+    var exceptionFactoryOk = false
+    var cursorProviderOk = false
     var clipboardOk = false
     var menuShortcutOk = false
     var resourcesOk = false
@@ -504,6 +510,7 @@ private fun runLinuxSelfTest() {
         val state = rememberWindowState(size = DpSize(640.dp, 400.dp))
         var openSecond by remember { mutableStateOf(false) }
         var openDialog by remember { mutableStateOf(false) }
+        var openModeless by remember { mutableStateOf(false) }
         var menuHit by remember { mutableStateOf(false) }
         Window(
             onCloseRequest = ::exitApplication,
@@ -602,10 +609,15 @@ private fun runLinuxSelfTest() {
                     delay(400)
                     openDialog = false
                     delay(200)
+                    openModeless = true
+                    delay(300)
+                    openModeless = false
+                    delay(200)
                     frames = 1
                     dualOk = true
                     dialogOk = true
-                    println("SELFTEST: placement+dual-window+dialog ok")
+                    modelessOk = true
+                    println("SELFTEST: placement+dual-window+dialog+modeless ok")
                 } catch (t: Throwable) {
                     failed = true
                     println("SELFTEST: FAIL ${t.message}")
@@ -614,6 +626,10 @@ private fun runLinuxSelfTest() {
                     exitApplication()
                 }
             }
+            // 冒烟：CompositionLocal + cursor popup provider 可解析
+            exceptionFactoryOk = LocalWindowExceptionHandlerFactory.current != null
+            val cursorProvider = rememberCursorPositionProvider()
+            cursorProviderOk = cursorProvider != null
             Text("selftest…")
         }
         if (openSecond) {
@@ -634,9 +650,21 @@ private fun runLinuxSelfTest() {
                 Text("dialog")
             }
         }
+        if (openModeless) {
+            DialogWindow(
+                onCloseRequest = { openModeless = false },
+                state = rememberDialogState(size = DpSize(260.dp, 160.dp)),
+                title = "SelfTest · Modeless",
+                decoration = WindowDecoration.Undecorated(),
+                modalityType = DialogModalityType.Modeless,
+            ) {
+                Text("modeless")
+            }
+        }
     }
 
-    val passCore = !failed && frames > 0 && dualOk && dialogOk && clipboardOk &&
+    val passCore = !failed && frames > 0 && dualOk && dialogOk && modelessOk &&
+        exceptionFactoryOk && cursorProviderOk && clipboardOk &&
         menuShortcutOk && resourcesOk && beginMoveOk && visibleOk && singleOk
     val extrasRequired = selftestExtrasRequired()
     val extrasOk = !extrasRequired || (trayOk && fdOk)
@@ -646,7 +674,8 @@ private fun runLinuxSelfTest() {
     val pass = passCore && extrasOk
     println(
         "SELFTEST: ${if (pass) "PASS" else "FAIL"} " +
-            "tray=$trayOk filedialog=$fdOk dual=$dualOk dialog=$dialogOk clipboard=$clipboardOk " +
+            "tray=$trayOk filedialog=$fdOk dual=$dualOk dialog=$dialogOk modeless=$modelessOk " +
+            "exFactory=$exceptionFactoryOk cursor=$cursorProviderOk clipboard=$clipboardOk " +
             "menu=$menuShortcutOk resources=$resourcesOk beginMove=$beginMoveOk " +
             "visible=$visibleOk single=$singleOk",
     )

@@ -16,6 +16,7 @@ import androidx.compose.ui.scene.ComposeScene
 import androidx.compose.ui.scene.SingleComposeSceneRenderingScope
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.window.WindowExceptionHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.enableSavedStateHandles
 import org.jetbrains.skiko.SkikoDispatchers
@@ -96,6 +97,9 @@ class WindowsComposeApplication(
     private var closed = false
     private var savedStateHandlesEnabled = false
 
+    /** From [androidx.compose.ui.window.LocalWindowExceptionHandlerFactory]. */
+    var exceptionHandler: WindowExceptionHandler? = null
+
     init {
         // 必须尽早标记「当前线程 = UI 主线程」。
         // Skiko 的 WindowsMainDispatcher 只有在 isWindowsMainThread() 为真时才会把
@@ -174,23 +178,33 @@ class WindowsComposeApplication(
      * 窗口模式下由 [SkikoRenderDelegate.onRender] 调用；离屏模式下由测试直接调用。
      */
     fun renderFrame(canvas: Canvas, width: Int, height: Int, nanoTime: Long) {
-        // 每帧同步 density：初始 scene.density 是默认值(1.0)，
-        // 只在收到 ResizeEvent 时才设，会导致第一帧（HiDPI 下）UI 特别小，
-        // 直到窗口被缩放触发重组才恢复。
-        val density = effectiveDensity()
-        // 容器尺寸必须在 scene.size / measure **之前**同步：Popup/Dialog 的
-        // measure policy 直接读 `LocalWindowInfo.current.containerSize` 来定位和裁剪，
-        // 缺了它弹层会被夹到 (0,0)（见 WindowsWindowInfo 的注释）。
-        platformContext.updateContainerSize(IntSize(width, height), density)
-        scene.density = density
-        scene.size = IntSize(width, height)
-        with(sceneRenderingScope) {
-            scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+        try {
+            // 每帧同步 density：初始 scene.density 是默认值(1.0)，
+            // 只在收到 ResizeEvent 时才设，会导致第一帧（HiDPI 下）UI 特别小，
+            // 直到窗口被缩放触发重组才恢复。
+            val density = effectiveDensity()
+            // 容器尺寸必须在 scene.size / measure **之前**同步：Popup/Dialog 的
+            // measure policy 直接读 `LocalWindowInfo.current.containerSize` 来定位和裁剪，
+            // 缺了它弹层会被夹到 (0,0)（见 WindowsWindowInfo 的注释）。
+            platformContext.updateContainerSize(IntSize(width, height), density)
+            scene.density = density
+            scene.size = IntSize(width, height)
+            with(sceneRenderingScope) {
+                scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+            }
+        } catch (t: Throwable) {
+            exceptionHandler?.onException(t) ?: throw t
         }
     }
 
     /** 派发一个（真实或合成的）平台事件。 */
-    fun dispatchEvent(event: WindowsEvent) = handleEvent(event)
+    fun dispatchEvent(event: WindowsEvent) {
+        try {
+            handleEvent(event)
+        } catch (t: Throwable) {
+            exceptionHandler?.onException(t) ?: throw t
+        }
+    }
 
     /**
      * 自检用：直接问一次「组字串里第 [charIndex] 个字符在哪」。

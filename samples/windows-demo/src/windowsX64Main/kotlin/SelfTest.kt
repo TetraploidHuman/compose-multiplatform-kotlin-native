@@ -90,10 +90,12 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.window.DialogModalityType
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowDecoration
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberDialogState
 import androidx.compose.ui.window.rememberWindowState
@@ -3298,6 +3300,7 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
     var stateToNativeOk = false
     var dialogFramesOk = false
     var dialogModalityOk = false
+    var dialogModelessOk = false
     var exitApp: (() -> Unit)? = null
 
     val guard = WindowPhaseGuard()
@@ -3317,6 +3320,7 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
             // 必须 remember：否则 application 层一重组就新建 false，DialogWindow 永远进不来。
             var openSecond by remember { mutableStateOf(true) }
             var openDialog by remember { mutableStateOf(false) }
+            var openModeless by remember { mutableStateOf(false) }
             val mainState = rememberWindowState(width = 400.dp, height = 300.dp)
 
             Window(
@@ -3410,6 +3414,28 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
                         dialogModalityOk = false
                     }
 
+                    // Modeless：主窗应保持可点（不注册软模态）
+                    openModeless = true
+                    waited = 0
+                    while (waited < 45) {
+                        withFrameNanos { waited++ }
+                    }
+                    val mainEnabledWhileModeless =
+                        (window as? WindowsNativeWindowHandle)
+                            ?.composeWindow
+                            ?.nativeWindow
+                            ?.isEnabled
+                    dialogModelessOk = mainEnabledWhileModeless == true
+                    winlog(
+                        "application-api: modeless mainEnabled=$mainEnabledWhileModeless " +
+                            "ok=$dialogModelessOk",
+                    )
+                    openModeless = false
+                    waited = 0
+                    while (openModeless && waited < 30) {
+                        withFrameNanos { waited++ }
+                    }
+
                     reachedExit = true
                     winlog(
                         "application-api: mainFrames=$frames secondFrames=$framesSecond " +
@@ -3451,6 +3477,18 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
                     Text("dialog frames=$framesDialog")
                 }
             }
+
+            if (openModeless) {
+                DialogWindow(
+                    onCloseRequest = { openModeless = false },
+                    state = rememberDialogState(width = 280.dp, height = 160.dp),
+                    title = "Selftest-modeless",
+                    decoration = WindowDecoration.Undecorated(),
+                    modalityType = DialogModalityType.Modeless,
+                ) {
+                    Text("modeless")
+                }
+            }
         }
     } catch (t: Throwable) {
         report.check(
@@ -3490,6 +3528,11 @@ private fun runApplicationApiSelfTest(report: SelfTestReport) {
         "application-api/dialog-modality",
         dialogModalityOk,
         "DialogWindow 打开时主窗应 EnableWindow(FALSE)，关闭后恢复",
+    )
+    report.check(
+        "application-api/dialog-modeless",
+        dialogModelessOk,
+        "Modeless DialogWindow 不应禁用主窗",
     )
     report.check("application-api/reached-exit", reachedExit)
     report.check(

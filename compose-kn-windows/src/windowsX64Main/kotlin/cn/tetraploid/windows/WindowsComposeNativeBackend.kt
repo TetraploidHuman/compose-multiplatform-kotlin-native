@@ -239,6 +239,14 @@ class WindowsNativeWindowHandle(
         app.window.onCloseRequest = callback
     }
 
+    override fun setDialogModality(isDialog: Boolean) {
+        app.window.isDialogWindow = isDialog
+    }
+
+    override fun setExceptionHandler(handler: androidx.compose.ui.window.WindowExceptionHandler?) {
+        app.exceptionHandler = handler
+    }
+
     override fun setContent(content: @Composable () -> Unit) {
         pendingContent = content
         // 重新 setContent 到已有 scene（attach 时已建好）
