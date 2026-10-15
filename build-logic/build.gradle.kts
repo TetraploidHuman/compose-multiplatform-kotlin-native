@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "cn.tetraploid"
-version = providers.gradleProperty("composekn.version").orElse("0.5.69").get()
+version = providers.gradleProperty("composekn.version").orElse("0.5.70").get()
 
 dependencies {
     implementation(gradleApi())

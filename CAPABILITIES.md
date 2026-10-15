@@ -13,6 +13,8 @@
 | `WindowExceptionHandlerFactory` | ✅ | ✅ | handle 类型为 `ComposeNativeWindowHandle`（非 AWT）；默认 stderr + rethrow |
 | `rememberCursorPositionProvider` 等 | ✅ | ✅ | DesktopPopup 助手（skiko `LocalComposeScene`） |
 | `pointerMoveFilter` | ✅ | ✅ | 已弃用；薄封装 `onPointerEvent` |
+| `mouseScrollFilter` | ✅ | ✅ | 已弃用；无 AWT，scrollDelta→Line |
+| `LocalLocalization` / `PlatformLocalization` | ✅ | ✅ | 全量 desktop l10n 表；上下文菜单文案 |
 | `WindowDecoration` | ✅ | ✅ | sealed；Win CSD `resizerThickness`→edgeMargin；`undecorated` 布尔仍兼容 |
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
 | 指针 / 键盘 / 滚轮 | ✅ | ✅ | |

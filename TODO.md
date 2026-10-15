@@ -9,7 +9,7 @@
 | 产品短名 | `composekn`（属性 / 缓存 / 脚本 / `ComposeKN*`） |
 | 产品全名 | `compose-multiplatform-kotlin-native` |
 
-## 已完成（近期，v0.5.69）
+## 已完成（近期，v0.5.70）
 
 - [x] 统一插件 + 单版本 BOM；消费方主要锁 `composekn.version`
 - [x] Release CDN：`composekn-maven-*.zip` → `~/.composekn/m2/<ver>`
@@ -19,6 +19,9 @@
 - [x] **发版 0.5.68**：`cn.tetraploid` 坐标重打并上传 [composekn-maven-0.5.68.zip](https://github.com/TetraploidHuman/compose-multiplatform-kotlin-native/releases/tag/v0.5.68)；consumer-smoke OK
 - [x] **真消费**：`samples/lumicode` 改为独立 Maven 工程（`cn.tetraploid` / 0.5.68），接 LumiCodeNext `commonMain`
 - [x] Desktop P0/P1 API 对齐 + Linux/Wine selftest；**发版 0.5.69**
+- [x] GitHub Packages 补传 0.5.69（`write:packages` PAT）
+- [x] `DialogModalityType` / ExceptionHandler / DesktopPopup / `pointerMoveFilter`；**发版 0.5.70**
+- [x] `LocalLocalization` + `mouseScrollFilter`（无 AWT）
 
 ## 待做：相对 JVM Desktop 的 API 补齐（按优先级）
 
@@ -57,7 +60,9 @@
 - [x] **`DialogModalityType`** + `DialogWindow(..., modalityType)`（Modeless 不软模态；Document/Application 软阻塞其它窗）
 - [x] **`WindowExceptionHandlerFactory` / `LocalWindowExceptionHandlerFactory`**（`ComposeNativeWindowHandle`；渲染/事件 catch）
 - [x] **DesktopPopup**：`rememberCursorPositionProvider` / `rememberPopupPositionProviderAtPosition` / `rememberComponentRectPositionProvider`
-- [x] **`Modifier.pointerMoveFilter`**（弃用 API，薄封装）
+- [x] **`modifier.pointerMoveFilter`**（弃用 API，薄封装）
+- [x] **`LocalLocalization` / `PlatformLocalization`** + desktop l10n 表
+- [x] **`modifier.mouseScrollFilter`**（弃用；无 AWT，Line-only）
 
 ### P2 — 平台行为诚实缺口（文档已知）
 
@@ -65,8 +70,7 @@
 - [ ] Linux **`WindowPosition.Absolute`**：协议无绝对坐标（基本不可移植）
 - [ ] Linux IME **Delete surrounding**（text-input-v3）
 - [x] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——代码已接 `drawDragDecoration`；Known gaps 已改
-- [ ] `mouseScrollFilter`（弃用且绑 AWT `MouseWheelEvent`）— 用 `PointerEventType.Scroll`
-- [ ] Desktop `ui.res` classpath / SVG — 走 `compose.resources`
+- [ ] Desktop `ui.res` classpath / SVG — 走 `compose.resources`（可选：Skia SVGDOM）
 
 ### P3 — 明确不做或远期
 

@@ -6,11 +6,11 @@
 
 ### 版本对照（官方 CMP ↔ 本产品）
 
-| 角色 | 官方 / 上游 | 0.5.69 |
+| 角色 | 官方 / 上游 | 0.5.70 |
 |------|-------------|--------|
-| 产品版本 | — | **0.5.69**（宿主 / Skiko / 插件 / BOM） |
+| 产品版本 | — | **0.5.70**（宿主 / Skiko / 插件 / BOM） |
 | Kotlin | 2.4.0（与本仓库对齐） | **2.4.0** |
-| Compose UI 源码基线 | Multiplatform **1.12.1** | 发布坐标 **`1.12.1-ckn.0.5.69`** |
+| Compose UI 源码基线 | Multiplatform **1.12.1** | 发布坐标 **`1.12.1-ckn.0.5.70`** |
 | Compose Gradle 插件 / `compose_deps` | 1.11.1 | 同左（仅未顶掉的 runtime 等） |
 | `compose.resources` | `org.jetbrains.compose.resources` + `components-resources` | **同包名**；K/N 桌面由 `compose-kn-resources` 提供（settings 自动顶替） |
 
@@ -41,7 +41,7 @@
 ### 1. `gradle.properties`
 
 ```properties
-composekn.version=0.5.69
+composekn.version=0.5.70
 ```
 
 ### 2. `settings.gradle.kts`
@@ -70,7 +70,7 @@ plugins {
 首次若缓存为空，先跑一次：
 
 ```bash
-./scripts/fetch-composekn-maven.sh   # → ~/.composekn/m2/0.5.69
+./scripts/fetch-composekn-maven.sh   # → ~/.composekn/m2/0.5.70
 ```
 
 （之后 `cn.tetraploid` 也会尝试自动补全同一目录，供依赖解析使用。）
@@ -106,7 +106,7 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation(platform("cn.tetraploid:compose-kn-bom:0.5.69"))
+    implementation(platform("cn.tetraploid:compose-kn-bom:0.5.70"))
 }
 ```
 
