@@ -151,6 +151,8 @@ struct ComposeKNWindow {
     std::vector<uint8_t> clipboard_image_bgra;
     int32_t clipboard_image_w = 0;
     int32_t clipboard_image_h = 0;
+    /** 1 = BGRA，2 = PNG 字节（宽高在 Kotlin/Skia 解）。 */
+    int32_t clipboard_image_kind = 0;
     bool selection_has_text = false;
     bool selection_has_html = false;
     bool selection_has_rtf = false;
@@ -173,6 +175,7 @@ struct ComposeKNWindow {
     wl_data_source* drag_source = nullptr;
     std::string drag_set_text;
     std::string drag_set_files_uri;
+    std::vector<uint8_t> drag_set_bmp;
     std::vector<uint8_t> drag_icon_bgra;
     int32_t drag_icon_w = 0;
     int32_t drag_icon_h = 0;
@@ -194,8 +197,15 @@ struct ComposeKNWindow {
     double dnd_y = 0.0;
     bool dnd_has_text = false;
     bool dnd_has_uri = false;
+    bool dnd_has_image = false;
+    std::string dnd_image_mime;
     std::string dnd_files_cache;
     std::string dnd_text_cache;
+    std::vector<uint8_t> dnd_image_bgra;
+    int32_t dnd_image_w = 0;
+    int32_t dnd_image_h = 0;
+    /** 1 = BGRA，2 = PNG 字节。 */
+    int32_t dnd_image_kind = 0;
     bool dnd_accept = false;
 
     uint32_t last_serial = 0;
@@ -1439,6 +1449,7 @@ static void clear_selection_caches(ComposeKNWindow* window) {
     window->clipboard_image_bgra.clear();
     window->clipboard_image_w = 0;
     window->clipboard_image_h = 0;
+    window->clipboard_image_kind = 0;
 }
 
 static std::string percent_encode_path(const std::string& path) {
@@ -1734,7 +1745,7 @@ static void read_selection_into_cache(ComposeKNWindow* window) {
         // Prefer BMP (what we offer); also try png bytes only if labeled image/bmp miss.
         std::string bmp = receive_offer_mime(window, window->selection_offer, "image/bmp");
         if (bmp.empty()) {
-            // Some apps offer image/png — skip decode (no png decoder here).
+            // BMP 优先；没有 BMP 时收下 image/png，交给 Skia 解码。
             for (const auto& mime : window->selection_mimes) {
                 if (mime == "image/bmp" || mime == "image/x-bmp" || mime == "image/x-ms-bmp") {
                     bmp = receive_offer_mime(window, window->selection_offer, mime.c_str());
@@ -1751,6 +1762,17 @@ static void read_selection_into_cache(ComposeKNWindow* window) {
                 window->clipboard_image_bgra = std::move(bgra);
                 window->clipboard_image_w = w;
                 window->clipboard_image_h = h;
+                window->clipboard_image_kind = 1;
+            }
+        }
+        if (window->clipboard_image_kind == 0) {
+            const std::string png =
+                receive_offer_mime(window, window->selection_offer, "image/png");
+            if (!png.empty()) {
+                window->clipboard_image_bgra.assign(png.begin(), png.end());
+                window->clipboard_image_w = 0;
+                window->clipboard_image_h = 0;
+                window->clipboard_image_kind = 2;
             }
         }
     }
@@ -1800,6 +1822,9 @@ static void dnd_accept_preferred(ComposeKNWindow* window) {
     if (window->dnd_accept) {
         if (window->dnd_has_uri) mime = "text/uri-list";
         else if (window->dnd_has_text) mime = "text/plain;charset=utf-8";
+        else if (window->dnd_has_image && !window->dnd_image_mime.empty()) {
+            mime = window->dnd_image_mime.c_str();
+        }
     }
     wl_data_offer_accept(window->dnd_offer, window->dnd_serial, mime);
 }
@@ -1834,8 +1859,14 @@ static void data_device_enter(
     window->dnd_y = wl_fixed_to_double(y);
     window->dnd_has_text = false;
     window->dnd_has_uri = false;
+    window->dnd_has_image = false;
+    window->dnd_image_mime.clear();
     window->dnd_files_cache.clear();
     window->dnd_text_cache.clear();
+    window->dnd_image_bgra.clear();
+    window->dnd_image_w = 0;
+    window->dnd_image_h = 0;
+    window->dnd_image_kind = 0;
     window->dnd_accept = false;
     g_dnd_target = window;
 
@@ -1843,9 +1874,24 @@ static void data_device_enter(
     if (state != nullptr) {
         window->dnd_has_text = state->has_text;
         window->dnd_has_uri = state->has_uri;
+        window->dnd_has_image = false;
+        window->dnd_image_mime.clear();
+        for (const std::string& mime : state->mimes) {
+            if (mime == "image/bmp" || mime == "image/x-bmp" || mime == "image/x-ms-bmp") {
+                window->dnd_has_image = true;
+                window->dnd_image_mime = mime;
+                break;
+            }
+            if (mime == "image/png" && window->dnd_image_mime.empty()) {
+                window->dnd_image_mime = mime;
+            }
+        }
+        if (!window->dnd_has_image && window->dnd_image_mime == "image/png") {
+            window->dnd_has_image = true;
+        }
     }
     // Optimistic accept when payload looks usable (mirrors Win32 DropTarget).
-    if (window->dnd_has_uri || window->dnd_has_text) {
+    if (window->dnd_has_uri || window->dnd_has_text || window->dnd_has_image) {
         window->dnd_accept = true;
     }
     if (id != nullptr) {
@@ -1861,8 +1907,9 @@ static void data_device_enter(
     event.type = COMPOSEKN_EVENT_DRAG_ENTER;
     event.x = static_cast<float>(window->dnd_x);
     event.y = static_cast<float>(window->dnd_y);
-    // button bits: 1=uri-list, 2=text (payload only on Drop)
-    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u);
+    // button bits: 1=uri-list, 2=text, 4=image/bmp (payload only on Drop)
+    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u) |
+        (window->dnd_has_image ? 4u : 0u);
     push_event(window, event);
 }
 
@@ -1902,7 +1949,8 @@ static void data_device_motion(
     event.type = COMPOSEKN_EVENT_DRAG_OVER;
     event.x = static_cast<float>(window->dnd_x);
     event.y = static_cast<float>(window->dnd_y);
-    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u);
+    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u) |
+        (window->dnd_has_image ? 4u : 0u);
     push_event(window, event);
 }
 
@@ -1925,6 +1973,29 @@ static void data_device_drop(void* data, wl_data_device* data_device) {
         }
         window->dnd_text_cache = std::move(text);
     }
+    if (window->dnd_has_image && !window->dnd_image_mime.empty()) {
+        const std::string payload =
+            receive_offer_mime(window, window->dnd_offer, window->dnd_image_mime.c_str());
+        if (window->dnd_image_mime == "image/png") {
+            if (!payload.empty()) {
+                window->dnd_image_bgra.assign(payload.begin(), payload.end());
+                window->dnd_image_w = 0;
+                window->dnd_image_h = 0;
+                window->dnd_image_kind = 2;
+            }
+        } else {
+            std::vector<uint8_t> bgra;
+            int32_t w = 0;
+            int32_t h = 0;
+            if (!payload.empty() && decode_bmp_to_bgra(
+                    reinterpret_cast<const uint8_t*>(payload.data()), payload.size(), bgra, w, h)) {
+                window->dnd_image_bgra = std::move(bgra);
+                window->dnd_image_w = w;
+                window->dnd_image_h = h;
+                window->dnd_image_kind = 1;
+            }
+        }
+    }
 
     wl_data_offer_finish(window->dnd_offer);
 
@@ -1932,7 +2003,8 @@ static void data_device_drop(void* data, wl_data_device* data_device) {
     event.type = COMPOSEKN_EVENT_DRAG_DROP;
     event.x = static_cast<float>(window->dnd_x);
     event.y = static_cast<float>(window->dnd_y);
-    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u);
+    event.button = (window->dnd_has_uri ? 1u : 0u) | (window->dnd_has_text ? 2u : 0u) |
+        (window->dnd_has_image ? 4u : 0u);
     push_event(window, event);
 
     free_offer_mime_state(window->dnd_offer);
@@ -2047,7 +2119,8 @@ static void data_source_handle_send(
     }
     if (strcmp(mime_type, "image/bmp") == 0 || strcmp(mime_type, "image/x-bmp") == 0 ||
         strcmp(mime_type, "image/x-ms-bmp") == 0) {
-        write_fd_bytes(fd, window->clipboard_set_bmp.data(), window->clipboard_set_bmp.size());
+        const std::vector<uint8_t>& bmp = is_drag ? window->drag_set_bmp : window->clipboard_set_bmp;
+        write_fd_bytes(fd, bmp.data(), bmp.size());
         return;
     }
     close(fd);
@@ -2086,6 +2159,7 @@ static void finish_outbound_drag(ComposeKNWindow* window, int32_t result) {
     window->drag_result = result;
     window->drag_set_text.clear();
     window->drag_set_files_uri.clear();
+    window->drag_set_bmp.clear();
     window->drag_icon_bgra.clear();
     // Button release often swallowed by compositor grab — match beginMove.
     synth_left_button_up_if_pressed(window, "dragEnd");
@@ -3188,6 +3262,7 @@ extern "C" void composekn_clipboard_set_rich(
     window->clipboard_image_bgra.clear();
     window->clipboard_image_w = 0;
     window->clipboard_image_h = 0;
+    window->clipboard_image_kind = 0;
     // Avoid a deferred selection receive overwriting the local caches we just set.
     window->selection_read_pending = false;
 
@@ -3200,6 +3275,7 @@ extern "C" void composekn_clipboard_set_rich(
         window->clipboard_image_bgra = window->clipboard_set_bgra;
         window->clipboard_image_w = image_w;
         window->clipboard_image_h = image_h;
+        window->clipboard_image_kind = 1;
     }
 
     if (window->clipboard_source != nullptr) {
@@ -3268,12 +3344,21 @@ extern "C" int32_t composekn_clipboard_get_image(uint8_t* bgra, int32_t size, in
     if (window == nullptr) return 0;
     composekn_process_deferred_selection(window);
     const auto& pixels = window->clipboard_image_bgra;
-    if (pixels.empty() || window->clipboard_image_w <= 0 || window->clipboard_image_h <= 0) {
+    if (pixels.empty() || window->clipboard_image_kind == 0) {
+        return 0;
+    }
+    if (window->clipboard_image_kind == 1 &&
+        (window->clipboard_image_w <= 0 || window->clipboard_image_h <= 0)) {
         return 0;
     }
     if (out_dims != nullptr) {
-        out_dims[0] = window->clipboard_image_w;
-        out_dims[1] = window->clipboard_image_h;
+        if (window->clipboard_image_kind == 2) {
+            out_dims[0] = -2;
+            out_dims[1] = 0;
+        } else {
+            out_dims[0] = window->clipboard_image_w;
+            out_dims[1] = window->clipboard_image_h;
+        }
     }
     const int32_t needed = static_cast<int32_t>(pixels.size());
     if (bgra == nullptr || size < needed) return needed;
@@ -3289,7 +3374,10 @@ extern "C" bool composekn_window_start_drag(
     int32_t icon_h,
     const uint8_t* icon_bgra,
     int32_t hot_x,
-    int32_t hot_y
+    int32_t hot_y,
+    int32_t image_w,
+    int32_t image_h,
+    const uint8_t* image_bgra
 ) {
     window = resolve_window(window);
     if (window == nullptr || window->data_device_manager == nullptr || window->surface == nullptr) {
@@ -3302,7 +3390,9 @@ extern "C" bool composekn_window_start_drag(
 
     window->drag_set_text = utf8_text != nullptr ? utf8_text : "";
     window->drag_set_files_uri = paths_to_uri_list(utf8_files);
-    if (window->drag_set_text.empty() && window->drag_set_files_uri.empty()) {
+    window->drag_set_bmp = encode_bmp_bgra(image_w, image_h, image_bgra);
+    if (window->drag_set_text.empty() && window->drag_set_files_uri.empty() &&
+        window->drag_set_bmp.empty()) {
         return false;
     }
 
@@ -3323,6 +3413,9 @@ extern "C" bool composekn_window_start_drag(
     }
     if (!window->drag_set_files_uri.empty()) {
         wl_data_source_offer(window->drag_source, "text/uri-list");
+    }
+    if (!window->drag_set_bmp.empty()) {
+        wl_data_source_offer(window->drag_source, "image/bmp");
     }
     wl_data_source_set_actions(window->drag_source, WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY);
 
@@ -3396,6 +3489,29 @@ extern "C" int32_t composekn_window_dnd_pop_text(ComposeKNWindow* window, char* 
     if (buf != nullptr && n > 0 && size >= n) {
         window->dnd_text_cache.clear();
     }
+    return n;
+}
+
+extern "C" int32_t composekn_window_dnd_pop_image(
+    ComposeKNWindow* window, uint8_t* buf, int32_t size, int32_t* out_wh) {
+    window = resolve_window(window);
+    if (window == nullptr || window->dnd_image_bgra.empty()) return 0;
+    const int32_t n = static_cast<int32_t>(window->dnd_image_bgra.size());
+    if (out_wh != nullptr) {
+        if (window->dnd_image_kind == 2) {
+            out_wh[0] = -2;
+            out_wh[1] = 0;
+        } else {
+            out_wh[0] = window->dnd_image_w;
+            out_wh[1] = window->dnd_image_h;
+        }
+    }
+    if (buf == nullptr || size < n) return n;
+    std::memcpy(buf, window->dnd_image_bgra.data(), static_cast<size_t>(n));
+    window->dnd_image_bgra.clear();
+    window->dnd_image_w = 0;
+    window->dnd_image_h = 0;
+    window->dnd_image_kind = 0;
     return n;
 }
 

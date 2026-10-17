@@ -114,7 +114,9 @@ class TrayState {
 private fun List<NativeMenuNode>.toTrayMenuItems(): List<TrayMenuItem> {
     fun convert(node: NativeMenuNode): TrayMenuItem = when (node) {
         is NativeMenuNode.Separator -> TrayMenuItem(isSeparator = true)
-        is NativeMenuNode.Item -> TrayMenuItem(
+        is NativeMenuNode.Item -> {
+            val icon = node.icon?.renderMenuIconBgra()
+            TrayMenuItem(
             text = when (node.checked) {
                 true -> "✓ ${node.text}"
                 false -> "    ${node.text}"
@@ -122,7 +124,11 @@ private fun List<NativeMenuNode>.toTrayMenuItems(): List<TrayMenuItem> {
             },
             enabled = node.enabled,
             onClick = node.onClick,
+            iconBgra = icon,
+            iconW = if (icon != null) 16 else 0,
+            iconH = if (icon != null) 16 else 0,
         )
+        }
         is NativeMenuNode.Menu -> TrayMenuItem(
             text = node.text,
             enabled = node.enabled,

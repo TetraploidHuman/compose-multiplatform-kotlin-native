@@ -27,6 +27,7 @@ import androidx.compose.ui.window.NativeMenuBarModel
 import androidx.compose.ui.window.NativeMenuNode
 import androidx.compose.ui.window.buildFileDialogFilterUtf8
 import androidx.compose.ui.window.formatNativeMenuLabel
+import androidx.compose.ui.window.renderMenuIconBgra
 import androidx.compose.ui.window.shortcutActions
 import androidx.compose.ui.window.structureKey
 import cn.tetraploid.windows.internal.MOD_ALT
@@ -72,6 +73,9 @@ class WindowsComposeWindow(
     val undecorated: Boolean = false,
 ) {
     val layer = SkiaLayer()
+
+    /** OVER 事件复用 ENTER 时解码的拖放位图，避免每帧再拷一次像素。 */
+    private var lastDragImage: ClipboardImage? = null
 
     // Window state
     var isMaximized: Boolean = false
@@ -659,11 +663,15 @@ class WindowsComposeWindow(
                     is NativeMenuNode.Item -> {
                         val id = nextId++
                         val label = formatNativeMenuLabel(node.text, node.mnemonic, node.shortcut)
+                        val icon = node.icon?.renderMenuIconBgra()
                         menu.appendString(
                             id = id,
                             text = label,
                             enabled = node.enabled,
                             checked = node.checked == true,
+                            iconBgra = icon,
+                            iconW = if (icon != null) 16 else 0,
+                            iconH = if (icon != null) 16 else 0,
                         )
                         menuClickMap[id] = node.onClick
                     }
@@ -842,6 +850,12 @@ class WindowsComposeWindow(
                 Win32Event.DRAG_LEAVE, Win32Event.DRAG_DROP -> {
                     val files = win.dragPopFiles()
                     val text = win.dragPopText().takeIf { it.isNotEmpty() }
+                    val imagePop = win.dragPopImage()
+                    val image = when {
+                        imagePop.reuse -> lastDragImage
+                        imagePop.image != null -> imagePop.image.also { lastDragImage = it }
+                        else -> null.also { lastDragImage = null }
+                    }
                     onEvent(
                         WindowsEvent.DragEvent(
                             phase = when (raw.type) {
@@ -854,6 +868,7 @@ class WindowsComposeWindow(
                             y = raw.y.toInt(),
                             files = files,
                             text = text,
+                            image = image,
                         )
                     )
                 }

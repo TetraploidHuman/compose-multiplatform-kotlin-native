@@ -82,8 +82,8 @@ sealed class WindowsEvent {
      * onEnded —— 我们这边是同一个 root 节点、同一套调用顺序，只是事件来源换成
      * Win32 的 OLE `IDropTarget`（见 HANDOVER §17.33）。
      *
-     * 负载（[files]/[text]）跟着事件一起带过来；只有 OLE 的 CF_HDROP /
-     * CF_UNICODETEXT 两种格式，其它格式（图片等）还没接。
+     * 负载（[files]/[text]/[image]）跟着事件一起带过来。图片是 CF_DIBV5 / CF_DIB /
+     * CF_BITMAP，解码成 BGRA。OVER 复用 ENTER 的同一张 [ClipboardImage]。
      */
     data class DragEvent(
         val phase: DragPhase,
@@ -91,6 +91,7 @@ sealed class WindowsEvent {
         val y: Int,
         val files: List<String>,
         val text: String?,
+        val image: org.jetbrains.skiko.ClipboardImage? = null,
     ) : WindowsEvent()
 
     /**

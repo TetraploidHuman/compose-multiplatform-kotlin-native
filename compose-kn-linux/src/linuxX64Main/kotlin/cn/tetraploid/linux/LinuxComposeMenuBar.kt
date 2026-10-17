@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,7 +31,7 @@ import androidx.compose.ui.window.NativeMenuNode
  * Wayland 上无系统 HMENU：用 Compose 画一条顶栏菜单（对齐 Desktop MenuBar 树模型）。
  *
  * 支持 Item / Checkbox / Radio / Separator / 一层嵌套 [NativeMenuNode.Menu]；
- * shortcut 标签显示在项右侧，真正触发走宿主 [LinuxComposeWindow.tryMenuShortcut]。
+ * shortcut 标签在项右侧，[NativeMenuNode.Item.icon] 画在文字左侧。
  */
 @Composable
 fun LinuxComposeMenuBar(
@@ -95,6 +97,15 @@ private fun LinuxMenuNodes(
                 }
                 DropdownMenuItem(
                     text = { Text(label) },
+                    leadingIcon = node.icon?.let { painter ->
+                        {
+                            Icon(
+                                painter = painter,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    },
                     enabled = node.enabled,
                     onClick = {
                         node.onClick()

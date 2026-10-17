@@ -160,6 +160,9 @@ internal external fun composekn_window_start_drag(
     iconBgra: CPointer<UByteVar>?,
     hotX: Int,
     hotY: Int,
+    imageW: Int,
+    imageH: Int,
+    imageBgra: CPointer<UByteVar>?,
 ): Boolean
 
 @SymbolName("composekn_window_drag_poll_result")
@@ -180,6 +183,14 @@ internal external fun composekn_window_dnd_pop_text(
     window: COpaquePointer?,
     buf: CPointer<ByteVar>?,
     size: Int,
+): Int
+
+@SymbolName("composekn_window_dnd_pop_image")
+internal external fun composekn_window_dnd_pop_image(
+    window: COpaquePointer?,
+    buf: CPointer<UByteVar>?,
+    size: Int,
+    outWh: CPointer<IntVar>?,
 ): Int
 
 @SymbolName("composekn_window_uses_server_decoration")
@@ -329,9 +340,6 @@ object WaylandClipboard {
         val out = allocArray<IntVar>(2)
         val needed = composekn_clipboard_get_image(null, 0, out)
         if (needed <= 0) return@memScoped null
-        val width = out[0]
-        val height = out[1]
-        if (width <= 0 || height <= 0) return@memScoped null
         val pixels = ByteArray(needed)
         val written = pixels.usePinned { pinned ->
             composekn_clipboard_get_image(
@@ -341,7 +349,9 @@ object WaylandClipboard {
             )
         }
         if (written != needed) return@memScoped null
-        ClipboardImage(width, height, pixels)
+        if (out[0] == -2) decodeSkiaEncodedImage(pixels)
+        else if (out[0] <= 0 || out[1] <= 0) null
+        else ClipboardImage(out[0], out[1], pixels)
     }
 
     /**
@@ -515,3 +525,32 @@ internal const val COMPOSEKN_IME_PREEDIT = 3
 internal const val COMPOSEKN_IME_COMMIT = 4
 internal const val COMPOSEKN_IME_DELETE = 5
 internal const val COMPOSEKN_IME_DONE = 6
+
+/** `out_wh[0] == -2`：字节是 PNG（或 Skia 能解的编码），不是 BGRA。 */
+internal fun decodeSkiaEncodedImage(bytes: ByteArray): ClipboardImage? {
+    if (bytes.isEmpty()) return null
+    val image = try {
+        org.jetbrains.skia.Image.makeFromEncoded(bytes)
+    } catch (_: Throwable) {
+        return null
+    }
+    val width = image.width
+    val height = image.height
+    if (width <= 0 || height <= 0) {
+        image.close()
+        return null
+    }
+    val info = org.jetbrains.skia.ImageInfo(
+        width,
+        height,
+        org.jetbrains.skia.ColorType.BGRA_8888,
+        org.jetbrains.skia.ColorAlphaType.UNPREMUL,
+    )
+    val bitmap = org.jetbrains.skia.Bitmap()
+    val ok = bitmap.allocPixels(info) && image.readPixels(bitmap)
+    val pixels = if (ok) bitmap.readPixels() else null
+    bitmap.close()
+    image.close()
+    if (pixels == null || pixels.size < width * height * 4) return null
+    return ClipboardImage(width, height, pixels)
+}

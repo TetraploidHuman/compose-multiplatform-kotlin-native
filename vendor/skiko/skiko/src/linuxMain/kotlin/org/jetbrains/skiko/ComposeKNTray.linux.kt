@@ -25,6 +25,9 @@ class TrayMenuItem(
     val isSeparator: Boolean = false,
     val onClick: (() -> Unit)? = null,
     val children: List<TrayMenuItem> = emptyList(),
+    val iconBgra: ByteArray? = null,
+    val iconW: Int = 0,
+    val iconH: Int = 0,
 )
 
 object ComposeKNTray {

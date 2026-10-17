@@ -6,7 +6,7 @@
  * 无边框 Win 窗不挂系统 HMENU（宿主忽略）。
  *
  * API 对齐 Desktop MenuScope：Item / CheckboxItem / RadioButtonItem +
- * icon / mnemonic / shortcut（icon 忽略；Win mnemonic→`&` / shortcut→`\t` 标签）。
+ * icon / mnemonic / shortcut（Linux Compose 顶栏与 Win HMENU/托盘都画 icon）。
  */
 
 package androidx.compose.ui.window
@@ -19,9 +19,15 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.input.key.toMenuAcceleratorLabel
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 
 /**
  * 原生菜单树节点（平台无关模型；Windows 上映射为 HMENU）。
@@ -41,6 +47,8 @@ sealed class NativeMenuNode {
         val shortcut: KeyShortcut? = null,
         /** null = 普通项；true/false = 勾选态（Checkbox / Radio）。 */
         val checked: Boolean? = null,
+        /** Linux Compose 顶栏绘制；Win HMENU / 托盘文本菜单忽略。 */
+        val icon: Painter? = null,
         val onClick: () -> Unit,
     ) : NativeMenuNode()
 
@@ -75,6 +83,7 @@ fun NativeMenuBarModel.structureKey(): String = buildString {
                             false -> 'f'
                         },
                     )
+                    append(if (n.icon != null) 'i' else '-')
                 }
                 is NativeMenuNode.Menu -> {
                     append('M')
@@ -204,10 +213,8 @@ class MenuScope internal constructor() {
         shortcut: KeyShortcut? = null,
         onClick: () -> Unit,
     ) {
-        // icon：原生 HMENU 无廉价位图项，忽略（API 对齐 Desktop）。
-        @Suppress("UNUSED_PARAMETER")
-        val ignoredIcon = icon
-        itemNode(text, enabled, mnemonic, shortcut, checked = null, onClick = onClick)
+        // Win HMENU 用 MIIM_BITMAP；Linux Compose 顶栏画同一 Painter。
+        itemNode(text, enabled, mnemonic, shortcut, checked = null, icon = icon, onClick = onClick)
     }
 
     @Composable
@@ -221,14 +228,13 @@ class MenuScope internal constructor() {
         shortcut: KeyShortcut? = null,
         onCheckedChange: (Boolean) -> Unit,
     ) {
-        @Suppress("UNUSED_PARAMETER")
-        val ignoredIcon = icon
         itemNode(
             text = text,
             enabled = enabled,
             mnemonic = mnemonic,
             shortcut = shortcut,
             checked = checked,
+            icon = icon,
             onClick = { onCheckedChange(!checked) },
         )
     }
@@ -244,14 +250,13 @@ class MenuScope internal constructor() {
         shortcut: KeyShortcut? = null,
         onClick: () -> Unit,
     ) {
-        @Suppress("UNUSED_PARAMETER")
-        val ignoredIcon = icon
         itemNode(
             text = text,
             enabled = enabled,
             mnemonic = mnemonic,
             shortcut = shortcut,
             checked = selected,
+            icon = icon,
             onClick = onClick,
         )
     }
@@ -264,6 +269,7 @@ private fun itemNode(
     mnemonic: Char?,
     shortcut: KeyShortcut?,
     checked: Boolean?,
+    icon: Painter?,
     onClick: () -> Unit,
 ) {
     val parent = LocalMenuCollector.current
@@ -276,6 +282,7 @@ private fun itemNode(
                 mnemonic = mnemonic,
                 shortcut = shortcut,
                 checked = checked,
+                icon = icon,
                 onClick = { latestOnClick() },
             ),
         )
@@ -286,6 +293,7 @@ private fun itemNode(
         mnemonic = mnemonic,
         shortcut = shortcut,
         checked = checked,
+        icon = icon,
         onClick = { latestOnClick() },
     )
     parent.ensure(slot)
@@ -349,4 +357,30 @@ fun formatNativeMenuLabel(
     } else {
         withMnemonic
     }
+}
+
+/** 菜单/托盘项图标：画成 [sizePx] 正方形、自上而下 BGRA。 */
+fun Painter.renderMenuIconBgra(sizePx: Int = 16): ByteArray? {
+    if (sizePx <= 0) return null
+    val bitmap = ImageBitmap(sizePx, sizePx)
+    val canvas = Canvas(bitmap)
+    CanvasDrawScope().draw(
+        density = Density(1f),
+        layoutDirection = LayoutDirection.Ltr,
+        canvas = canvas,
+        size = Size(sizePx.toFloat(), sizePx.toFloat()),
+    ) {
+        draw(Size(sizePx.toFloat(), sizePx.toFloat()))
+    }
+    val argb = IntArray(sizePx * sizePx)
+    bitmap.readPixels(argb)
+    val bgra = ByteArray(sizePx * sizePx * 4)
+    for (i in argb.indices) {
+        val color = argb[i]
+        bgra[i * 4] = (color and 0xFF).toByte()
+        bgra[i * 4 + 1] = ((color shr 8) and 0xFF).toByte()
+        bgra[i * 4 + 2] = ((color shr 16) and 0xFF).toByte()
+        bgra[i * 4 + 3] = ((color shr 24) and 0xFF).toByte()
+    }
+    return bgra
 }

@@ -23,6 +23,7 @@
 // 覆盖；这里显式引用它，保证链接器把**我们那份**从归档里拉进来。
 #include "SkLoadICU.h"
 #include <algorithm>
+#include <memory>
 #include <cstdarg>
 #include <string>
 #include <cstdio>
@@ -271,8 +272,20 @@ struct ComposeKNWin32Window {
     // 本次拖放会话的负载（ENTER 时解析一次），以及和 drag 事件严格 1:1 的 FIFO。
     std::string dragSessionFiles;   // '\n' 分隔的 UTF-8 路径
     std::string dragSessionText;    // UTF-8 文本
+    // 会话位图（BGRA）。OVER 只复用这份，不把像素再拷进队列。
+    std::shared_ptr<std::vector<uint8_t>> dragSessionImage;
+    int32_t dragSessionImageW = 0;
+    int32_t dragSessionImageH = 0;
     std::vector<std::string> dragFiles;
     std::vector<std::string> dragTexts;
+    struct DragImageSlot {
+        bool has = false;
+        // 非空 = 本条事件带新像素；空且 has = 复用上一条已解码的图。
+        std::shared_ptr<std::vector<uint8_t>> pixels;
+        int32_t width = 0;
+        int32_t height = 0;
+    };
+    std::vector<DragImageSlot> dragImages;
     int dragLogCount = 0;
 
     // ---- IME（IMM32）状态 ----
@@ -2849,6 +2862,7 @@ extern "C" void* composekn_win32_menu_create(bool popup) {
 
 extern "C" void composekn_win32_menu_destroy(void* hmenu) {
     if (hmenu == nullptr) return;
+    composekn_win32_menu_release_bitmaps(hmenu);
     DestroyMenu(reinterpret_cast<HMENU>(hmenu));
 }
 
@@ -2860,6 +2874,55 @@ extern "C" bool composekn_win32_menu_append_string(
     UINT flags = MF_STRING | (enabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED));
     if (checked) flags |= MF_CHECKED;
     return AppendMenuW(reinterpret_cast<HMENU>(parent), flags, id, wide.c_str()) != FALSE;
+}
+
+static void releaseMenuItemBitmaps(HMENU menu) {
+    if (menu == nullptr) return;
+    const int count = GetMenuItemCount(menu);
+    for (int i = 0; i < count; ++i) {
+        MENUITEMINFOW info = {};
+        info.cbSize = sizeof(info);
+        info.fMask = MIIM_SUBMENU | MIIM_BITMAP;
+        if (!GetMenuItemInfoW(menu, static_cast<UINT>(i), TRUE, &info)) continue;
+        if (info.hSubMenu != nullptr) releaseMenuItemBitmaps(info.hSubMenu);
+        if (info.hbmpItem != nullptr &&
+            reinterpret_cast<ULONG_PTR>(info.hbmpItem) > 0xFFFFu) {
+            DeleteObject(info.hbmpItem);
+        }
+    }
+}
+
+extern "C" void composekn_win32_menu_release_bitmaps(void* hmenu) {
+    releaseMenuItemBitmaps(reinterpret_cast<HMENU>(hmenu));
+}
+
+extern "C" bool composekn_win32_menu_set_item_bitmap(
+    void* parent, uint32_t id, const uint8_t* bgra, int32_t w, int32_t h
+) {
+    if (parent == nullptr || bgra == nullptr || w <= 0 || h <= 0) return false;
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (hbmp == nullptr || bits == nullptr) {
+        if (hbmp != nullptr) DeleteObject(hbmp);
+        return false;
+    }
+    std::memcpy(bits, bgra, static_cast<size_t>(w) * static_cast<size_t>(h) * 4u);
+    MENUITEMINFOW info = {};
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_BITMAP;
+    info.hbmpItem = hbmp;
+    if (!SetMenuItemInfoW(reinterpret_cast<HMENU>(parent), id, FALSE, &info)) {
+        DeleteObject(hbmp);
+        return false;
+    }
+    return true;
 }
 
 extern "C" bool composekn_win32_menu_append_separator(void* parent) {
@@ -2895,6 +2958,7 @@ extern "C" void composekn_win32_menu_set(ComposeKNWin32Window* window, void* hme
     window->menuBar = next;
     // 接管所有权：旧菜单（含 MF_POPUP 挂上的子菜单）一并销毁。
     if (prev != nullptr) {
+        composekn_win32_menu_release_bitmaps(prev);
         DestroyMenu(prev);
     }
 }
@@ -3780,6 +3844,42 @@ static int readHDropFiles(HDROP drop, std::string& out) {
     return found;
 }
 
+static bool parseDib(const void* data, size_t size, std::vector<uint8_t>& out, int32_t& width, int32_t& height);
+static bool parseBitmapHandle(HBITMAP handle, std::vector<uint8_t>& out, int32_t& width, int32_t& height);
+
+/** IDataObject 上的 CF_DIBV5 / CF_DIB / CF_BITMAP -> 自上而下 BGRA。 */
+static bool extractDropImage(
+    IDataObject* data, std::vector<uint8_t>& pixels, int32_t& width, int32_t& height) {
+    if (data == nullptr) return false;
+    const CLIPFORMAT formats[] = { CF_DIBV5, CF_DIB };
+    for (CLIPFORMAT format : formats) {
+        FORMATETC fmt = { format, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        STGMEDIUM medium = {};
+        if (data->GetData(&fmt, &medium) != S_OK) continue;
+        bool ok = false;
+        if (medium.tymed == TYMED_HGLOBAL && medium.hGlobal != nullptr) {
+            void* locked = GlobalLock(medium.hGlobal);
+            if (locked != nullptr) {
+                ok = parseDib(locked, GlobalSize(medium.hGlobal), pixels, width, height);
+                GlobalUnlock(medium.hGlobal);
+            }
+        }
+        ReleaseStgMedium(&medium);
+        if (ok) return true;
+    }
+    FORMATETC fmt = { CF_BITMAP, nullptr, DVASPECT_CONTENT, -1, TYMED_GDI };
+    STGMEDIUM medium = {};
+    if (data->GetData(&fmt, &medium) == S_OK) {
+        bool ok = false;
+        if (medium.tymed == TYMED_GDI && medium.hBitmap != nullptr) {
+            ok = parseBitmapHandle(medium.hBitmap, pixels, width, height);
+        }
+        ReleaseStgMedium(&medium);
+        if (ok) return true;
+    }
+    return false;
+}
+
 static bool extractDropPayload(IDataObject* data, std::string& files, std::string& text) {
     if (data == nullptr) return false;
     bool any = false;
@@ -3825,7 +3925,11 @@ static void pushDragEvent(
     float x,
     float y,
     const std::string& files,
-    const std::string& text
+    const std::string& text,
+    bool hasImage,
+    const std::shared_ptr<std::vector<uint8_t>>& image,
+    int32_t imageW,
+    int32_t imageH
 ) {
     if (window == nullptr) return;
     ComposeKNWin32Event e{};
@@ -3836,6 +3940,12 @@ static void pushDragEvent(
     pushEvent(window, e);
     window->dragFiles.push_back(files);
     window->dragTexts.push_back(text);
+    ComposeKNWin32Window::DragImageSlot slot;
+    slot.has = hasImage;
+    slot.pixels = image;
+    slot.width = imageW;
+    slot.height = imageH;
+    window->dragImages.push_back(std::move(slot));
     if (window->dragLogCount < 300) {
         ++window->dragLogCount;
         const int fileCount = files.empty() ? 0 : static_cast<int>(std::count(files.begin(), files.end(), '\n')) + 1;
@@ -3878,13 +3988,29 @@ public:
     HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* data, DWORD keys, POINTL pt, DWORD* effect) override {
         window_->dragSessionFiles.clear();
         window_->dragSessionText.clear();
+        window_->dragSessionImage.reset();
+        window_->dragSessionImageW = 0;
+        window_->dragSessionImageH = 0;
         extractDropPayload(data, window_->dragSessionFiles, window_->dragSessionText);
-        const bool supported = !window_->dragSessionFiles.empty() || !window_->dragSessionText.empty();
+        std::vector<uint8_t> imagePixels;
+        int32_t imageW = 0;
+        int32_t imageH = 0;
+        if (extractDropImage(data, imagePixels, imageW, imageH)) {
+            window_->dragSessionImage =
+                std::make_shared<std::vector<uint8_t>>(std::move(imagePixels));
+            window_->dragSessionImageW = imageW;
+            window_->dragSessionImageH = imageH;
+        }
+        const bool hasImage = window_->dragSessionImage != nullptr;
+        const bool supported =
+            !window_->dragSessionFiles.empty() || !window_->dragSessionText.empty() || hasImage;
         window_->dropAccepted = supported;   // 乐观接受，Kotlin 随后会纠正
         float x = 0.f, y = 0.f;
         dropPointToClient(window_, pt, &x, &y);
         pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_ENTER, x, y,
-                      window_->dragSessionFiles, window_->dragSessionText);
+                      window_->dragSessionFiles, window_->dragSessionText,
+                      hasImage, window_->dragSessionImage,
+                      window_->dragSessionImageW, window_->dragSessionImageH);
         if (effect != nullptr) {
             *effect = supported ? DROPEFFECT_COPY : DROPEFFECT_NONE;
             window_->lastDropEffect = *effect;
@@ -3897,7 +4023,9 @@ public:
         float x = 0.f, y = 0.f;
         dropPointToClient(window_, pt, &x, &y);
         pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_OVER, x, y,
-                      window_->dragSessionFiles, window_->dragSessionText);
+                      window_->dragSessionFiles, window_->dragSessionText,
+                      window_->dragSessionImage != nullptr, nullptr,
+                      window_->dragSessionImageW, window_->dragSessionImageH);
         if (effect != nullptr) {
             *effect = window_->dropAccepted ? DROPEFFECT_COPY : DROPEFFECT_NONE;
             window_->lastDropEffect = *effect;
@@ -3907,9 +4035,13 @@ public:
     }
 
     HRESULT STDMETHODCALLTYPE DragLeave() override {
-        pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_LEAVE, -1.f, -1.f, std::string(), std::string());
+        pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_LEAVE, -1.f, -1.f,
+                      std::string(), std::string(), false, nullptr, 0, 0);
         window_->dragSessionFiles.clear();
         window_->dragSessionText.clear();
+        window_->dragSessionImage.reset();
+        window_->dragSessionImageW = 0;
+        window_->dragSessionImageH = 0;
         window_->dropAccepted = false;
         window_->lastDropEffect = DROPEFFECT_NONE;   // 拖放已离开，光标不再显示「可放下」
         return S_OK;
@@ -3923,12 +4055,26 @@ public:
             files = window_->dragSessionFiles;
             text = window_->dragSessionText;
         }
+        std::vector<uint8_t> imagePixels;
+        int32_t imageW = 0;
+        int32_t imageH = 0;
+        std::shared_ptr<std::vector<uint8_t>> image = window_->dragSessionImage;
+        if (extractDropImage(data, imagePixels, imageW, imageH)) {
+            image = std::make_shared<std::vector<uint8_t>>(std::move(imagePixels));
+        } else {
+            imageW = window_->dragSessionImageW;
+            imageH = window_->dragSessionImageH;
+        }
         float x = 0.f, y = 0.f;
         dropPointToClient(window_, pt, &x, &y);
-        pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_DROP, x, y, files, text);
+        pushDragEvent(window_, COMPOSEKN_WIN32_EVENT_DRAG_DROP, x, y, files, text,
+                      image != nullptr, image, imageW, imageH);
         const bool accepted = window_->dropAccepted;
         window_->dragSessionFiles.clear();
         window_->dragSessionText.clear();
+        window_->dragSessionImage.reset();
+        window_->dragSessionImageW = 0;
+        window_->dragSessionImageH = 0;
         window_->dropAccepted = false;
         if (effect != nullptr) {
             *effect = accepted ? DROPEFFECT_COPY : DROPEFFECT_NONE;
@@ -4075,11 +4221,25 @@ static void composeknInstallDropTarget(ComposeKNWin32Window* window) {
 // OLE 拖放发出侧（文件作用域类 + extern "C"；不进匿名 namespace，以便 C 导出能看见）
 // ---------------------------------------------------------------------------
 
+static std::vector<uint8_t> buildDibLegacy(int32_t width, int32_t height, const uint8_t* bgra);
+static std::vector<uint8_t> buildDibV5(int32_t width, int32_t height, const uint8_t* bgra);
+static HGLOBAL bytesToGlobal(const std::vector<uint8_t>& bytes);
+
 class ComposeKNSourceDataObject final : public IDataObject {
 public:
-    ComposeKNSourceDataObject(const char* utf8_files, const char* utf8_text)
+    ComposeKNSourceDataObject(
+        const char* utf8_files,
+        const char* utf8_text,
+        int32_t image_w,
+        int32_t image_h,
+        const uint8_t* image_bgra)
         : files_(utf8_files != nullptr ? utf8_files : ""),
-          text_(utf8_text != nullptr ? utf8_text : "") {}
+          text_(utf8_text != nullptr ? utf8_text : "") {
+        if (image_w > 0 && image_h > 0 && image_bgra != nullptr) {
+            dib_ = buildDibLegacy(image_w, image_h, image_bgra);
+            dibv5_ = buildDibV5(image_w, image_h, image_bgra);
+        }
+    }
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
         if (ppv == nullptr) return E_POINTER;
@@ -4107,6 +4267,10 @@ public:
             global = buildHDropGlobal(files_.c_str());
         } else if (fmt->cfFormat == CF_UNICODETEXT && !text_.empty()) {
             global = utf8ToUnicodeTextGlobal(text_.c_str());
+        } else if (fmt->cfFormat == CF_DIB && !dib_.empty()) {
+            global = bytesToGlobal(dib_);
+        } else if (fmt->cfFormat == CF_DIBV5 && !dibv5_.empty()) {
+            global = bytesToGlobal(dibv5_);
         } else {
             return DV_E_FORMATETC;
         }
@@ -4121,6 +4285,8 @@ public:
         if (fmt == nullptr) return E_INVALIDARG;
         if (fmt->cfFormat == CF_HDROP && !files_.empty()) return S_OK;
         if (fmt->cfFormat == CF_UNICODETEXT && !text_.empty()) return S_OK;
+        if (fmt->cfFormat == CF_DIB && !dib_.empty()) return S_OK;
+        if (fmt->cfFormat == CF_DIBV5 && !dibv5_.empty()) return S_OK;
         return DV_E_FORMATETC;
     }
 
@@ -4148,6 +4314,8 @@ private:
     LONG refCount_ = 1;
     std::string files_;
     std::string text_;
+    std::vector<uint8_t> dib_;
+    std::vector<uint8_t> dibv5_;
 };
 
 class ComposeKNDropSource final : public IDropSource {
@@ -4345,18 +4513,25 @@ extern "C" int32_t composekn_win32_do_drag_drop(
     int32_t icon_h,
     const uint8_t* icon_bgra,
     int32_t hot_x,
-    int32_t hot_y
+    int32_t hot_y,
+    int32_t image_w,
+    int32_t image_h,
+    const uint8_t* image_bgra
 ) {
     const bool hasFiles = utf8_files != nullptr && utf8_files[0] != '\0';
     const bool hasText = utf8_text != nullptr && utf8_text[0] != '\0';
-    if (!hasFiles && !hasText) return -1;
+    const bool hasImage = image_w > 0 && image_h > 0 && image_bgra != nullptr;
+    if (!hasFiles && !hasText && !hasImage) return -1;
     if ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) == 0) {
         composeknLog("drag: skip DoDragDrop（左键已抬起）");
         return 0;
     }
     ComposeKNSourceDataObject* data = new ComposeKNSourceDataObject(
         hasFiles ? utf8_files : nullptr,
-        hasText ? utf8_text : nullptr
+        hasText ? utf8_text : nullptr,
+        hasImage ? image_w : 0,
+        hasImage ? image_h : 0,
+        hasImage ? image_bgra : nullptr
     );
     ComposeKNDropSource* source = new ComposeKNDropSource();
     DWORD effect = DROPEFFECT_NONE;
@@ -4393,7 +4568,7 @@ extern "C" int32_t composekn_win32_do_drag_drop(
 extern "C" int32_t composekn_win32_test_source_data_formats(
     const char* utf8_files, const char* utf8_text
 ) {
-    ComposeKNSourceDataObject* data = new ComposeKNSourceDataObject(utf8_files, utf8_text);
+    ComposeKNSourceDataObject* data = new ComposeKNSourceDataObject(utf8_files, utf8_text, 0, 0, nullptr);
     FORMATETC fmt = { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     int32_t mask = 0;
     if (data->QueryGetData(&fmt) == S_OK) mask |= 1;
@@ -4464,7 +4639,37 @@ extern "C" int32_t composekn_win32_drag_pop_text(
 }
 
 /**
- * 自检用：直接驱动注册好的 IDropTarget（不经过 OLE 的模态拖放循环）。
+ * 弹出与最近一条 drag 事件配对的图片。
+ *  0  = 这条没有图片（已出队）
+ * -1  = 队列空（配对错了）
+ * -2  = 复用上一条已交给 Kotlin 的像素（已出队，不再拷贝）
+ * >0  = 需要的字节数；buffer 不够时不出队，够了才拷贝并出队。
+ * out_wh[0]=width [1]=height（有像素时）。
+ */
+extern "C" int32_t composekn_win32_drag_pop_image(
+    ComposeKNWin32Window* window, uint8_t* buffer, int32_t buffer_size, int32_t* out_wh) {
+    if (window == nullptr || window->dragImages.empty()) return -1;
+    const ComposeKNWin32Window::DragImageSlot slot = window->dragImages.front();
+    if (!slot.has) {
+        window->dragImages.erase(window->dragImages.begin());
+        return 0;
+    }
+    if (slot.pixels == nullptr || slot.pixels->empty()) {
+        window->dragImages.erase(window->dragImages.begin());
+        return -2;
+    }
+    const int32_t needed = static_cast<int32_t>(slot.pixels->size());
+    if (out_wh != nullptr) {
+        out_wh[0] = slot.width;
+        out_wh[1] = slot.height;
+    }
+    if (buffer == nullptr || buffer_size < needed) return needed;
+    std::memcpy(buffer, slot.pixels->data(), static_cast<size_t>(needed));
+    window->dragImages.erase(window->dragImages.begin());
+    return needed;
+}
+
+/**
  *
  * phase: 0=DragEnter 1=DragOver 2=DragLeave 3=Drop；kind: 0=文件 1=文本。
  * (x, y) 是**客户区**坐标（内部换成屏幕坐标，和真机 OLE 的 POINTL 一致）。

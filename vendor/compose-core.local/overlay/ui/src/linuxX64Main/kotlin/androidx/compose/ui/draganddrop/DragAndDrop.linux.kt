@@ -18,13 +18,23 @@ package androidx.compose.ui.draganddrop
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import org.jetbrains.skia.ColorAlphaType as SkAlpha
+import org.jetbrains.skia.ColorType as SkColorType
+import org.jetbrains.skia.Image
+import org.jetbrains.skia.ImageInfo
+import org.jetbrains.skiko.ClipboardImage
 
 /**
  * 拖放传输的数据（**发起侧**：应用自己往外拖）。
  *
- * Windows：OLE `IDataObject`（`files` → CF_HDROP，`text` → CF_UNICODETEXT）。
- * Linux：`wl_data_source`（`files` → text/uri-list，`text` → text/plain）。
+ * Windows：OLE `IDataObject`（`files` → CF_HDROP，`text` → CF_UNICODETEXT，`image` → CF_DIB/CF_DIBV5）。
+ * Linux：`wl_data_source`（`files` → text/uri-list，`text` → text/plain，`image` → image/bmp）。
  * 至少要有一个非空字段，否则宿主不会启动拖放。
  */
 actual class DragAndDropTransferData @ExperimentalComposeUiApi constructor(
@@ -39,6 +49,12 @@ actual class DragAndDropTransferData @ExperimentalComposeUiApi constructor(
      */
     @property:ExperimentalComposeUiApi
     val onTransferCompleted: ((success: Boolean) -> Unit)? = null,
+    /**
+     * 出站图片（自上而下 BGRA）。Win：`CF_DIB` + `CF_DIBV5`；Linux：`image/bmp`。
+     * 可以单独拖图片，不必再带 files / text。
+     */
+    @property:ExperimentalComposeUiApi
+    val image: ClipboardImage? = null,
 )
 
 /**
@@ -55,6 +71,8 @@ actual class DragAndDropEvent internal constructor(
     internal val position: Offset,
     private val paths: List<String>,
     private val textValue: String?,
+    internal val imageValue: ClipboardImage?,
+    internal val imagePending: Boolean,
 ) {
     /**
      * 本次拖放带来的**文件路径**（Windows 上是 OLE 的 `CF_HDROP`）。
@@ -86,7 +104,9 @@ actual class DragAndDropEvent internal constructor(
             position: Offset,
             files: List<String> = emptyList(),
             text: String? = null,
-        ): DragAndDropEvent = DragAndDropEvent(position, files, text)
+            image: ClipboardImage? = null,
+            imagePending: Boolean = false,
+        ): DragAndDropEvent = DragAndDropEvent(position, files, text, image, imagePending)
     }
 }
 
@@ -136,19 +156,32 @@ interface DragData {
 /**
  * Returns the [DragData] associated with this [DragAndDropEvent].
  *
- * Prefers file lists, then text. Image drops are not exposed by ComposeKN hosts yet
- * (returns an empty [DragData] marker).
+ * 顺序对齐 Desktop：文件列表，然后图片（CF_DIB / image/bmp），然后文本。
+ * Wayland 在 Drop 之前拿不到像素，[imagePending] 仍返回 [DragData.Image]，
+ * [DragData.Image.readImage] 在像素到达前是透明占位。
  */
 @ExperimentalComposeUiApi
 fun DragAndDropEvent.dragData(): DragData = when {
     files.isNotEmpty() -> object : DragData.FilesList {
         override fun readFiles(): List<String> = files
     }
+    imageValue != null || imagePending -> object : DragData.Image {
+        override fun readImage(): Painter {
+            val image = imageValue ?: return ColorPainter(Color.Transparent)
+            return image.toDragPainter()
+        }
+    }
     text != null -> object : DragData.Text {
         override val bestMimeType: String = "text/plain"
         override fun readText(): String = text!!
     }
     else -> EmptyDragData
+}
+
+private fun ClipboardImage.toDragPainter(): Painter {
+    val info = ImageInfo(width, height, SkColorType.BGRA_8888, SkAlpha.UNPREMUL)
+    val bitmap: ImageBitmap = Image.makeRaster(info, pixels, width * 4).toComposeImageBitmap()
+    return BitmapPainter(bitmap)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

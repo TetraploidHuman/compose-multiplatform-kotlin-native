@@ -203,7 +203,10 @@ bool composekn_window_start_drag(
     int32_t icon_h,
     const uint8_t* icon_bgra,
     int32_t hot_x,
-    int32_t hot_y);
+    int32_t hot_y,
+    int32_t image_w,
+    int32_t image_h,
+    const uint8_t* image_bgra);
 
 /** -1 still active/none, 0 cancelled, 1 success. Clears when read if finished. */
 int32_t composekn_window_drag_poll_result(ComposeKNWindow* window);
@@ -214,6 +217,9 @@ void composekn_window_dnd_set_accept(ComposeKNWindow* window, bool accept);
 /** After DragDrop: pop cached files ('\n' paths) / text. Two-phase like getters. */
 int32_t composekn_window_dnd_pop_files(ComposeKNWindow* window, char* buf, int32_t size);
 int32_t composekn_window_dnd_pop_text(ComposeKNWindow* window, char* buf, int32_t size);
+/** After DragDrop: pop cached BMP pixels (BGRA). 0 = none. Two-phase: null buf returns size. */
+int32_t composekn_window_dnd_pop_image(
+    ComposeKNWindow* window, uint8_t* buf, int32_t size, int32_t* out_wh);
 
 /** True when the compositor provides server-side window decorations. */
 bool composekn_window_uses_server_decoration(ComposeKNWindow* window);

@@ -19,13 +19,24 @@ import org.jetbrains.compose.resources.vector.decodeToImageVector as vectorBytes
  * 门面侧真实实现（勿再薄转发到另一包的 `@Composable`：K/N IR 会断链）。
  */
 
-/** 对齐官方 `painterResource(DrawableResource)`（位图 + Android VectorDrawable `.xml`）。 */
+/** 对齐官方 `painterResource(DrawableResource)`（位图、Android VectorDrawable `.xml`、SVG）。 */
 @Composable
 fun painterResource(resource: DrawableResource): Painter {
     val path = resource.relativePath.lowercase()
     if (path.endsWith(".xml")) {
         val image = vectorResource(resource)
         return rememberVectorPainter(image)
+    }
+    if (path.endsWith(".svg")) {
+        val density = LocalDensity.current
+        return remember(resource.identity, resource.relativePath, resource.developmentPath, density) {
+            val bytes = loadDrawableBytes(resource)
+                ?: error(
+                    "Drawable not found: ${resource.identity} " +
+                        "(${resource.relativePath}; dev=${resource.developmentPath})",
+                )
+            bytes.decodeToSvgPainter(density)
+        }
     }
     val image = remember(resource.identity, resource.relativePath, resource.developmentPath) {
         val bytes = loadDrawableBytes(resource)

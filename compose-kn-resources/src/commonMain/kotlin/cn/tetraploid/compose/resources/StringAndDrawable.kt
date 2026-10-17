@@ -29,7 +29,7 @@ fun stringResource(resource: StringResource): String =
         ?: resource.defaultValue
 
 /**
- * 复数资源句柄（对齐官方 `PluralStringResource` 子集）。
+ * 复数资源句柄（对齐官方 `PluralStringResource`）。
  * [items] 的 key 为 quantity：`zero` / `one` / `two` / `few` / `many` / `other`。
  */
 class PluralStringResource internal constructor(
@@ -64,16 +64,11 @@ fun pluralStringResource(resource: PluralStringResource, quantity: Int): String 
 }
 
 /**
- * 极简 CLDR 子集：东亚语系一律 `other`；其它语言 `one`/`other`。
- * （完整 CLDR 规则表后续可再对齐官方。）
+ * CLDR 基数复数（整数）。[language] 是 ISO 639；小数操作数用不到，因为数量是 [Int]。
+ * 缺的 quantity 由调用方回退到 `other`。
  */
-internal fun selectPluralQuantity(language: String, count: Int): String {
-    val abs = if (count < 0) -count else count
-    return when (language.lowercase()) {
-        "zh", "ja", "ko", "vi", "th", "id", "ms", "my", "km", "lo" -> "other"
-        else -> if (abs == 1) "one" else "other"
-    }
-}
+internal fun selectPluralQuantity(language: String, count: Int): String =
+    selectCardinalPlural(language, count)
 
 internal fun formatQuantity(template: String, quantity: Int): String {
     val q = quantity.toString()

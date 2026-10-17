@@ -23,6 +23,9 @@ class TrayMenuItem(
     val isSeparator: Boolean = false,
     val onClick: (() -> Unit)? = null,
     val children: List<TrayMenuItem> = emptyList(),
+    val iconBgra: ByteArray? = null,
+    val iconW: Int = 0,
+    val iconH: Int = 0,
 )
 
 object ComposeKNTray {
@@ -79,7 +82,14 @@ object ComposeKNTray {
                     }
                     else -> {
                         val id = nextId++
-                        menu.appendString(id, node.text, node.enabled)
+                        menu.appendString(
+                            id,
+                            node.text,
+                            node.enabled,
+                            iconBgra = node.iconBgra,
+                            iconW = node.iconW,
+                            iconH = node.iconH,
+                        )
                         node.onClick?.let { menuClickMap[id] = it }
                     }
                 }
@@ -173,6 +183,7 @@ object ComposeKNTray {
                         append('I')
                         append(n.text.length).append(':').append(n.text)
                         append(if (n.enabled) '1' else '0')
+                        append(if (n.iconBgra != null) 'i' else '-')
                     }
                 }
             }

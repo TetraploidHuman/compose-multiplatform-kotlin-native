@@ -47,7 +47,7 @@ import com.example.app.generated.resources.Res
 
 Font(Res.font.noto_sans_regular)
 stringResource(Res.string.app_name)           // values-{lang}[-rREGION] → values
-pluralStringResource(Res.plurals.items, 3)    // one/other 子集 + %d
+pluralStringResource(Res.plurals.items, 3)    // 整数 CLDR + %d
 loadDrawableBytes(Res.drawable.logo)
 painterResource(Res.drawable.logo)            // png/jpeg/webp/bmp…
 painterResource(Res.drawable.ic_foo)          // Android VectorDrawable .xml

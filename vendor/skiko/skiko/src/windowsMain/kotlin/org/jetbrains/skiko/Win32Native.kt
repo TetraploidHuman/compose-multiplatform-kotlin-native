@@ -135,6 +135,15 @@ internal external fun composekn_win32_menu_append_string(
     checked: Boolean,
 ): Boolean
 
+@SymbolName("composekn_win32_menu_set_item_bitmap")
+internal external fun composekn_win32_menu_set_item_bitmap(
+    parent: COpaquePointer?,
+    id: UInt,
+    bgra: CPointer<UByteVar>?,
+    width: Int,
+    height: Int,
+): Boolean
+
 @SymbolName("composekn_win32_menu_append_separator")
 internal external fun composekn_win32_menu_append_separator(parent: COpaquePointer?): Boolean
 
@@ -429,6 +438,14 @@ internal external fun composekn_win32_drag_pop_text(
     bufferSize: Int,
 ): Int
 
+@SymbolName("composekn_win32_drag_pop_image")
+internal external fun composekn_win32_drag_pop_image(
+    window: COpaquePointer?,
+    buffer: CPointer<UByteVar>?,
+    bufferSize: Int,
+    outWh: CPointer<IntVar>?,
+): Int
+
 @SymbolName("composekn_win32_clipboard_get_html")
 internal external fun composekn_win32_clipboard_get_html(
     window: COpaquePointer?, buffer: CPointer<ByteVar>, bufferSize: Int,
@@ -507,6 +524,9 @@ internal external fun composekn_win32_do_drag_drop(
     iconBgra: CPointer<UByteVar>?,
     hotX: Int,
     hotY: Int,
+    imageW: Int,
+    imageH: Int,
+    imageBgra: CPointer<UByteVar>?,
 ): Int
 
 @SymbolName("composekn_win32_test_source_data_formats")
@@ -527,6 +547,12 @@ internal external fun composekn_win32_post_test_key(
 /**
  * High-level wrapper over the Win32 C bridge. All calls are main-thread only.
  */
+/** [Win32Window.dragPopImage] 的结果。`reuse` 时不要重新解码像素。 */
+class DragImagePop(
+    val image: ClipboardImage?,
+    val reuse: Boolean,
+)
+
 class Win32Window internal constructor(internal val native: COpaquePointer) : AutoCloseable {
     private var destroyed = false
 
@@ -1046,6 +1072,39 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
     fun dragPopText(): String =
         dragPopString { buffer, size -> composekn_win32_drag_pop_text(native, buffer, size) }
 
+    /**
+     * 弹出与最近一条 drag 事件配对的图片。必须每条 DRAG_* 都调用一次。
+     *
+     * [reuse] 为 true 时像素与上一次非空结果相同，调用方沿用上次的 [ClipboardImage]。
+     */
+    fun dragPopImage(): DragImagePop = memScoped {
+        val wh = allocArray<IntVar>(2)
+        val needed = composekn_win32_drag_pop_image(native, null, 0, wh)
+        when {
+            needed == -2 -> DragImagePop(image = null, reuse = true)
+            needed <= 0 -> DragImagePop(image = null, reuse = false)
+            else -> {
+                val pixels = ByteArray(needed)
+                val written = pixels.usePinned { pinned ->
+                    composekn_win32_drag_pop_image(
+                        native,
+                        pinned.addressOf(0).reinterpret<UByteVar>(),
+                        needed,
+                        wh,
+                    )
+                }
+                if (written != needed) {
+                    DragImagePop(image = null, reuse = false)
+                } else {
+                    DragImagePop(
+                        image = ClipboardImage(wh[0], wh[1], pixels),
+                        reuse = false,
+                    )
+                }
+            }
+        }
+    }
+
     private inline fun dragPopString(pop: (CPointer<ByteVar>, Int) -> Int): String = memScoped {
         val buffer = allocArray<ByteVar>(DRAG_PAYLOAD_BUFFER_SIZE)
         val length = pop(buffer, DRAG_PAYLOAD_BUFFER_SIZE)
@@ -1079,39 +1138,54 @@ class Win32Window internal constructor(internal val native: COpaquePointer) : Au
         iconBgra: ByteArray? = null,
         hotX: Int = 0,
         hotY: Int = 0,
+        image: ClipboardImage? = null,
     ): Int {
         val filesJoined = files?.takeIf { it.isNotEmpty() }?.joinToString("\n")
         val pixels = iconBgra
         val useIcon = pixels != null && iconW > 0 && iconH > 0 &&
             pixels.size >= iconW * iconH * 4
+        val imagePixels = image?.pixels
+        val useImage = image != null && imagePixels != null &&
+            image.width > 0 && image.height > 0 &&
+            imagePixels.size >= image.width * image.height * 4
         return useCStringOrNull(filesJoined) { filesPtr ->
             useCStringOrNull(text) { textPtr ->
-                if (useIcon && pixels != null) {
-                    pixels.usePinned { pinned ->
-                        composekn_win32_do_drag_drop(
-                            native,
-                            filesPtr,
-                            textPtr,
-                            allowedEffects,
-                            iconW,
-                            iconH,
-                            pinned.addressOf(0).reinterpret<UByteVar>(),
-                            hotX,
-                            hotY,
-                        )
-                    }
-                } else {
-                    composekn_win32_do_drag_drop(
-                        native,
-                        filesPtr,
-                        textPtr,
-                        allowedEffects,
-                        0,
-                        0,
-                        null,
-                        0,
-                        0,
-                    )
+                fun invoke(
+                    iconPtr: CPointer<UByteVar>?,
+                    imagePtr: CPointer<UByteVar>?,
+                ): Int = composekn_win32_do_drag_drop(
+                    native,
+                    filesPtr,
+                    textPtr,
+                    allowedEffects,
+                    if (iconPtr != null) iconW else 0,
+                    if (iconPtr != null) iconH else 0,
+                    iconPtr,
+                    hotX,
+                    hotY,
+                    if (useImage && image != null) image.width else 0,
+                    if (useImage && image != null) image.height else 0,
+                    imagePtr,
+                )
+                when {
+                    useIcon && useImage && pixels != null && imagePixels != null ->
+                        pixels.usePinned { iconPin ->
+                            imagePixels.usePinned { imagePin ->
+                                invoke(
+                                    iconPin.addressOf(0).reinterpret(),
+                                    imagePin.addressOf(0).reinterpret(),
+                                )
+                            }
+                        }
+                    useIcon && pixels != null ->
+                        pixels.usePinned { iconPin ->
+                            invoke(iconPin.addressOf(0).reinterpret(), null)
+                        }
+                    useImage && imagePixels != null ->
+                        imagePixels.usePinned { imagePin ->
+                            invoke(null, imagePin.addressOf(0).reinterpret())
+                        }
+                    else -> invoke(null, null)
                 }
             }
         }
@@ -1708,11 +1782,28 @@ class Win32Menu private constructor(internal val handle: COpaquePointer) {
         text: String,
         enabled: Boolean = true,
         checked: Boolean = false,
+        iconBgra: ByteArray? = null,
+        iconW: Int = 0,
+        iconH: Int = 0,
     ): Boolean {
         check(!transferred) { "Win32Menu 所有权已转移，不能再 append" }
-        return text.useCString {
+        val ok = text.useCString {
             composekn_win32_menu_append_string(handle, id.toUInt(), it, enabled, checked)
         }
+        if (ok && iconBgra != null && iconW > 0 && iconH > 0 &&
+            iconBgra.size >= iconW * iconH * 4
+        ) {
+            iconBgra.usePinned { pinned ->
+                composekn_win32_menu_set_item_bitmap(
+                    handle,
+                    id.toUInt(),
+                    pinned.addressOf(0).reinterpret(),
+                    iconW,
+                    iconH,
+                )
+            }
+        }
+        return ok
     }
 
     fun appendSeparator(): Boolean {

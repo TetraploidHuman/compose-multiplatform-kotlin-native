@@ -268,6 +268,7 @@ extern "C" void composekn_win32_tray_set_tooltip(const char* tooltip_utf8) {
 
 extern "C" void composekn_win32_tray_set_menu(void* hmenu) {
     if (g_tray.menu != nullptr) {
+        composekn_win32_menu_release_bitmaps(g_tray.menu);
         DestroyMenu(g_tray.menu);
         g_tray.menu = nullptr;
     }
@@ -307,6 +308,7 @@ extern "C" void composekn_win32_tray_destroy(void) {
         trayLog("tray: NIM_DELETE");
     }
     if (g_tray.menu != nullptr) {
+        composekn_win32_menu_release_bitmaps(g_tray.menu);
         DestroyMenu(g_tray.menu);
         g_tray.menu = nullptr;
     }

@@ -69,8 +69,9 @@ internal class WindowsDragAndDropManager(
     ): Boolean {
         val files = transferData.files.takeIf { it.isNotEmpty() }
         val text = transferData.text?.takeIf { it.isNotEmpty() }
-        if (files == null && text == null) {
-            win32Log("drag: Source 没有 files/text，跳过 DoDragDrop")
+        val image = transferData.image
+        if (files == null && text == null && image == null) {
+            win32Log("drag: Source 没有 files/text/image，跳过 DoDragDrop")
             transferData.onTransferCompleted?.invoke(false)
             return false
         }
@@ -93,6 +94,7 @@ internal class WindowsDragAndDropManager(
                 window = window,
                 files = files,
                 text = text,
+                image = image,
                 iconW = iconW,
                 iconH = iconH,
                 iconBgra = iconBgra,
@@ -160,6 +162,7 @@ internal class WindowsDragAndDropManager(
         val window: Win32Window,
         val files: List<String>?,
         val text: String?,
+        val image: org.jetbrains.skiko.ClipboardImage?,
         val iconW: Int,
         val iconH: Int,
         val iconBgra: ByteArray?,
@@ -182,6 +185,7 @@ internal class WindowsDragAndDropManager(
                 val effect = pending.window.doDragDrop(
                     files = pending.files,
                     text = pending.text,
+                    image = pending.image,
                     allowedEffects = Win32Message.DROPEFFECT_COPY,
                     iconW = pending.iconW,
                     iconH = pending.iconH,

@@ -18,9 +18,11 @@
 | `MenuComposable` | ✅ | ✅ | 目标注解；MenuBar/Tray/Menu 已标 |
 | `WindowSize`（弃用） | ✅ | ✅ | → `DpSize`；旧 State 重载保留 |
 | `Dialog(...)`（弃用） | ✅ | ✅ | → `DialogWindow`；无 Swing create/dispose |
-| `DragData` / `dragData()` / `DragAndDropTransferAction` | ✅ | ✅ | 无 AWT；files/text 映射；无 image 负载 |
+| `DragData` / `dragData()` / `DragAndDropTransferAction` | ✅ | ✅ | 无 AWT；入站 files / Image（Win DIB、Linux BMP/PNG）/ text；出站 files / text / image（Win CF_DIB+DIBV5、Linux image/bmp） |
 | `currentSystemTheme` / `isSystemInDarkTheme` | ✅ | ✅ | Win：`AppsUseLightTheme`；Linux：portal/gsettings；`COMPOSEKN_SYSTEM_THEME` 可覆盖 |
 | `ComposeUiFlags.pollSystemTheme` + `ProvideSystemTheme` | ✅ | ✅ | Window/Dialog 自动提供；Linux 默认不轮询（同 Desktop） |
+| `TooltipArea` / `BoxWithTooltip` / `TooltipPlacement` | ✅ | ✅ | 纯 Compose Popup；无 AWT |
+| `ContextMenuArea` / `ContextMenuDataProvider` / `contextMenuOpenDetector` | ✅ | ✅ | 公开 API；`DefaultContextMenuRepresentation`（Light/Dark）；无 JPopup |
 | Desktop `ui.res` classpath（`painterResource(String)` 等） | ❌ | ❌ | 无 ClassLoader；用 `compose.resources` |
 | `WindowDecoration` | ✅ | ✅ | sealed；Win CSD `resizerThickness`→edgeMargin；`undecorated` 布尔仍兼容 |
 | 多窗口 | ✅ | ✅ | Linux 共享 `wl_display` |
@@ -28,12 +30,12 @@
 | 窗级 `onPreviewKeyEvent` / `onKeyEvent` | ✅ | ✅ | preview → scene → onKey（对齐 Desktop） |
 | `KeyShortcut` Meta（Win 键） | ✅ | ✅ | Win：`MOD_META`→`isMetaPressed`；Linux：wl Mod4 |
 | 触摸 | ✅ | ✅ | |
-| IME | ✅ | ✅ | Wayland text-input-v3；Win32 IME |
-| 剪贴板 | ✅ | ✅ | 多 MIME（text/html/rtf/image/…） |
+| IME | ✅ | ✅ | Wayland text-input-v3（含 delete-surrounding）；Win32 IME |
+| 剪贴板 | ✅ | ✅ | 多 MIME；Linux 入站图片含 BMP 与 PNG |
 | DnD | ✅ | ✅ | |
 | 文件对话框 | ✅ | ✅ | Linux：xdg-desktop-portal |
 | 系统托盘 | ✅ | ✅ | Linux：SNI；无 SNI 时通知兜底 |
-| MenuBar | ⚠️ Compose 顶栏 | ✅ | Win：HMENU；Linux：Compose 顶栏 + shortcut；icon 忽略 |
+| MenuBar | ⚠️ Compose 顶栏 | ✅ | Win：HMENU + `MIIM_BITMAP` icon；托盘菜单同样；Linux：Compose 顶栏 + shortcut + icon |
 | 窗口最小化 / 最大化 / 关闭 | ✅ | ✅ | |
 | 全屏 | ✅ | ✅ | |
 | `setResizable` | ✅ | ✅ | |
@@ -42,9 +44,9 @@
 | `alwaysOnTop` | ⚠️ 记账 | ✅ | Wayland 无通用协议 |
 | `Aligned` / parent transient | ✅ | ✅ | |
 | 自定义字体 `Res.font` | ✅ | ✅ | `org.jetbrains.compose.resources.Font` + `compose-kn-resources` |
-| `painterResource` / `vectorResource` | ✅ | ✅ | 位图 + Android VectorDrawable `.xml`；无 SVG |
-| `stringResource` locale / `pluralStringResource` | ⚠️ | ⚠️ | `values-*` overlay；plurals 为 one/other 子集（非完整 CLDR） |
-| 官方 `compose.resources` 心智 | ⚠️ 子集 | ⚠️ 子集 | 同包名 / `Res.*`；无完整 CLDR / SVG |
+| `painterResource` / `vectorResource` | ✅ | ✅ | 位图 + Android VectorDrawable `.xml` + SVG（`decodeToSvgPainter`） |
+| `stringResource` locale / `pluralStringResource` | ✅ | ✅ | `values-*` overlay；整数 CLDR 基数（zero/one/two/few/many/other） |
+| 官方 `compose.resources` 心智 | ⚠️ 子集 | ⚠️ 子集 | 同包名 / `Res.*`；复数只覆盖整数 n |
 | JVM Desktop `swing` 互操作 | ❌ | ❌ | 非 JVM |
 | macOS K/N 宿主 | ❌ | — | 未提供 |
 | iOS / Android / WASM | — | — | 用官方 target，非本仓库 |

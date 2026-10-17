@@ -156,27 +156,45 @@ class WaylandWindow(
         iconHeight: Int = 0,
         hotX: Int = 0,
         hotY: Int = 0,
+        image: ClipboardImage? = null,
     ): Boolean {
         val filesJoined = files?.takeIf { it.isNotEmpty() }?.joinToString("\n")
+        val imagePixels = image?.pixels
+        val imageOk = image != null && imagePixels != null &&
+            image.width > 0 && image.height > 0 &&
+            imagePixels.size >= image.width * image.height * 4
         return useCStringOrNull(filesJoined) { filesPtr ->
             useCStringOrNull(text) { textPtr ->
-                if (iconBgra == null || iconWidth <= 0 || iconHeight <= 0) {
+                fun call(iconPtr: kotlinx.cinterop.CPointer<kotlinx.cinterop.UByteVar>?, imagePtr: kotlinx.cinterop.CPointer<kotlinx.cinterop.UByteVar>?): Boolean =
                     composekn_window_start_drag(
-                        native, filesPtr, textPtr, 0, 0, null, hotX, hotY,
+                        native, filesPtr, textPtr,
+                        if (iconPtr != null) iconWidth else 0,
+                        if (iconPtr != null) iconHeight else 0,
+                        iconPtr, hotX, hotY,
+                        if (imageOk && image != null) image.width else 0,
+                        if (imageOk && image != null) image.height else 0,
+                        imagePtr,
                     )
-                } else {
-                    iconBgra.usePinned { pinned ->
-                        composekn_window_start_drag(
-                            native,
-                            filesPtr,
-                            textPtr,
-                            iconWidth,
-                            iconHeight,
-                            pinned.addressOf(0).reinterpret<UByteVar>(),
-                            hotX,
-                            hotY,
-                        )
+                val iconUsable = iconBgra != null && iconWidth > 0 && iconHeight > 0
+                if (iconUsable && imageOk && imagePixels != null && iconBgra != null) {
+                    iconBgra.usePinned { iconPin ->
+                        imagePixels.usePinned { imagePin ->
+                            call(
+                                iconPin.addressOf(0).reinterpret(),
+                                imagePin.addressOf(0).reinterpret(),
+                            )
+                        }
                     }
+                } else if (iconUsable && iconBgra != null) {
+                    iconBgra.usePinned { iconPin ->
+                        call(iconPin.addressOf(0).reinterpret(), null)
+                    }
+                } else if (imageOk && imagePixels != null) {
+                    imagePixels.usePinned { imagePin ->
+                        call(null, imagePin.addressOf(0).reinterpret())
+                    }
+                } else {
+                    call(null, null)
                 }
             }
         }
@@ -193,6 +211,25 @@ class WaylandWindow(
     }
 
     fun dndPopText(): String? = dndPopString(::composekn_window_dnd_pop_text)
+
+    fun dndPopImage(): ClipboardImage? = memScoped {
+        val wh = allocArray<IntVar>(2)
+        val needed = composekn_window_dnd_pop_image(native, null, 0, wh)
+        if (needed <= 0) return@memScoped null
+        val pixels = ByteArray(needed)
+        val written = pixels.usePinned { pinned ->
+            composekn_window_dnd_pop_image(
+                native,
+                pinned.addressOf(0).reinterpret<UByteVar>(),
+                needed,
+                wh,
+            )
+        }
+        if (written != needed) return@memScoped null
+        if (wh[0] == -2) decodeSkiaEncodedImage(pixels)
+        else if (wh[0] <= 0 || wh[1] <= 0) null
+        else ClipboardImage(wh[0], wh[1], pixels)
+    }
 
     private fun dndPopString(
         pop: (COpaquePointer?, CPointer<ByteVar>?, Int) -> Int,

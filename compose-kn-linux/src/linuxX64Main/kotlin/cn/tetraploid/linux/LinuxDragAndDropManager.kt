@@ -63,8 +63,9 @@ internal class LinuxDragAndDropManager(
     ): Boolean {
         val files = transferData.files.takeIf { it.isNotEmpty() }
         val text = transferData.text?.takeIf { it.isNotEmpty() }
-        if (files == null && text == null) {
-            println("composekn: drag Source 没有 files/text，跳过 start_drag")
+        val image = transferData.image
+        if (files == null && text == null && image == null) {
+            println("composekn: drag Source 没有 files/text/image，跳过 start_drag")
             transferData.onTransferCompleted?.invoke(false)
             return false
         }
@@ -81,6 +82,7 @@ internal class LinuxDragAndDropManager(
                 window = window,
                 files = files,
                 text = text,
+                image = image,
                 iconW = icon.width,
                 iconH = icon.height,
                 iconBgra = icon.bgra,
@@ -140,6 +142,7 @@ internal class LinuxDragAndDropManager(
         val window: WaylandWindow,
         val files: List<String>?,
         val text: String?,
+        val image: org.jetbrains.skiko.ClipboardImage?,
         val iconW: Int,
         val iconH: Int,
         val iconBgra: ByteArray?,
@@ -166,6 +169,7 @@ internal class LinuxDragAndDropManager(
                 val started = pending.window.startDrag(
                     files = pending.files,
                     text = pending.text,
+                    image = pending.image,
                     iconBgra = pending.iconBgra,
                     iconWidth = pending.iconW,
                     iconHeight = pending.iconH,

@@ -280,6 +280,11 @@ void* composekn_win32_menu_create(bool popup);
 void composekn_win32_menu_destroy(void* hmenu);
 bool composekn_win32_menu_append_string(
     void* parent, uint32_t id, const char* utf8, bool enabled, bool checked);
+/** 给已追加的命令项挂 32bpp 顶向下 BGRA 图标（MIIM_BITMAP）。w/h<=0 则跳过。 */
+bool composekn_win32_menu_set_item_bitmap(
+    void* parent, uint32_t id, const uint8_t* bgra, int32_t w, int32_t h);
+/** DestroyMenu 之前释放该项及子菜单上的 hbmpItem。 */
+void composekn_win32_menu_release_bitmaps(void* hmenu);
 bool composekn_win32_menu_append_separator(void* parent);
 bool composekn_win32_menu_append_popup(void* parent, const char* utf8, void* child, bool enabled);
 /** SetMenu + DrawMenuBar；hmenu=null 清除。接管所有权（替换时销毁旧菜单）。 */
@@ -364,6 +369,12 @@ int32_t composekn_win32_drag_pop_files(
     ComposeKNWin32Window* window, char* buffer, int32_t buffer_size);
 int32_t composekn_win32_drag_pop_text(
     ComposeKNWin32Window* window, char* buffer, int32_t buffer_size);
+/**
+ * 与 drag 事件 1:1。0=无图（已出队），-1=队列空，-2=复用上一张（已出队），
+ * >0=像素字节数（buffer 不够时不出队）。
+ */
+int32_t composekn_win32_drag_pop_image(
+    ComposeKNWin32Window* window, uint8_t* buffer, int32_t buffer_size, int32_t* out_wh);
 
 /**
  * 自检用：直接驱动注册好的 IDropTarget（构造一个真的 IDataObject 交给它）。
@@ -392,7 +403,10 @@ int32_t composekn_win32_do_drag_drop(
     int32_t icon_h,
     const uint8_t* icon_bgra,
     int32_t hot_x,
-    int32_t hot_y);
+    int32_t hot_y,
+    int32_t image_w,
+    int32_t image_h,
+    const uint8_t* image_bgra);
 
 /**
  * 自检：SourceDataObject 的 QueryGetData/GetData。

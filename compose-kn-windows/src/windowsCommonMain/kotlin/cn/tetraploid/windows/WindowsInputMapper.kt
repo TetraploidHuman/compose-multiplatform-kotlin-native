@@ -161,6 +161,7 @@ internal fun ComposeScene.dispatchWindowsDragEvent(event: WindowsEvent.DragEvent
         position = Offset(event.x.toFloat(), event.y.toFloat()),
         files = event.files,
         text = event.text,
+        image = event.image,
     )
     return when (event.phase) {
         DragPhase.Enter -> {

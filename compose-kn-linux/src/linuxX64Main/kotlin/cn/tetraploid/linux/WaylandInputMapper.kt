@@ -204,22 +204,28 @@ internal fun ComposeScene.dispatchWaylandDragEvent(
     val position = Offset(event.x * contentScale, event.y * contentScale)
     val hasUri = (event.button and 1) != 0
     val hasText = (event.button and 2) != 0
+    val hasImage = (event.button and 4) != 0
 
     val files: List<String>
     val text: String?
+    val image: org.jetbrains.skiko.ClipboardImage?
     if (event.type == WaylandEventType.DragDrop) {
         files = window.dndPopFiles()
         text = window.dndPopText()
+        image = if (hasImage) window.dndPopImage() else null
     } else {
         // 占位：非空 list / 非 null text，真实路径/内容在 Drop 才有
         files = if (hasUri) listOf("") else emptyList()
         text = if (hasText) "" else null
+        image = null
     }
 
     val dragEvent = DragAndDropEvent.forPlatformDrop(
         position = position,
         files = files,
         text = text,
+        image = image,
+        imagePending = hasImage && image == null && event.type != WaylandEventType.DragDrop,
     )
     return when (event.type) {
         WaylandEventType.DragEnter -> {

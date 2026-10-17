@@ -129,7 +129,7 @@ Linux（尤其 NixOS）若直接跑 `.kexe` 缺库，优先用仓库内 `scripts
 | `focusable=false` | 不抢焦点 | 丢 Key/IME；**挡不住** compositor 焦点 | ✅ `WS_EX_NOACTIVATE` |
 | `MenuBar` `icon` | 可显示 | **忽略** | **忽略** |
 | MenuBar 形态 | Swing / 原生 | Compose 顶栏 | 原生 HMENU |
-| `plurals` / locale | 完整 CLDR | **one/other + `values-*`** | 同左 |
+| `plurals` / locale | 完整 CLDR（含小数） | **整数 CLDR + `values-*`** | 同左 |
 | Swing / `AwtWindow` | ✅ | ❌ 非 JVM | ❌ |
 
 更细矩阵：[`CAPABILITIES.md`](CAPABILITIES.md)；Windows 行为与 Wine 限制：[`compose-kn-windows/README.md`](compose-kn-windows/README.md)。

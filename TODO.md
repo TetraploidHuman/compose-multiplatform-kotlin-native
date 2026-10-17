@@ -37,7 +37,7 @@
 
 ### P1 — API 形态不对齐，真项目会踩
 
-- [x] **MenuBar 能力**：`mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win HMENU；Linux Compose 顶栏；`icon` 忽略）
+- [x] **MenuBar 能力**：`mnemonic` / `shortcut` / `CheckboxItem` / `RadioButtonItem`（Win HMENU 忽略 icon；Linux Compose 顶栏画 icon）
 - [x] **`WindowDecoration` + resizerThickness**（`undecorated` 布尔兼容保留）
 - [x] **窗级快捷键路径**：preview → scene → onKey（Linux / Windows）
 
@@ -52,7 +52,7 @@
 - [x] Linux MenuBar 可见实现（Compose 顶栏 + shortcut；非 HMENU）
 - [x] `compose.resources` XML vector（`painterResource` / `vectorResource`；纯 Kotlin xmldom）
 - [x] `compose.resources` locale overlay（`values-*` + `COMPOSEKN_LOCALE`）
-- [x] `compose.resources` plurals 子集（`Res.plurals` + one/other；非完整 CLDR）
+- [x] `compose.resources` plurals（`Res.plurals` + 整数 CLDR 基数）
 - [x] Windows `KeyShortcut(meta=true)`（`MOD_META` → `KeyEvent.isMetaPressed`）
 - [x] `WindowDecoration.resizerThickness` → Win CSD `edgeMarginDp`；Linux 记账
 
@@ -67,17 +67,23 @@
 - [x] **`MenuComposable`** + MenuBar/Tray 目标注解
 - [x] **`WindowSize`** + deprecated Window/DialogState 重载
 - [x] **`Dialog(...)`** → `DialogWindow`（无 Swing）
-- [x] **`DragData` / `DragAndDropTransferAction` / `dragData()`**（files/text；无 image）
+- [x] **`DragData` / `DragAndDropTransferAction` / `dragData()`**（files / 入站 Image / text；出站无 image）
+- [x] Linux 入站图片 **BMP 优先，否则 PNG**（剪贴板与拖放；Skia 解码，`out_dims[0]==-2`）
+- [x] 出站拖图片（`DragAndDropTransferData.image`；Win CF_DIB/DIBV5，Linux image/bmp）
+- [x] Windows 菜单 / 托盘项图标（HMENU `MIIM_BITMAP`，16×16 BGRA）
+- [x] `pluralStringResource` 整数 CLDR（zero/one/two/few/many/other；无小数操作数）
 - [x] **`currentSystemTheme` + `ProvideSystemTheme` / `pollSystemTheme`**（Win 注册表；Linux portal/gsettings）
+- [x] **`TooltipArea` / `BoxWithTooltip` / `TooltipPlacement`**（纯 Compose；无 AWT）
+- [x] **`ContextMenuArea` / `ContextMenuDataProvider` / `DefaultContextMenuRepresentation`**（无 JPopup）
 
 ### P2 — 平台行为诚实缺口（文档已知）
 
 - [ ] Linux **`alwaysOnTop`**：现记账；可选 layer-shell / 厂商扩展
 - [ ] Linux **`WindowPosition.Absolute`**：协议无绝对坐标（基本不可移植）
-- [ ] Linux IME **Delete surrounding**（text-input-v3）
+- [x] Linux IME **Delete surrounding**（text-input-v3：`done` 时先按 UTF-8 字节删除，再提交）
 - [x] Windows README Features / Known gaps 矛盾（自定义装饰拖出）——代码已接 `drawDragDecoration`；Known gaps 已改
 - [x] Desktop `ui.res` classpath — **不做**（无 ClassLoader；用 `compose.resources`）
-- [ ] SVG — 可选 Skia SVGDOM / `compose.resources`
+- [x] SVG — `ByteArray.decodeToSvgPainter` + `painterResource` 识别 `.svg`（Skia SVGDOM）
 
 ### P3 — 明确不做或远期
 
