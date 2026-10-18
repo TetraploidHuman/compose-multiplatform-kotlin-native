@@ -4221,9 +4221,11 @@ static void composeknInstallDropTarget(ComposeKNWin32Window* window) {
 // OLE 拖放发出侧（文件作用域类 + extern "C"；不进匿名 namespace，以便 C 导出能看见）
 // ---------------------------------------------------------------------------
 
+namespace {
 static std::vector<uint8_t> buildDibLegacy(int32_t width, int32_t height, const uint8_t* bgra);
 static std::vector<uint8_t> buildDibV5(int32_t width, int32_t height, const uint8_t* bgra);
 static HGLOBAL bytesToGlobal(const std::vector<uint8_t>& bytes);
+}
 
 class ComposeKNSourceDataObject final : public IDataObject {
 public:

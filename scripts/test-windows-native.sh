@@ -112,9 +112,15 @@ fi
 # 起一个私有 Xvfb（NixOS 的 xvfb 包里**没有** xvfb-run），返回 DISPLAY 号
 XVFB_PID=""
 start_xvfb() {
+    # 上一阶段的 Xvfb 还占着号时，下一阶段会误报「找不到空闲 X display」。
+    if [ -n "${XVFB_PID:-}" ]; then
+        kill "$XVFB_PID" 2>/dev/null || true
+        wait "$XVFB_PID" 2>/dev/null || true
+        XVFB_PID=""
+    fi
     local disp
-    for disp in 99 98 97 96; do
-        if [ ! -e "/tmp/.X${disp}-lock" ]; then break; fi
+    for disp in 92 91 90 89 88 99 98 97 96; do
+        if [ ! -e "/tmp/.X${disp}-lock" ] && [ ! -e "/tmp/.X11-unix/X${disp}" ]; then break; fi
         disp=""
     done
     [ -n "${disp:-}" ] || { echo "找不到空闲 X display" >&2; return 1; }
