@@ -216,24 +216,61 @@ if [ "$DO_RELEASE" = 1 ]; then
     shopt -u dotglob
   fi
   [ -d "$REPO/build/maven-repo/cn/tetraploid" ] || die "build/maven-repo empty — publish first"
-  KLIB_N="$(find "$REPO/build/maven-repo" -name '*.klib' 2>/dev/null | wc -l | tr -d ' ')"
-  info "maven-repo klibs: $KLIB_N"
-  [ "$KLIB_N" -gt 0 ] || die "no .klib under build/maven-repo — artifact merge failed?"
-  info "Pack $ZIP for Release $TAG"
+  UI_VER="$(grep '^composekn.compose.ui.version=' gradle.properties | cut -d= -f2)"
+  UI_VER="${UI_VER:-1.12.1-ckn.${CKN_VER}}"
+  info "Pack $ZIP for Release $TAG (only $CKN_VER and $UI_VER)"
   rm -f "$ZIP"
-  if command -v zip >/dev/null 2>&1; then
-    ( cd "$REPO/build/maven-repo" && zip -qr "$ZIP" . )
-  else
-    python3 - <<PY
-import zipfile, pathlib
-root = pathlib.Path("$REPO/build/maven-repo")
-with zipfile.ZipFile("$ZIP", "w", zipfile.ZIP_DEFLATED) as z:
-    for p in root.rglob("*"):
-        if p.is_file():
-            z.write(p, p.relative_to(root).as_posix())
-print("wrote", "$ZIP")
+  python3 - "$REPO/build/maven-repo" "$ZIP" "$CKN_VER" "$UI_VER" <<'PY'
+import hashlib, pathlib, re, sys, zipfile
+root = pathlib.Path(sys.argv[1])
+zip_path = sys.argv[2]
+keep_vers = {sys.argv[3], sys.argv[4]}
+
+def rewrite_metadata(text):
+    m = re.search(r"<versions>(.*?)</versions>", text, flags=re.S)
+    if not m:
+        return text
+    vers = re.findall(r"<version>([^<]+)</version>", m.group(1))
+    kept = [v for v in vers if v in keep_vers]
+    if not kept:
+        return None
+    block = "<versions>" + "".join(f"\n      <version>{v}</version>" for v in kept) + "\n    </versions>"
+    text = text[:m.start()] + block + text[m.end():]
+    latest = kept[-1]
+    text = re.sub(r"<latest>[^<]*</latest>", f"<latest>{latest}</latest>", text)
+    text = re.sub(r"<release>[^<]*</release>", f"<release>{latest}</release>", text)
+    return text
+
+klibs = 0
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        parts = rel.split("/")
+        name = parts[-1]
+        if name == "maven-metadata.xml" or name.startswith("maven-metadata.xml."):
+            if name != "maven-metadata.xml":
+                continue
+            rewritten = rewrite_metadata(path.read_text(encoding="utf-8"))
+            if rewritten is None:
+                continue
+            data = rewritten.encode("utf-8")
+            z.writestr(rel, data)
+            for algo in ("md5", "sha1", "sha256", "sha512"):
+                digest = hashlib.new(algo, data).hexdigest()
+                side = f"{rel}.{algo}"
+                z.writestr(side, digest.encode("ascii"))
+            continue
+        if not keep_vers.intersection(parts):
+            continue
+        z.write(path, rel)
+        if name.endswith(".klib"):
+            klibs += 1
+print(f"packed klibs: {klibs}")
+if klibs <= 0:
+    sys.exit("no .klib packed — artifact merge failed?")
 PY
-  fi
   ls -lh "$ZIP"
   if ! gh release view "$TAG" >/dev/null 2>&1; then
     gh release create "$TAG" --title "$TAG" \
