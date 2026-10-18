@@ -9,7 +9,7 @@
 | 产品短名 | `composekn`（属性 / 缓存 / 脚本 / `ComposeKN*`） |
 | 产品全名 | `compose-multiplatform-kotlin-native` |
 
-## 已完成（近期，v0.5.71）
+## 已完成（近期，v0.5.72）
 
 - [x] 统一插件 + 单版本 BOM；消费方主要锁 `composekn.version`
 - [x] Release CDN：`composekn-maven-*.zip` → `~/.composekn/m2/<ver>`
@@ -23,6 +23,7 @@
 - [x] `DialogModalityType` / ExceptionHandler / DesktopPopup / `pointerMoveFilter`；**发版 0.5.70**
 - [x] `LocalLocalization` + `mouseScrollFilter`（无 AWT）
 - [x] `MenuComposable` / `WindowSize` / `Dialog` / `DragData` + 系统主题；Linux/Wine selftest；**发版 0.5.71**
+- [x] Tooltip / ContextMenu / SVG / 出站拖图片 / Win 菜单图标 / 整数 CLDR 复数；**发版 0.5.72**
 
 ## 待做：相对 JVM Desktop 的 API 补齐（按优先级）
 

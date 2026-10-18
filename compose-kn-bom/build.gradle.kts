@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "cn.tetraploid"
-version = providers.gradleProperty("composekn.version").getOrElse("0.5.71")
+version = providers.gradleProperty("composekn.version").getOrElse("0.5.72")
 
 val uiBase = providers.gradleProperty("composekn.compose.ui").orElse("1.12.1").get()
 val uiVersion = providers.gradleProperty("composekn.compose.ui.version")

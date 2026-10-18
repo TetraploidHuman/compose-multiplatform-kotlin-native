@@ -11,7 +11,7 @@
 ~/compose-multiplatform-kotlin-native/   # 本仓库（提供 gradlew / 脚本）
   samples/lumicode/                      # 本工程
 ~/LumiCodeNext/                          # sibling
-~/.composekn/m2/0.5.71/                  # Release zip 缓存（或 -Pcomposekn.maven.local=…）
+~/.composekn/m2/0.5.72/                  # Release zip 缓存（或 -Pcomposekn.maven.local=…）
 ```
 
 `build.gradle.kts` 引用：
@@ -55,7 +55,7 @@ Windows（需先 fetch MinGW Skia 预编译包）：
 
 ## 状态
 
-- ✅ 消费 `cn.tetraploid` / **0.5.71**（非 monorepo `project()`）
+- ✅ 消费 `cn.tetraploid` / **0.5.72**（非 monorepo `project()`）
 - ✅ linuxX64 / mingwX64 可链
 - ✅ 自定义字体（`compose-kn-resources` → `Res.font.*`）
 - ✅ `LocalPrefs`：`~/.config/lumicode/settings` / `%APPDATA%/lumicode/settings`
